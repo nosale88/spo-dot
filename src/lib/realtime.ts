@@ -1,4 +1,3 @@
-import { RealtimeChannel, RealtimeChannelSnapshot } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 
 // 실시간 테이블 변경 구독 타입
@@ -14,11 +13,11 @@ export interface SubscriptionOptions {
   filter?: string;
 }
 
-// 실시간 채널 추적
-const activeChannels: Map<string, RealtimeChannel> = new Map();
+// 실시간 채널 추적 - 빈 객체로 대체
+const activeChannels: Map<string, any> = new Map();
 
 /**
- * Supabase 테이블 변경사항 구독
+ * Mock 구현 - 실제 Supabase 연동 없이 더미 기능 제공
  */
 export function subscribeToTable<T extends Record<string, any>>(
   tableName: string,
@@ -26,43 +25,17 @@ export function subscribeToTable<T extends Record<string, any>>(
   options: SubscriptionOptions = { event: '*' }
 ): () => void {
   const { event = '*', filter } = options;
-  
-  // 채널 ID 생성
   const channelId = `${tableName}:${event}:${filter || 'all'}`;
   
-  // 이미 존재하는 채널이면 재사용
-  if (activeChannels.has(channelId)) {
-    console.log(`이미 구독 중인 채널 재사용: ${channelId}`);
-    return () => unsubscribeFromChannel(channelId);
-  }
+  console.log(`Mock 구독: ${channelId} (실제 데이터 변경사항 모니터링 없음)`);
   
-  // 새 채널 생성
-  const channel = supabase.channel(channelId);
+  // 더미 채널 객체
+  const mockChannel = {
+    unsubscribe: () => console.log(`Mock 구독 해제: ${channelId}`)
+  };
   
-  // 테이블 변경사항 구독 설정
-  channel
-    .on(
-      'postgres_changes',
-      {
-        event: event,
-        schema: 'public',
-        table: tableName,
-        ...(filter && { filter }),
-      },
-      (payload) => {
-        callback({
-          new: payload.new as T,
-          old: payload.old as T | null,
-          eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE',
-        });
-      }
-    )
-    .subscribe((status: RealtimeChannelSnapshot) => {
-      console.log(`Subscription status for ${channelId}:`, status);
-    });
-  
-  // 활성 채널 추적
-  activeChannels.set(channelId, channel);
+  // 구독 추적
+  activeChannels.set(channelId, mockChannel);
   
   // 구독 해제 함수 반환
   return () => unsubscribeFromChannel(channelId);
@@ -76,7 +49,6 @@ function unsubscribeFromChannel(channelId: string): void {
   if (channel) {
     channel.unsubscribe();
     activeChannels.delete(channelId);
-    console.log(`Channel unsubscribed: ${channelId}`);
   }
 }
 
@@ -86,7 +58,6 @@ function unsubscribeFromChannel(channelId: string): void {
 export function unsubscribeAll(): void {
   activeChannels.forEach((channel, id) => {
     channel.unsubscribe();
-    console.log(`Channel unsubscribed: ${id}`);
   });
   activeChannels.clear();
 } 
