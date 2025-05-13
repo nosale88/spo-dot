@@ -108,13 +108,32 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
   return (
     <>
       <motion.aside
-        initial={{ width: open ? 256 : 80 }}
-        animate={{ width: open ? 256 : 80 }}
+        initial={isMobile ? {
+          width: open ? '100%' : 0,
+          opacity: open ? 1 : 0
+        } : {
+          width: open ? 256 : 80
+        }}
+        animate={isMobile ? {
+          width: open ? '80%' : 0,
+          opacity: open ? 1 : 0
+        } : {
+          width: open ? 256 : 80
+        }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
+        style={{ 
+          visibility: (isMobile && !open) ? 'hidden' : 'visible',
+          maxWidth: '300px'
+        }}
         className={clsx(
-          'fixed inset-y-0 left-0 z-50 bg-indigo-900 text-white transform lg:static lg:inset-auto',
-          'flex flex-col overflow-hidden',
-          open ? 'translate-x-0' : isMobile ? '-translate-x-full' : 'translate-x-0'
+          'fixed inset-y-0 left-0 z-[999] bg-indigo-900 text-white transform lg:static lg:inset-auto',
+          'flex flex-col overflow-hidden shadow-xl',
+          'transition-all duration-300 ease-in-out',
+          isMobile 
+            ? (open 
+                ? 'opacity-100 translate-x-0' 
+                : 'opacity-0 -translate-x-full') 
+            : (open ? 'translate-x-0' : 'translate-x-0')
         )}
       >
         <div className="flex items-center justify-between h-16 px-4 border-b border-indigo-800">

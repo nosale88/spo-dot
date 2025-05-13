@@ -72,8 +72,13 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
     <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 h-16 flex items-center justify-between px-4 md:px-6">
       <div className="flex items-center">
         <button 
-          onClick={toggleSidebar}
-          className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleSidebar();
+          }}
+          aria-label="Toggle menu"
+          className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white touch-manipulation"
         >
           <Menu size={24} />
         </button>

@@ -47,8 +47,16 @@ const MainLayout = () => {
 
   const toggleSidebar = () => {
     console.log('토글 사이드바:', !sidebarOpen, '현재 모바일:', isMobile);
-    setSidebarOpen(!sidebarOpen);
+    setSidebarOpen(prevState => {
+      const newState = !prevState;
+      console.log('사이드바 상태 변경:', newState);
+      return newState;
+    });
   };
+
+  useEffect(() => {
+    console.log('사이드바 열림 상태:', sidebarOpen, '모바일:', isMobile);
+  }, [sidebarOpen, isMobile]);
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
