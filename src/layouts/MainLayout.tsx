@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Sidebar from '../components/layout/Sidebar';
-import Header from '../components/layout/Header';
-import GlobalAnnouncementBanner from '../components/layout/GlobalAnnouncementBanner';
-import { useAuth } from '../contexts/AuthContext';
-import { useAnnouncement } from '../contexts/AnnouncementContext';
-import type { Announcement } from '../types/index';
+import Sidebar from '@/components/layout/Sidebar';
+import Header from '@/components/layout/Header';
+import GlobalAnnouncementBanner from '@/components/layout/GlobalAnnouncementBanner';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAnnouncement } from '@/contexts/AnnouncementContext';
+import type { Announcement } from '@/types/index';
+import clsx from 'clsx';
 
 const MainLayout = () => {
   const { user } = useAuth();
@@ -14,8 +15,9 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [sidebarOpen, setSidebarOpen] = useState(() => {
-    const savedState = localStorage.getItem('sidebarOpen');
     if (window.innerWidth < 1024) return false;
+    
+    const savedState = localStorage.getItem('sidebarOpen');
     return savedState !== null ? savedState === 'true' : true;
   });
 
@@ -30,11 +32,10 @@ const MainLayout = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
       
-      if (!mobile && !sidebarOpen) {
+      if (!mobile) {
         const savedState = localStorage.getItem('sidebarOpen');
         setSidebarOpen(savedState !== null ? savedState === 'true' : true);
-      }
-      else if (mobile && sidebarOpen) {
+      } else {
         setSidebarOpen(false);
       }
     };
@@ -43,36 +44,46 @@ const MainLayout = () => {
     handleResize();
     
     return () => window.removeEventListener('resize', handleResize);
-  }, [sidebarOpen]);
+  }, []);
 
   const toggleSidebar = () => {
-    console.log('토글 사이드바:', !sidebarOpen, '현재 모바일:', isMobile);
-    setSidebarOpen(prevState => {
-      const newState = !prevState;
-      console.log('사이드바 상태 변경:', newState);
+    setSidebarOpen(prev => {
+      console.log(`사이드바 상태 변경 전: ${prev}, isMobile: ${isMobile}`);
+      const newState = !prev;
+      console.log(`사이드바 상태 변경 후: ${newState}, isMobile: ${isMobile}`);
       return newState;
     });
   };
 
-  useEffect(() => {
-    console.log('사이드바 열림 상태:', sidebarOpen, '모바일:', isMobile);
-  }, [sidebarOpen, isMobile]);
+  const mainContentClasses = clsx(
+    "flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
+    {
+      "lg:ml-64": sidebarOpen && !isMobile,
+      "lg:ml-20": !sidebarOpen && !isMobile,
+      "ml-0": isMobile && sidebarOpen,
+      "ml-20": isMobile && !sidebarOpen,
+    }
+  );
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
-      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} isMobile={isMobile} />
 
       {isMobile && sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-slate-900/50 z-40"
+          className="fixed inset-0 bg-slate-900/50 z-40 backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
+          style={{
+            willChange: 'opacity',
+            touchAction: 'manipulation'
+          }}
         />
       )}
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className={mainContentClasses}>
         <GlobalAnnouncementBanner />
         <Header toggleSidebar={toggleSidebar} />
-        <main className="flex-1 overflow-auto p-4 md:p-6">
+        <main className="flex-1 overflow-auto p-3 sm:p-4 md:p-6">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

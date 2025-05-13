@@ -25,7 +25,7 @@ interface Announcement {
 
 const summaryStats = [
   { title: '총 업무', value: 12, icon: <Briefcase size={28} className="text-blue-500" />, bgColor: 'bg-blue-100' },
-  { title: '진행 중', value: 5, icon: <Loader2 size={28} className="text-yellow-500 animate-spin" />, bgColor: 'bg-yellow-100' },
+  { title: '진행 중', value: 5, icon: <Loader2 size={28} className="text-yellow-500" />, bgColor: 'bg-yellow-100' },
   { title: '완료', value: 7, icon: <CheckCircle2 size={28} className="text-green-500" />, bgColor: 'bg-green-100' },
   { title: '중요 업무', value: 3, icon: <AlertTriangle size={28} className="text-red-500" />, bgColor: 'bg-red-100' },
 ];

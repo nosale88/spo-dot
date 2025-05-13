@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useAnnouncement } from '../../contexts/AnnouncementContext';
 import { Announcement } from '../../types'; 
 import { format, parseISO } from 'date-fns';
 import { Edit3, Trash2, PlusCircle, CheckSquare, Square } from 'lucide-react';
+
+const MOCK_USER_ID = 'admin'; // 실제 로그인 유저 id로 대체 가능
 
 const AnnouncementsManagement: React.FC = () => {
   const {
@@ -19,12 +21,37 @@ const AnnouncementsManagement: React.FC = () => {
   const [currentAnnouncement, setCurrentAnnouncement] = useState<Partial<Announcement> | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
+  // 검색/필터 상태
+  const [search, setSearch] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // 카테고리/태그 입력 상태
+  const [categoryInput, setCategoryInput] = useState('');
+  const [tagsInput, setTagsInput] = useState('');
+
+  // 성능 최적화: useMemo로 필터링
+  const filteredAnnouncements = useMemo(() => announcements.filter((a) => {
+    const q = search.toLowerCase();
+    return (
+      a.title?.toLowerCase().includes(q) ||
+      a.content?.toLowerCase().includes(q) ||
+      (a.targetAudience || '').toLowerCase().includes(q) ||
+      (a.isPublished ? '게시됨' : '게시 안됨').includes(q) ||
+      (a.category || '').toLowerCase().includes(q) ||
+      (a.tags || []).some(tag => tag.toLowerCase().includes(q))
+    );
+  }), [announcements, search]);
+
   const handleOpenModal = (announcement?: Announcement) => {
     if (announcement) {
       setCurrentAnnouncement({ ...announcement });
+      setCategoryInput(announcement.category || '');
+      setTagsInput((announcement.tags || []).join(','));
       setIsEditMode(true);
     } else {
-      setCurrentAnnouncement({ title: '', content: '', targetAudience: 'all' }); 
+      setCurrentAnnouncement({ title: '', content: '', targetAudience: 'all', category: '', tags: [] });
+      setCategoryInput('');
+      setTagsInput('');
       setIsEditMode(false);
     }
     setIsModalOpen(true);
@@ -50,13 +77,17 @@ const AnnouncementsManagement: React.FC = () => {
     }
 
     try {
+      const category = categoryInput.trim();
+      const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
       if (isEditMode && currentAnnouncement.id) {
-        await updateAnnouncement(currentAnnouncement as Partial<Announcement> & { id: string });
+        await updateAnnouncement({ ...currentAnnouncement, category, tags } as Partial<Announcement> & { id: string });
       } else {
         const newAnnouncementData: Omit<Announcement, 'id' | 'createdAt' | 'updatedAt'> = {
           title: currentAnnouncement.title,
           content: currentAnnouncement.content,
           targetAudience: currentAnnouncement.targetAudience || 'all',
+          category,
+          tags,
         };
         await addAnnouncement(newAnnouncementData);
       }
@@ -95,6 +126,17 @@ const AnnouncementsManagement: React.FC = () => {
     }
   };
 
+  // 공지 클릭 시 읽음 처리
+  const handleAnnouncementClick = (announcement: Announcement) => {
+    if (!announcement.readBy?.includes(MOCK_USER_ID)) {
+      updateAnnouncement({
+        ...announcement,
+        readBy: [...(announcement.readBy || []), MOCK_USER_ID],
+      });
+    }
+    handleOpenModal(announcement);
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (isModalOpen && event.target instanceof HTMLElement && event.target.id === 'announcement-modal-overlay') {
@@ -105,6 +147,16 @@ const AnnouncementsManagement: React.FC = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
+  }, [isModalOpen]);
+
+  // 모달 열릴 때 제목 input에 자동 포커스
+  useEffect(() => {
+    if (isModalOpen) {
+      setTimeout(() => {
+        const el = document.getElementById('title');
+        if (el) (el as HTMLInputElement).focus();
+      }, 100);
+    }
   }, [isModalOpen]);
 
   if (loading && announcements.length === 0) {
@@ -137,6 +189,27 @@ const AnnouncementsManagement: React.FC = () => {
         <p className="text-slate-600 mt-1">이곳에서 전체 공지사항을 관리할 수 있습니다.</p>
       </header>
 
+      {/* 검색 입력창 */}
+      <div className="mb-4 flex items-center">
+        <input
+          ref={searchInputRef}
+          type="text"
+          placeholder="제목, 내용, 대상, 상태로 검색..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full max-w-md px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        {search && (
+          <button
+            onClick={() => { setSearch(''); searchInputRef.current?.focus(); }}
+            className="ml-2 text-slate-400 hover:text-slate-700"
+            aria-label="검색 초기화"
+          >
+            ×
+          </button>
+        )}
+      </div>
+
       <div className="mb-6 flex justify-end">
         <button
           onClick={() => handleOpenModal()}
@@ -147,14 +220,15 @@ const AnnouncementsManagement: React.FC = () => {
         </button>
       </div>
 
-      {announcements.length === 0 && !loading && (
+      {filteredAnnouncements.length === 0 && !loading && (
         <div className="text-center py-10 bg-white rounded-lg shadow">
-          <h3 className="text-xl font-semibold text-slate-700 mb-2">등록된 공지사항이 없습니다.</h3>
-          <p className="text-slate-500">새 공지사항을 추가하여 사용자들에게 중요한 정보를 전달하세요.</p>
+          <h3 className="text-xl font-semibold text-slate-700 mb-2">검색 결과가 없습니다.</h3>
+          <p className="text-slate-500">검색어를 지우거나, 새 공지사항을 추가해보세요.</p>
+          {announcements.length === 0 && <p className="text-slate-400 mt-2">아직 등록된 공지사항이 없습니다.</p>}
         </div>
       )}
 
-      {announcements.length > 0 && (
+      {filteredAnnouncements.length > 0 && (
         <section className="bg-white shadow-lg rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200">
@@ -169,10 +243,15 @@ const AnnouncementsManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-100">
-                {announcements.map((announcement) => (
+                {filteredAnnouncements.map((announcement) => (
                   <tr key={announcement.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-slate-900 truncate max-w-xs" title={announcement.title}>{announcement.title}</div>
+                    <td className="px-6 py-4 whitespace-nowrap cursor-pointer" onClick={() => handleAnnouncementClick(announcement)}>
+                      <div className="text-sm font-semibold text-slate-900 truncate max-w-xs" title={announcement.title}>
+                        {announcement.title}
+                        {!(announcement.readBy || []).includes(MOCK_USER_ID) && (
+                          <span className="ml-2 inline-block px-2 py-0.5 text-xs bg-red-500 text-white rounded-full align-middle">NEW</span>
+                        )}
+                      </div>
                       <div className="text-xs text-slate-500 truncate max-w-xs" title={announcement.content}>{announcement.content.substring(0, 50) + (announcement.content.length > 50 ? '...' : '')}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
@@ -290,6 +369,36 @@ const AnnouncementsManagement: React.FC = () => {
                   <option value="staff">직원</option>
                   {/* Add more specific roles/groups if needed */}
                 </select>
+              </div>
+
+              <div>
+                <label htmlFor="category" className="block text-sm font-medium text-slate-700 mb-1">
+                  카테고리
+                </label>
+                <input
+                  type="text"
+                  id="category"
+                  name="category"
+                  value={categoryInput}
+                  onChange={e => setCategoryInput(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm placeholder-slate-400 transition-all"
+                  placeholder="예: 일반, 이벤트, 시스템"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="tags" className="block text-sm font-medium text-slate-700 mb-1">
+                  태그 (쉼표로 구분)
+                </label>
+                <input
+                  type="text"
+                  id="tags"
+                  name="tags"
+                  value={tagsInput}
+                  onChange={e => setTagsInput(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm placeholder-slate-400 transition-all"
+                  placeholder="예: 점검,중요,긴급"
+                />
               </div>
 
               <div className="mt-8 pt-6 border-t border-slate-200 flex justify-end space-x-3">

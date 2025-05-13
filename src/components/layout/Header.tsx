@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, User, Moon, Sun } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import NotificationCenter from '../common/NotificationCenter';
-import InitialsAvatar from '../common/InitialsAvatar';
+import NotificationCenter from '@/components/common/NotificationCenter';
+import InitialsAvatar from '@/components/common/InitialsAvatar';
 
 type HeaderProps = {
   toggleSidebar: () => void;
@@ -68,21 +68,23 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
     setShowUserMenu(!showUserMenu);
   };
 
+  // 모바일 메뉴 버튼 클릭 처리 함수
+  const handleMenuButtonClick = () => {
+    console.log('메뉴 버튼 클릭');
+    toggleSidebar();
+  };
+
   return (
-    <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 h-16 flex items-center justify-between px-4 md:px-6">
+    <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 h-16 flex items-center justify-between px-4 md:px-6 z-10">
       <div className="flex items-center">
         <button 
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleSidebar();
-          }}
+          onClick={handleMenuButtonClick}
           aria-label="Toggle menu"
           className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white touch-manipulation"
         >
           <Menu size={24} />
         </button>
-        <h1 className="text-xl font-semibold text-slate-900 dark:text-white ml-2 hidden sm:block">
+        <h1 className="text-xl font-semibold text-slate-900 dark:text-white ml-2 hidden lg:block">
           피트니스 센터 관리
         </h1>
       </div>

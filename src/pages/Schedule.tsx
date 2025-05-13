@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, Calendar, Clock, User, CheckSquare, MoreHorizontal, X, Edit, Trash } from 'lucide-react';
+import { Plus, Search, Filter, Calendar, Clock, User, CheckSquare, MoreHorizontal, X, Edit, Trash, Dumbbell, Users as GroupIcon, UserCheck, MessageCircle } from 'lucide-react';
 import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addMonths, subMonths, addWeeks, subWeeks, parseISO, isSameDay, isSameMonth, getDate, getDaysInMonth, getDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import AddScheduleForm from '../components/forms/AddScheduleForm';
@@ -10,6 +10,18 @@ import { useAuth } from '../contexts/AuthContext';
 import clsx from 'clsx';
 
 // ... (기존 타입 정의 유지)
+
+// 모달 ESC 닫기용 커스텀 훅
+function useEscClose(closeFn: () => void, enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeFn();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [closeFn, enabled]);
+}
 
 const Schedule = () => {
   const { user } = useAuth();
@@ -162,6 +174,17 @@ const Schedule = () => {
   const handleExpandDay = (day: Date, schedules: ScheduleType[]) => {
     setExpandedDay(day);
     setDaySchedules(schedules);
+  };
+
+  // 일정 유형별 아이콘/색상
+  const getSessionTypeIcon = (type: SessionType) => {
+    switch (type) {
+      case 'PT': return <Dumbbell size={14} className="text-blue-500 mr-1" />;
+      case 'OT': return <UserCheck size={14} className="text-green-500 mr-1" />;
+      case 'GROUP': return <GroupIcon size={14} className="text-purple-500 mr-1" />;
+      case 'CONSULT': return <MessageCircle size={14} className="text-orange-500 mr-1" />;
+      default: return null;
+    }
   };
 
   return (
@@ -503,7 +526,7 @@ const Schedule = () => {
                 className={clsx(
                   "border-r border-b last:border-r-0 border-slate-200 dark:border-slate-700 p-1 overflow-hidden",
                   !day.isCurrentMonth && "bg-slate-50 dark:bg-slate-800/50",
-                  isSameDay(day.date, new Date()) && "bg-primary-50 dark:bg-primary-900/10"
+                  isSameDay(day.date, new Date()) && "ring-2 ring-primary ring-offset-2 bg-primary-50 dark:bg-primary-900/10"
                 )}
               >
                 <div className="flex justify-between items-center">
@@ -548,7 +571,10 @@ const Schedule = () => {
                         setShowDetails(true);
                       }}
                     >
-                      {schedule.startTime.slice(0, 5)} {schedule.clientName}
+                      <span className="flex items-center">
+                        {getSessionTypeIcon(schedule.type)}
+                        {schedule.startTime.slice(0, 5)} {schedule.clientName}
+                      </span>
                     </div>
                   ))}
                   
@@ -588,6 +614,7 @@ const Schedule = () => {
       
       {/* 일정 상세 보기 */}
       {showDetails && selectedSchedule && (
+        useEscClose(() => setShowDetails(false), true),
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -683,6 +710,7 @@ const Schedule = () => {
 
       {/* 날짜별 일정 확장 보기 모달 */}
       {expandedDay && (
+        useEscClose(() => setExpandedDay(null), true),
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

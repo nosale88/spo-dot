@@ -155,22 +155,33 @@ export interface Room {
   is_active: boolean;
   created_at: string;
   updated_at: string;
-} 
+}
+
+// 첨부파일 타입 정의
+export interface Attachment {
+  name: string; // 파일명
+  url: string;  // 파일 URL
+  type?: string; // mime type (image/png 등)
+}
 
 // 공지사항 타입 정의
 export interface Announcement {
   id: string;
   title: string;
   content: string;
+  createdAt: string;
+  updatedAt: string;
+  authorId?: string;
+  isPublished: boolean;
+  targetAudience?: string;
+  showInBanner?: boolean;
+  category?: string;
+  tags?: string[];
+  readBy?: string[];
+  attachments?: Attachment[];
   priority?: 'low' | 'medium' | 'high';
   startDate?: string;
   endDate?: string;
-  createdAt: string;
-  updatedAt?: string;
-  authorId?: string;
-  isPublished?: boolean;
-  targetAudience?: string;
-  showInBanner?: boolean;
 }
 
 // 직원(사용자) 상태 타입 (UserContext에서 사용)

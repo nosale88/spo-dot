@@ -1,6 +1,7 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { Team } from '../types';
-import { supabase } from '../supabaseClient';
+// supabase 클라이언트 주석 처리 - mock 데이터만 사용
+// import { supabase } from '../supabaseClient';
 
 // 사용자 역할 타입
 export type UserRole = 'client' | 'trainer' | 'admin' | 'staff';
@@ -210,38 +211,83 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setLoadingStaff(true);
     setStaffError(null);
     try {
-      const { data, error } = await supabase
-        .from('profiles') 
-        .select('*');
+      // Supabase API 호출 주석 처리 및 mock 데이터로 대체
+      // const { data, error } = await supabase
+      //   .from('profiles') 
+      //   .select('*');
 
-      if (error) {
-        console.error('Error fetching staff:', error);
-        setStaffError(error);
-        return;
-      }
+      // if (error) {
+      //   console.error('Error fetching staff:', error);
+      //   setStaffError(error);
+      //   return;
+      // }
 
-      if (data) {
-        const fetchedStaff = data
-          .filter(profile => profile.role === 'staff' || profile.role === 'admin')
-          .map(profile => ({
-            id: profile.id,
-            name: profile.name || '',
-            email: profile.email || '',
-            phone: profile.phone || '', 
-            role: profile.role as 'staff' | 'admin',
-            status: profile.status as UserStatus || 'active',
-            employeeId: profile.employee_id,
-            team: profile.team as Team || null,
-            position: profile.position,
-            hireDate: profile.hire_date,
-            permissions: profile.permissions,
-            profileImage: profile.profile_image_url,
-            createdAt: profile.created_at || new Date().toISOString(),
-            updatedAt: profile.updated_at || new Date().toISOString(),
-            lastLogin: profile.last_login,
-          }));
-        setStaffList(fetchedStaff as Staff[]); 
-      }
+      // Mock 데이터 사용
+      const mockStaffData = [
+        {
+          id: 'staff-1',
+          name: '홍길동',
+          email: 'hong@example.com',
+          phone: '010-1234-5678',
+          role: 'staff',
+          status: 'active',
+          employeeId: 'EMP001',
+          team: 'FITNESS',
+          position: '매니저',
+          permissions: ['read', 'write', 'admin'],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: 'staff-2',
+          name: '김철수',
+          email: 'kim@example.com',
+          phone: '010-2345-6789',
+          role: 'staff',
+          status: 'active',
+          employeeId: 'EMP002',
+          team: 'GOLF',
+          position: '코치',
+          permissions: ['read', 'write'],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: 'admin-1',
+          name: '박관리',
+          email: 'admin@example.com',
+          phone: '010-9876-5432',
+          role: 'admin',
+          status: 'active',
+          employeeId: 'ADM001',
+          team: null,
+          position: '관리자',
+          permissions: ['read', 'write', 'admin', 'super'],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ];
+
+      // Mock 데이터를 사용하여 staff 목록 설정
+      const fetchedStaff = mockStaffData.map(profile => ({
+        id: profile.id,
+        name: profile.name || '',
+        email: profile.email || '',
+        phone: profile.phone || '', 
+        role: profile.role as 'staff' | 'admin',
+        status: profile.status as UserStatus || 'active',
+        employeeId: profile.employeeId,
+        team: profile.team as Team || null,
+        position: profile.position,
+        hireDate: profile.hireDate,
+        permissions: profile.permissions,
+        profileImage: profile.profileImage,
+        createdAt: profile.createdAt || new Date().toISOString(),
+        updatedAt: profile.updatedAt || new Date().toISOString(),
+        lastLogin: profile.lastLogin,
+      }));
+      
+      setStaffList(fetchedStaff as Staff[]); 
     } catch (err) {
       console.error('Unexpected error fetching staff:', err);
       setStaffError(err instanceof Error ? err : new Error('An unexpected error occurred'));
@@ -250,60 +296,59 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // 직원 추가 함수 구현 (Supabase insert)
+  // 직원 추가 함수 구현 (Mock 데이터 사용)
   const addStaffMember = async (staffData: Omit<Staff, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
     setLoadingStaff(true);
     try {
-      const profileData = {
+      // Supabase 호출 부분 주석 처리
+      // const profileData = {
+      //   name: staffData.name,
+      //   email: staffData.email,
+      //   phone: staffData.phone,
+      //   role: staffData.role,
+      //   status: staffData.status,
+      //   employee_id: staffData.employeeId,
+      //   team: staffData.team,
+      //   position: staffData.position,
+      //   hire_date: staffData.hireDate,
+      //   permissions: staffData.permissions,
+      //   profile_image_url: staffData.profileImage,
+      // };
+
+      // const { data, error } = await supabase
+      //   .from('profiles')
+      //   .insert([profileData])
+      //   .select(); 
+
+      // if (error) {
+      //   console.error('Error adding staff:', error);
+      //   setStaffError(error);
+      //   setLoadingStaff(false);
+      //   return null;
+      // }
+
+      // Mock 데이터 추가
+      const newId = `staff-${Date.now()}`;
+      const newStaffMember: Staff = {
+        id: newId,
         name: staffData.name,
         email: staffData.email,
         phone: staffData.phone,
         role: staffData.role,
         status: staffData.status,
-        employee_id: staffData.employeeId,
+        employeeId: staffData.employeeId,
         team: staffData.team,
         position: staffData.position,
-        hire_date: staffData.hireDate,
+        hireDate: staffData.hireDate,
         permissions: staffData.permissions,
-        profile_image_url: staffData.profileImage,
+        profileImage: staffData.profileImage,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert([profileData])
-        .select(); 
-
-      if (error) {
-        console.error('Error adding staff:', error);
-        setStaffError(error);
-        setLoadingStaff(false);
-        return null;
-      }
-
-      if (data && data.length > 0) {
-        const newStaffMember = {
-            id: data[0].id,
-            name: data[0].name || '',
-            email: data[0].email || '',
-            phone: data[0].phone || '', 
-            role: data[0].role as 'staff' | 'admin',
-            status: data[0].status as UserStatus || 'active',
-            employeeId: data[0].employee_id,
-            team: data[0].team as Team || null,
-            position: data[0].position,
-            hireDate: data[0].hire_date,
-            permissions: data[0].permissions,
-            profileImage: data[0].profile_image_url,
-            createdAt: data[0].created_at || new Date().toISOString(),
-            updatedAt: data[0].updated_at || new Date().toISOString(),
-            lastLogin: data[0].last_login,
-        };
-        setStaffList(prevStaffList => [...prevStaffList, newStaffMember as Staff]);
-        setLoadingStaff(false);
-        return data[0].id; 
-      }
+      setStaffList(prevStaffList => [...prevStaffList, newStaffMember]);
       setLoadingStaff(false);
-      return null;
+      return newId;
     } catch (err) {
       console.error('Unexpected error adding staff:', err);
       setStaffError(err instanceof Error ? err : new Error('An unexpected error occurred while adding staff'));
@@ -312,70 +357,64 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // 직원 정보 수정 함수 (Supabase update)
+  // 직원 정보 수정 함수 (Mock 데이터 사용)
   const updateStaffMember = async (id: string, staffData: Partial<Staff>): Promise<boolean> => {
     setLoadingStaff(true);
     try {
-      // Map partial Staff data to Supabase 'profiles' table columns (snake_case)
-      const profileUpdateData: { [key: string]: any } = {};
-      if (staffData.name !== undefined) profileUpdateData.name = staffData.name;
-      if (staffData.email !== undefined) profileUpdateData.email = staffData.email;
-      if (staffData.phone !== undefined) profileUpdateData.phone = staffData.phone;
-      if (staffData.role !== undefined) profileUpdateData.role = staffData.role;
-      if (staffData.status !== undefined) profileUpdateData.status = staffData.status;
-      if (staffData.employeeId !== undefined) profileUpdateData.employee_id = staffData.employeeId;
-      if (staffData.team !== undefined) profileUpdateData.team = staffData.team;
-      if (staffData.position !== undefined) profileUpdateData.position = staffData.position;
-      if (staffData.hireDate !== undefined) profileUpdateData.hire_date = staffData.hireDate;
-      if (staffData.permissions !== undefined) profileUpdateData.permissions = staffData.permissions;
-      if (staffData.profileImage !== undefined) profileUpdateData.profile_image_url = staffData.profileImage;
-      // updated_at will be handled by Supabase or a DB trigger
+      // Supabase 호출 부분 주석 처리
+      // // Map partial Staff data to Supabase 'profiles' table columns (snake_case)
+      // const profileUpdateData: { [key: string]: any } = {};
+      // if (staffData.name !== undefined) profileUpdateData.name = staffData.name;
+      // if (staffData.email !== undefined) profileUpdateData.email = staffData.email;
+      // if (staffData.phone !== undefined) profileUpdateData.phone = staffData.phone;
+      // if (staffData.role !== undefined) profileUpdateData.role = staffData.role;
+      // if (staffData.status !== undefined) profileUpdateData.status = staffData.status;
+      // if (staffData.employeeId !== undefined) profileUpdateData.employee_id = staffData.employeeId;
+      // if (staffData.team !== undefined) profileUpdateData.team = staffData.team;
+      // if (staffData.position !== undefined) profileUpdateData.position = staffData.position;
+      // if (staffData.hireDate !== undefined) profileUpdateData.hire_date = staffData.hireDate;
+      // if (staffData.permissions !== undefined) profileUpdateData.permissions = staffData.permissions;
+      // if (staffData.profileImage !== undefined) profileUpdateData.profile_image_url = staffData.profileImage;
+      // // updated_at will be handled by Supabase or a DB trigger
 
-      if (Object.keys(profileUpdateData).length === 0) {
-        setLoadingStaff(false);
-        return true; // No data to update
-      }
+      // if (Object.keys(profileUpdateData).length === 0) {
+      //   setLoadingStaff(false);
+      //   return true; // No data to update
+      // }
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(profileUpdateData)
-        .eq('id', id)
-        .select();
+      // const { data, error } = await supabase
+      //   .from('profiles')
+      //   .update(profileUpdateData)
+      //   .eq('id', id)
+      //   .select();
 
-      if (error) {
-        console.error('Error updating staff:', error);
-        setStaffError(error);
+      // if (error) {
+      //   console.error('Error updating staff:', error);
+      //   setStaffError(error);
+      //   setLoadingStaff(false);
+      //   return false;
+      // }
+
+      // Mock 데이터 업데이트
+      const existingStaff = staffList.find(staff => staff.id === id);
+      if (!existingStaff) {
+        console.error('Staff member not found:', id);
         setLoadingStaff(false);
         return false;
       }
 
-      if (data && data.length > 0) {
-        // Update the local state
-        const updatedStaffMember = {
-            id: data[0].id,
-            name: data[0].name || '',
-            email: data[0].email || '',
-            phone: data[0].phone || '', 
-            role: data[0].role as 'staff' | 'admin',
-            status: data[0].status as UserStatus || 'active',
-            employeeId: data[0].employee_id,
-            team: data[0].team as Team || null,
-            position: data[0].position,
-            hireDate: data[0].hire_date,
-            permissions: data[0].permissions,
-            profileImage: data[0].profile_image_url,
-            createdAt: data[0].created_at || new Date().toISOString(),
-            updatedAt: data[0].updated_at || new Date().toISOString(),
-            lastLogin: data[0].last_login,
-        };
-        setStaffList(prevStaffList => 
-          prevStaffList.map(staff => staff.id === id ? (updatedStaffMember as Staff) : staff)
-        );
-        setLoadingStaff(false);
-        return true;
-      }
+      const updatedStaffMember = {
+        ...existingStaff,
+        ...staffData,
+        updatedAt: new Date().toISOString(),
+      };
+
+      setStaffList(prevStaffList => 
+        prevStaffList.map(staff => staff.id === id ? updatedStaffMember : staff)
+      );
+      
       setLoadingStaff(false);
-      return false; // Should not happen if update was successful and select returned data
+      return true;
     } catch (err) {
       console.error('Unexpected error updating staff:', err);
       setStaffError(err instanceof Error ? err : new Error('An unexpected error occurred while updating staff'));
@@ -384,23 +423,24 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // 직원 삭제 함수 (Supabase delete)
+  // 직원 삭제 함수 (Mock 데이터 사용)
   const deleteStaffMember = async (id: string): Promise<boolean> => {
     setLoadingStaff(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', id);
+      // Supabase 호출 부분 주석 처리
+      // const { error } = await supabase
+      //   .from('profiles')
+      //   .delete()
+      //   .eq('id', id);
 
-      if (error) {
-        console.error('Error deleting staff:', error);
-        setStaffError(error);
-        setLoadingStaff(false);
-        return false;
-      }
+      // if (error) {
+      //   console.error('Error deleting staff:', error);
+      //   setStaffError(error);
+      //   setLoadingStaff(false);
+      //   return false;
+      // }
 
-      // Remove the staff member from the local state
+      // Mock 데이터에서 삭제
       setStaffList(prevStaffList => prevStaffList.filter(staff => staff.id !== id));
       setLoadingStaff(false);
       return true;

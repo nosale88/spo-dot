@@ -24,6 +24,17 @@ const getStatusDisplayName = (status: TaskStatus | undefined) => {
   }
 };
 
+const getCategoryDisplayName = (category: string) => {
+  switch (category) {
+    case 'maintenance': return '유지보수';
+    case 'client': return '고객';
+    case 'administrative': return '행정';
+    case 'training': return '트레이닝';
+    case 'general': return '일반';
+    default: return category;
+  }
+};
+
 const AdminTaskManagement: React.FC = () => {
   const { tasks, addTask, updateTask, deleteTask } = useTask();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -141,6 +152,7 @@ const AdminTaskManagement: React.FC = () => {
               <thead>
                 <tr className="border-b border-slate-200">
                   <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider w-[20%]">업무명</th>
+                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider w-[12%]">카테고리</th>
                   <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider w-[15%]">담당자</th>
                   <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider w-[10%]">상태</th>
                   <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider w-[10%]">마감일</th>
@@ -156,6 +168,7 @@ const AdminTaskManagement: React.FC = () => {
                       <p className="font-semibold text-slate-800">{task.title}</p>
                       {task.description && <p className="text-xs text-slate-500 truncate w-64" title={task.description}>{task.description}</p>}
                     </td>
+                    <td className="py-3 pr-3 text-sm text-slate-700">{getCategoryDisplayName(task.category)}</td>
                     <td className="py-3 pr-3 text-sm text-slate-700">{task.assignedToName || task.assignedTo || 'N/A'}</td>
                     <td className="py-3 pr-3">
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full`}> 
