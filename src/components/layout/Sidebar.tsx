@@ -95,13 +95,13 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
   return (
     <div
       className={clsx(
-        'fixed inset-y-0 left-0 z-50 bg-indigo-900 text-white transform lg:static lg:inset-auto',
+        'fixed inset-y-0 left-0 z-50 bg-indigo-900 text-white transform',
         'flex flex-col overflow-hidden shadow-xl',
         'transition-all duration-300 ease-in-out',
         isMobile
           ? open
             ? 'w-[80%] min-w-[260px] max-w-[300px] translate-x-0'
-            : 'w-20'
+            : 'w-0 -translate-x-full'
           : open
             ? 'w-64'
             : 'w-20'

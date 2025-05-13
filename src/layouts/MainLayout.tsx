@@ -56,12 +56,11 @@ const MainLayout = () => {
   };
 
   const mainContentClasses = clsx(
-    "flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out",
+    "flex-1 flex flex-col overflow-hidden transition-margin duration-300 ease-in-out",
     {
-      "lg:ml-64": sidebarOpen && !isMobile,
-      "lg:ml-20": !sidebarOpen && !isMobile,
-      "ml-0": isMobile && sidebarOpen,
-      "ml-20": isMobile && !sidebarOpen,
+      "ml-64": sidebarOpen && !isMobile,
+      "ml-20": !sidebarOpen && !isMobile,
+      "ml-0": isMobile,
     }
   );
 
