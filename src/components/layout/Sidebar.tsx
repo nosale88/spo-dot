@@ -157,7 +157,16 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
                         : 'hover:bg-indigo-900/30 text-indigo-100',
                       !open && 'justify-center px-2'
                     )}
-                    onClick={() => isMobile && setOpen(false)}
+                    onClick={(e) => {
+                      if (isMobile) {
+                        e.preventDefault(); // 기본 링크 동작 방지
+                        setOpen(false); // 사이드바 닫기
+                        // 약간의 지연 후 네비게이션 실행
+                        setTimeout(() => {
+                          navigate(link.path);
+                        }, 10);
+                      }
+                    }}
                     title={!open ? link.name : ''}
                   >
                     <span className={clsx(!open && 'mr-0', open && 'mr-3')}>{link.icon}</span>
@@ -190,7 +199,16 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
                         : 'hover:bg-indigo-900/30 text-indigo-100',
                       !open && 'justify-center px-2'
                     )}
-                    onClick={() => isMobile && setOpen(false)}
+                    onClick={(e) => {
+                      if (isMobile) {
+                        e.preventDefault(); // 기본 링크 동작 방지
+                        setOpen(false); // 사이드바 닫기
+                        // 약간의 지연 후 네비게이션 실행
+                        setTimeout(() => {
+                          navigate(link.path);
+                        }, 10);
+                      }
+                    }}
                     title={!open ? link.name : ''}
                   >
                     <span className={clsx(!open && 'mr-0', open && 'mr-3')}>{link.icon}</span>
@@ -222,7 +240,16 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
                         : 'hover:bg-indigo-900/30 text-indigo-100',
                       !open && 'justify-center px-2'
                     )}
-                    onClick={() => isMobile && setOpen(false)}
+                    onClick={(e) => {
+                      if (isMobile) {
+                        e.preventDefault(); // 기본 링크 동작 방지
+                        setOpen(false); // 사이드바 닫기
+                        // 약간의 지연 후 네비게이션 실행
+                        setTimeout(() => {
+                          navigate(link.path);
+                        }, 10);
+                      }
+                    }}
                     title={!open ? link.name : ''}
                   >
                     <span className={clsx(!open && 'mr-0', open && 'mr-3')}>{link.icon}</span>
