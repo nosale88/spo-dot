@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 type SidebarProps = {
   open: boolean;
@@ -59,8 +59,20 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const isMobile = window.innerWidth < 1024;
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [customerMenuOpen, setCustomerMenuOpen] = useState(false);
+
+  // 화면 크기 변화 감지하여 isMobile 상태 업데이트
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    handleResize(); // 초기 실행
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const menuItems: SidebarLink[] = [
     { name: '대시보드', path: '/dashboard', icon: <LayoutDashboard size={22} />, section: 'menu' },

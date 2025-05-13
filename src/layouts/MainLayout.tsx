@@ -15,25 +15,40 @@ const MainLayout = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     const savedState = localStorage.getItem('sidebarOpen');
-    return savedState !== null ? savedState === 'true' : window.innerWidth >= 1024;
+    if (window.innerWidth < 1024) return false;
+    return savedState !== null ? savedState === 'true' : true;
   });
 
   useEffect(() => {
-    localStorage.setItem('sidebarOpen', sidebarOpen.toString());
-  }, [sidebarOpen]);
+    if (!isMobile) {
+      localStorage.setItem('sidebarOpen', sidebarOpen.toString());
+    }
+  }, [sidebarOpen, isMobile]);
 
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
-      if (mobile && sidebarOpen) {
+      
+      if (!mobile && !sidebarOpen) {
+        const savedState = localStorage.getItem('sidebarOpen');
+        setSidebarOpen(savedState !== null ? savedState === 'true' : true);
+      }
+      else if (mobile && sidebarOpen) {
         setSidebarOpen(false);
       }
     };
+    
     window.addEventListener('resize', handleResize);
     handleResize();
+    
     return () => window.removeEventListener('resize', handleResize);
   }, [sidebarOpen]);
+
+  const toggleSidebar = () => {
+    console.log('토글 사이드바:', !sidebarOpen, '현재 모바일:', isMobile);
+    setSidebarOpen(!sidebarOpen);
+  };
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
@@ -48,7 +63,7 @@ const MainLayout = () => {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <GlobalAnnouncementBanner />
-        <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+        <Header toggleSidebar={toggleSidebar} />
         <main className="flex-1 overflow-auto p-4 md:p-6">
           <motion.div
             initial={{ opacity: 0 }}
