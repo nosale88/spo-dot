@@ -324,7 +324,7 @@ const Tasks = () => {
                   
                   <div className="flex items-center text-slate-600 dark:text-slate-400">
                     <User size={16} className="mr-1.5" />
-                    <span className="text-sm">{task.assignedToName}</span>
+                    <span className="text-sm">{Array.isArray(task.assignedToName) ? task.assignedToName.join(', ') : task.assignedToName}</span>
                   </div>
                   
                   {/* 빠른 상태 변경 버튼 */}

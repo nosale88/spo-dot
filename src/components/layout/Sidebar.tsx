@@ -66,7 +66,11 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
     { name: '내 업무', path: '/my-tasks', icon: <ListChecks size={22} />, section: 'menu' },
     { name: '전체 업무 보기', path: '/all-tasks', icon: <List size={22} />, section: 'menu' },
     { name: '일일 업무 보고', path: '/daily-report', icon: <FileText size={22} />, section: 'menu' },
+    { name: '매출 보고 작성', path: '/sales-report-user', icon: <FileText size={22} />, section: 'menu' },
     { name: '건의사항', path: '/suggestions', icon: <MessageSquare size={22} />, section: 'menu' },
+    { name: '이용권 관리', path: '/pass-management', icon: <Briefcase size={22} />, section: 'menu' },
+    { name: 'OT배정', path: '/ot-assignment', icon: <Briefcase size={22} />, section: 'menu' },
+    { name: '자판기 매출', path: '/vending-sales', icon: <Briefcase size={22} />, section: 'menu' },
   ];
 
   const customerMenuItems: SidebarLink[] = [
@@ -78,6 +82,7 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
     { name: '업무 관리', path: '/admin/tasks', icon: <ClipboardList size={22} />, roles: ['admin'], section: 'admin' }, 
     { name: '건의사항 관리', path: '/admin/suggestions', icon: <Archive size={22} />, roles: ['admin'], section: 'admin' },
     { name: '공지사항 관리', path: '/admin/announcements', icon: <Megaphone size={22} />, roles: ['admin'], section: 'admin' },
+    { name: '매출보고 관리', path: '/sales-report', icon: <FileText size={22} />, roles: ['admin'], section: 'admin' },
   ];
 
   const links: SidebarLink[] = [...menuItems, ...customerMenuItems, ...adminMenuItems];

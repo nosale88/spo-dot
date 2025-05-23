@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { useTask, TaskPriority, TaskCategory, TaskStatus } from '../../contexts/TaskContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAnnouncement } from '../../contexts/AnnouncementContext';
+import { useUser } from '../../contexts/UserContext';
 import clsx from 'clsx';
 
 interface AddTaskFormProps {
@@ -15,6 +16,7 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
   const { addTask } = useTask();
   const { user } = useAuth();
   const { createAnnouncement } = useAnnouncement();
+  const { staff: staffList = [] } = useUser() || {};
   
   const [formData, setFormData] = useState({
     title: '',
@@ -22,8 +24,8 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
     priority: 'medium' as TaskPriority,
     category: 'general' as TaskCategory,
     dueDate: format(new Date(), 'yyyy-MM-dd'),
-    assignedTo: '',
-    assignedToName: '',
+    assignedTo: [] as string[],
+    assignedToName: [] as string[],
     status: 'pending' as TaskStatus
   });
 
@@ -186,35 +188,36 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
 
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              담당자 이름
+              담당자
             </label>
-            <div className="relative">
-              <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                required
-                value={formData.assignedToName}
-                onChange={(e) => setFormData({ ...formData, assignedToName: e.target.value })}
-                className="form-input pl-10 w-full"
-                placeholder="담당자 이름을 입력하세요"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              담당자 ID
-            </label>
-            <div className="relative">
-              <Tag size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                required
-                value={formData.assignedTo}
-                onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                className="form-input pl-10 w-full"
-                placeholder="담당자 ID를 입력하세요"
-              />
+            <div className="flex flex-wrap gap-2">
+              {staffList && staffList.length > 0 ? staffList.map((staff) => (
+                <label key={staff.id} className="flex items-center gap-1 text-sm">
+                  <input
+                    type="checkbox"
+                    value={staff.id}
+                    checked={formData.assignedTo.includes(staff.id)}
+                    onChange={e => {
+                      const checked = e.target.checked;
+                      setFormData(prev => {
+                        let assignedTo = checked
+                          ? [...prev.assignedTo, staff.id]
+                          : prev.assignedTo.filter(id => id !== staff.id);
+                        let assignedToName = checked
+                          ? [...prev.assignedToName, staff.name]
+                          : prev.assignedToName.filter((_, idx) => prev.assignedTo[idx] !== staff.id);
+                        // assignedToName 동기화
+                        assignedToName = assignedTo.map(id => {
+                          const s = staffList.find(st => st.id === id);
+                          return s ? s.name : '';
+                        });
+                        return { ...prev, assignedTo, assignedToName };
+                      });
+                    }}
+                  />
+                  {staff.name}
+                </label>
+              )) : <span className="text-xs text-slate-400">직원 없음</span>}
             </div>
           </div>
 

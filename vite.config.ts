@@ -9,6 +9,16 @@ export default defineConfig({
     tsconfigPaths()
   ],
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    include: ['lucide-react'],
+  },
+  build: {
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'lucide-icons': ['lucide-react'],
+        },
+      },
+    },
   },
 });

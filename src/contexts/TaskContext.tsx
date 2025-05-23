@@ -21,8 +21,8 @@ export interface Task {
   dueDate: string; // ISO 문자열
   createdAt: string; // ISO 문자열
   updatedAt: string; // ISO 문자열
-  assignedTo: string; // 유저 ID
-  assignedToName: string; // 유저 이름
+  assignedTo: string[]; // 유저 ID 배열
+  assignedToName: string[]; // 유저 이름 배열
   assignedBy: string; // 유저 ID
   assignedByName: string; // 유저 이름
   completedAt?: string; // ISO 문자열
@@ -93,8 +93,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         dueDate: tomorrow.toISOString(),
         createdAt: today.toISOString(),
         updatedAt: today.toISOString(),
-        assignedTo: 'user-1',
-        assignedToName: '김철수',
+        assignedTo: ['user-1'],
+        assignedToName: ['김철수'],
         assignedBy: 'admin-1',
         assignedByName: '관리자',
         comments: [
@@ -117,8 +117,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         dueDate: nextWeek.toISOString(),
         createdAt: addDays(today, -2).toISOString(),
         updatedAt: today.toISOString(),
-        assignedTo: 'user-2',
-        assignedToName: '박지민',
+        assignedTo: ['user-2'],
+        assignedToName: ['박지민'],
         assignedBy: 'admin-1',
         assignedByName: '관리자'
       },
@@ -133,8 +133,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         createdAt: addDays(today, -3).toISOString(),
         updatedAt: addDays(today, -1).toISOString(),
         completedAt: addDays(today, -1).toISOString(),
-        assignedTo: 'user-3',
-        assignedToName: '최준호',
+        assignedTo: ['user-3'],
+        assignedToName: ['최준호'],
         assignedBy: 'admin-1',
         assignedByName: '관리자',
         comments: [
@@ -157,8 +157,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         dueDate: addDays(today, 3).toISOString(),
         createdAt: today.toISOString(),
         updatedAt: today.toISOString(),
-        assignedTo: 'admin-2',
-        assignedToName: '이영희',
+        assignedTo: ['admin-2'],
+        assignedToName: ['이영희'],
         assignedBy: 'admin-1',
         assignedByName: '관리자'
       },
@@ -172,8 +172,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         dueDate: tomorrow.toISOString(),
         createdAt: addDays(today, -1).toISOString(),
         updatedAt: today.toISOString(),
-        assignedTo: 'user-3',
-        assignedToName: '최준호',
+        assignedTo: ['user-3'],
+        assignedToName: ['최준호'],
         assignedBy: 'admin-1',
         assignedByName: '관리자'
       }
@@ -216,8 +216,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       filtered = filtered.filter(task => task.category === options.category);
     }
     
-    if (options.assignedTo) {
-      filtered = filtered.filter(task => task.assignedTo === options.assignedTo);
+    if (options.assignedTo && typeof options.assignedTo === 'string') {
+      filtered = filtered.filter(task => task.assignedTo.includes(options.assignedTo as string));
     }
     
     if (options.dueDateFrom) {
@@ -232,7 +232,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       const query = options.searchQuery.toLowerCase();
       filtered = filtered.filter(task => 
         task.title.toLowerCase().includes(query) ||
-        task.assignedToName.toLowerCase().includes(query) ||
+        task.assignedToName.some(name => name.toLowerCase().includes(query)) ||
         (task.description && task.description.toLowerCase().includes(query))
       );
     }
@@ -266,7 +266,6 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
               ...task, 
               ...updatedData, 
               updatedAt: now,
-              // 상태가 완료로 변경되면 완료 시간 설정
               completedAt: 
                 updatedData.status === 'completed' && task.status !== 'completed'
                   ? now

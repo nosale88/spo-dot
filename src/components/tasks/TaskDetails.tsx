@@ -211,7 +211,7 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
               <User size={18} className="mr-2 text-primary flex-shrink-0" />
               <div>
                 <span className="block text-sm font-medium text-slate-500 dark:text-slate-400">담당자</span>
-                <span>{task.assignedToName}</span>
+                <span>{Array.isArray(task.assignedToName) ? task.assignedToName.join(', ') : task.assignedToName}</span>
               </div>
             </div>
             

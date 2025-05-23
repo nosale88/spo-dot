@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useUser } from '../../contexts/UserContext';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import { Mail, Lock, AlertCircle } from 'lucide-react';
@@ -13,24 +12,23 @@ type LoginFormData = {
 
 const Login = () => {
   const { login } = useAuth();
-  const { users } = useUser();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
 
-  const onSubmit = (data: LoginFormData) => {
+  const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     setError(null);
     
     try {
-      const success = login(data.email, data.password, users);
-      if (success) {
+      const result = await login(data.email, data.password);
+      if (result.error) {
+        setError(result.error.message);
+      } else {
         // 로그인 성공 시 대시보드로 리디렉션
         navigate('/dashboard');
-      } else {
-        setError('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.');

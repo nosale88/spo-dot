@@ -11,7 +11,7 @@ type HeaderProps = {
 };
 
 const Header = ({ toggleSidebar }: HeaderProps) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -148,7 +148,8 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
                 </button>
                 <button 
                   onClick={() => {
-                    // 로그아웃 로직
+                    logout();
+                    setShowUserMenu(false);
                   }}
                   className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 >

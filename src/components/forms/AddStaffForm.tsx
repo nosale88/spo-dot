@@ -108,11 +108,9 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
       newErrors.phone = '유효한 전화번호 형식을 입력해 주세요 (예: 010-1234-5678 또는 01012345678)';
     }
     
-    // 비밀번호 유효성 검사 추가
+    // 비밀번호 유효성 검사 - 이제 간소화됨
     if (!formData.password) {
       newErrors.password = '비밀번호를 입력해 주세요';
-    } else if (formData.password.length < 8) {
-      newErrors.password = '비밀번호는 최소 8자 이상이어야 합니다';
     }
     
     if (!formData.confirmPassword) {
@@ -131,7 +129,12 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    console.log('직원 폼 제출 시작');
+    
+    if (!validateForm()) {
+      console.log('폼 유효성 검사 실패');
+      return;
+    }
     
     setIsSubmitting(true);
     
@@ -150,13 +153,28 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
         permissions: formData.permissions
       };
       
-      // 직원 추가
-      addStaff(staffData);
+      console.log('직원 데이터:', staffData);
       
-      // 폼 닫기
-      onClose();
+      // 직원 추가
+      if (addStaff) {
+        console.log('addStaff 함수 호출');
+        const userId = await addStaff(staffData);
+        console.log('직원 추가 결과:', userId);
+        
+        if (userId) {
+          alert('직원이 성공적으로 추가되었습니다.\n이메일: ' + formData.email + '\n비밀번호: ' + formData.password);
+          // 폼 닫기
+          onClose();
+        } else {
+          console.error("직원 추가 실패: userId가 반환되지 않음");
+        }
+      } else {
+        console.error("addStaff function is not available in UserContext");
+        setErrors(prev => ({ ...prev, form: "직원 추가 기능을 사용할 수 없습니다." }));
+      }
     } catch (error) {
       console.error('직원 추가 중 오류 발생:', error);
+      setErrors(prev => ({ ...prev, form: "직원 추가 중 오류가 발생했습니다." }));
     } finally {
       setIsSubmitting(false);
     }
@@ -341,8 +359,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       부서
                       <span className="text-red-500 ml-1">*</span>
                     </label>
-                    <input
-                      type="text"
+                    <select
                       name="department"
                       value={formData.department}
                       onChange={handleChange}
@@ -350,9 +367,14 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                         'form-input w-full',
                         errors.department ? 'border-red-500 dark:border-red-500' : ''
                       )}
-                      placeholder="부서명 (예: 회원관리, 운영)"
                       required
-                    />
+                    >
+                      <option value="">부서 선택</option>
+                      <option value="임원">임원</option>
+                      <option value="헬스">헬스</option>
+                      <option value="테니스">테니스</option>
+                      <option value="골프">골프</option>
+                    </select>
                     {errors.department && (
                       <p className="mt-1 text-sm text-red-500">{errors.department}</p>
                     )}
