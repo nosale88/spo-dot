@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useContext, useState, useEffect } from "react";
+import { ReactNode, createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 
 // AuthContext 타입 정의
@@ -42,74 +42,16 @@ const AuthContext = createContext<AuthContextProps>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  // 앱 로드 시 사용자 정보 가져오기
-  useEffect(() => {
-    const initAuth = async () => {
-      setLoading(true);
-      try {
-        // 로컬 스토리지에서 사용자 정보 확인
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          const userData = JSON.parse(storedUser);
-          setUser(userData);
-        }
-      } catch (err) {
-        console.error('초기 인증 로드 오류:', err);
-        localStorage.removeItem('user');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    initAuth();
-  }, []);
+  const [loading, setLoading] = useState(true);
 
   // 사용자 인증 상태 확인
   const checkAuth = async (): Promise<boolean> => {
     try {
-      // 로컬 스토리지에서 사용자 정보 확인
       const storedUser = localStorage.getItem('user');
       if (!storedUser) return false;
       
       const userData = JSON.parse(storedUser);
-      
-      // Supabase에서 사용자 데이터 최신화
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userData.id)
-        .single();
-        
-      if (error || !data) {
-        console.error('사용자 정보 조회 오류:', error);
-        localStorage.removeItem('user');
-        setUser(null);
-        return false;
-      }
-      
-      // 사용자 정보 업데이트
-      const updatedUser = {
-        id: data.id,
-        email: data.email,
-        name: data.name,
-        role: data.role,
-        profileImage: data.profile_image,
-        department: data.department,
-        position: data.position,
-        permissions: data.permissions
-      };
-      
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      
-      // 마지막 로그인 시간 업데이트
-      await supabase
-        .from('users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', data.id);
-        
+      setUser(userData);
       return true;
     } catch (err) {
       console.error('사용자 인증 확인 중 오류:', err);
@@ -118,6 +60,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
   };
+
+  // 앱 로드 시 사용자 정보 가져오기
+  useEffect(() => {
+    const initAuth = async () => {
+      setLoading(true);
+      try {
+        // 로컬 스토리지에서 사용자 정보 확인
+        const storedUser = localStorage.getItem('user');
+        
+        if (storedUser) {
+          // 직접 사용자 정보 설정
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
+          console.log('✅ 사용자 로그인 상태 복원됨:', userData.name);
+        }
+      } catch (err) {
+        console.error('❌ 초기 인증 로드 오류:', err);
+        localStorage.removeItem('user');
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    initAuth();
+  }, []);
 
   // 로그인 함수
   const login = async (email: string, password: string) => {

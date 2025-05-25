@@ -58,7 +58,7 @@ const ReportManagement = () => {
       className="space-y-6"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">보고서 관리</h1>
+        <h1 className="text-2xl font-bold text-slate-900">보고서 관리</h1>
         
         <div className="flex items-center space-x-2">
           <button

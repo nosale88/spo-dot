@@ -9,6 +9,146 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      clients: {
+        Row: {
+          address: string | null
+          assigned_trainer_id: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          emergency_contact: string | null
+          gender: string | null
+          goals: string | null
+          health_notes: string | null
+          height: number | null
+          id: string
+          membership_end: string | null
+          membership_start: string | null
+          membership_type: string | null
+          updated_at: string | null
+          weight: number | null
+        }
+        Insert: {
+          address?: string | null
+          assigned_trainer_id?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          emergency_contact?: string | null
+          gender?: string | null
+          goals?: string | null
+          health_notes?: string | null
+          height?: number | null
+          id: string
+          membership_end?: string | null
+          membership_start?: string | null
+          membership_type?: string | null
+          updated_at?: string | null
+          weight?: number | null
+        }
+        Update: {
+          address?: string | null
+          assigned_trainer_id?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          emergency_contact?: string | null
+          gender?: string | null
+          goals?: string | null
+          health_notes?: string | null
+          height?: number | null
+          id?: string
+          membership_end?: string | null
+          membership_start?: string | null
+          membership_type?: string | null
+          updated_at?: string | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_assigned_trainer_id_fkey"
+            columns: ["assigned_trainer_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      handovers: {
+        Row: {
+          author_id: string | null
+          author_name: string
+          content: string
+          created_at: string | null
+          date: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          author_name: string
+          content: string
+          created_at?: string | null
+          date: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string
+          content?: string
+          created_at?: string | null
+          date?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string
+          title: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message: string
+          title: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string
+          title?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       passes: {
         Row: {
           amount: number
@@ -74,6 +214,42 @@ export type Database = {
           },
         ]
       }
+      staff_teams: {
+        Row: {
+          created_at: string | null
+          id: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_teams_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_teams_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assigned_to: string | null
@@ -122,32 +298,139 @@ export type Database = {
           },
         ]
       }
-      users: {
+      teams: {
         Row: {
           created_at: string | null
-          email: string
+          department: string | null
+          description: string | null
           id: string
           name: string
-          password: string
-          role: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          email: string
+          department?: string | null
+          description?: string | null
           id?: string
           name: string
-          password: string
-          role: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          email?: string
+          department?: string | null
+          description?: string | null
           id?: string
           name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      trainers: {
+        Row: {
+          address: string | null
+          bio: string | null
+          certifications: Json | null
+          client_count: number | null
+          created_at: string | null
+          date_of_birth: string | null
+          experience: string | null
+          gender: string | null
+          hourly_rate: number | null
+          id: string
+          schedule: Json | null
+          schedule_preference: Json | null
+          specialties: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          bio?: string | null
+          certifications?: Json | null
+          client_count?: number | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          experience?: string | null
+          gender?: string | null
+          hourly_rate?: number | null
+          id: string
+          schedule?: Json | null
+          schedule_preference?: Json | null
+          specialties?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          bio?: string | null
+          certifications?: Json | null
+          client_count?: number | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          experience?: string | null
+          gender?: string | null
+          hourly_rate?: number | null
+          id?: string
+          schedule?: Json | null
+          schedule_preference?: Json | null
+          specialties?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trainers_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          email: string
+          id: string
+          last_login: string | null
+          name: string
+          password: string
+          permissions: Json | null
+          phone: string | null
+          position: string | null
+          profile_image: string | null
+          role: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          email: string
+          id?: string
+          last_login?: string | null
+          name: string
+          password: string
+          permissions?: Json | null
+          phone?: string | null
+          position?: string | null
+          profile_image?: string | null
+          role: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          email?: string
+          id?: string
+          last_login?: string | null
+          name?: string
           password?: string
+          permissions?: Json | null
+          phone?: string | null
+          position?: string | null
+          profile_image?: string | null
           role?: string
+          status?: string | null
           updated_at?: string | null
         }
         Relationships: []

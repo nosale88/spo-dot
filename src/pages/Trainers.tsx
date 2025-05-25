@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { UserPlus, Search, Filter, User, Info, ChevronDown, ChevronUp, Mail, Phone, Award } from 'lucide-react';
 import { useUser, Trainer, UserStatus } from '../contexts/UserContext';
 import clsx from 'clsx';
@@ -8,7 +8,7 @@ import clsx from 'clsx';
 const AddTrainerForm = ({ onClose }: { onClose: () => void }) => (
   <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
     <div 
-      className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-3xl w-full p-6"
+      className="bg-white rounded-lg shadow-xl max-w-3xl w-full p-6"
       onClick={e => e.stopPropagation()}
     >
       <h2 className="text-xl font-bold mb-4">새 트레이너 추가</h2>
@@ -28,7 +28,7 @@ const AddTrainerForm = ({ onClose }: { onClose: () => void }) => (
 const TrainerDetails = ({ trainer, onClose }: { trainer: Trainer, onClose: () => void }) => (
   <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
     <div 
-      className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-3xl w-full p-6"
+      className="bg-white rounded-lg shadow-xl max-w-3xl w-full p-6"
       onClick={e => e.stopPropagation()}
     >
       <h2 className="text-xl font-bold mb-4">{trainer.name} 상세 정보</h2>
@@ -82,13 +82,13 @@ const Trainers = () => {
   const getStatusStyle = (status: UserStatus) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+        return 'bg-green-100 text-green-800';
       case 'inactive':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        return 'bg-red-100 text-red-800';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+        return 'bg-yellow-100 text-yellow-800';
       case 'suspended':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
+        return 'bg-purple-100 text-purple-800';
     }
   };
   
@@ -109,7 +109,7 @@ const Trainers = () => {
       className="space-y-6"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">트레이너 관리</h1>
+        <h1 className="text-2xl font-bold text-slate-900">트레이너 관리</h1>
         
         <div className="flex items-center space-x-2">
           <div className="relative">
@@ -150,11 +150,11 @@ const Trainers = () => {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-4"
+          className="bg-white rounded-lg shadow-sm p-4"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 상태
               </label>
               <select
@@ -171,7 +171,7 @@ const Trainers = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 전문 분야
               </label>
               <select
@@ -192,37 +192,37 @@ const Trainers = () => {
       )}
       
       {/* 트레이너 목록 */}
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full table-auto">
-            <thead className="bg-slate-50 dark:bg-slate-700">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   트레이너 정보
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   전문 분야
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   고객 수
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   시간당 요금
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   상태
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                   액션
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-slate-200">
               {displayedTrainers.length > 0 ? (
                 displayedTrainers.map((trainer) => (
                   <tr 
                     key={trainer.id}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-700/30 cursor-pointer"
+                    className="hover:bg-slate-50 cursor-pointer"
                     onClick={() => {
                       setSelectedTrainer(trainer);
                       setShowTrainerDetails(true);
@@ -230,7 +230,7 @@ const Trainers = () => {
                   >
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600">
                           {trainer.profileImage ? (
                             <img 
                               src={trainer.profileImage} 
@@ -242,13 +242,13 @@ const Trainers = () => {
                           )}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-slate-900 dark:text-white">
+                          <div className="text-sm font-medium text-slate-900">
                             {trainer.name}
                           </div>
-                          <div className="text-sm text-slate-500 dark:text-slate-400">
+                          <div className="text-sm text-slate-500">
                             {trainer.email}
                           </div>
-                          <div className="text-sm text-slate-500 dark:text-slate-400">
+                          <div className="text-sm text-slate-500">
                             {trainer.phone}
                           </div>
                         </div>
@@ -259,25 +259,25 @@ const Trainers = () => {
                         {trainer.specialties?.map(specialty => (
                           <span 
                             key={specialty} 
-                            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
                           >
                             {specialty}
                           </span>
                         ))}
                         {!trainer.specialties?.length && (
-                          <span className="text-sm text-slate-500 dark:text-slate-400">
+                          <span className="text-sm text-slate-500">
                             미지정
                           </span>
                         )}
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-sm text-slate-900 dark:text-white">
+                      <div className="text-sm text-slate-900">
                         {trainer.clientCount || 0}명
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-sm text-slate-900 dark:text-white">
+                      <div className="text-sm text-slate-900">
                         {trainer.hourlyRate ? `${trainer.hourlyRate.toLocaleString()}원` : '미지정'}
                       </div>
                     </td>
@@ -292,7 +292,7 @@ const Trainers = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-right text-sm">
                       <div className="flex items-center justify-end space-x-2" onClick={e => e.stopPropagation()}>
                         <button 
-                          className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                          className="p-1 text-blue-600 hover:text-blue-800"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedTrainer(trainer);
@@ -307,7 +307,7 @@ const Trainers = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
                     {searchQuery || filterStatus !== 'all' || filterSpecialty
                       ? '검색 결과가 없습니다. 다른 검색어나 필터를 사용해 보세요.'
                       : '등록된 트레이너가 없습니다. 새 트레이너를 추가해 보세요.'}

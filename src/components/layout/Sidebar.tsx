@@ -11,12 +11,14 @@ import {
   LogOut, 
   ChevronLeft, 
   ChevronRight,
+  ChevronDown,
   Users,
   ClipboardList,
   Archive,
   Phone,
   CalendarDays,
   UserCheck,
+  DollarSign,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
@@ -35,54 +37,35 @@ interface SidebarLink {
   roles?: string[];
 }
 
-const customerSubMenu = [
-  { name: '전화문의', path: '/customer/phone-inquiry' },
-  { name: '회원권(PT포함)상담예약', path: '/customer/membership-reservation' },
-  { name: '상담예약', path: '/customer/consulting-reservation' },
-  { name: '문의', path: '/customer/inquiry' },
-  { name: 'FC LOG', path: '/customer/fc-log' },
-  { name: '미등록자DB', path: '/customer/unregistered' },
-  { name: '전체DB', path: '/customer' },
-  { name: 'OT리스트', path: '/customer/ot-list' },
-  { name: '연락망/스케줄', path: '/customer/contact-schedule' },
-  { name: '투어만', path: '/customer/tour-only' },
-  { name: '질문', path: '/customer/question' },
-  { name: '피드백', path: '/customer/feedback' },
-  { name: '테니스상담내역서', path: '/customer/tennis-consult' },
-  { name: '테니스골프무료개방', path: '/customer/tennis-golf-free' },
-  { name: '헬스무료개방', path: '/customer/fitness-free' },
-  { name: '방문객', path: '/customer/visitor' },
-  { name: '테니스레슨회원(무인증정현황)', path: '/customer/tennis-lesson-unverified' },
-];
+
 
 const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [customerMenuOpen, setCustomerMenuOpen] = useState(false);
-
   const menuItems: SidebarLink[] = [
     { name: '대시보드', path: '/dashboard', icon: <LayoutDashboard size={22} />, section: 'menu' },
-    { name: '내 업무', path: '/my-tasks', icon: <ListChecks size={22} />, section: 'menu' },
-    { name: '전체 업무 보기', path: '/all-tasks', icon: <List size={22} />, section: 'menu' },
-    { name: '일일 업무 보고', path: '/daily-report', icon: <FileText size={22} />, section: 'menu' },
-    { name: '매출 보고 작성', path: '/sales-report-user', icon: <FileText size={22} />, section: 'menu' },
-    { name: '건의사항', path: '/suggestions', icon: <MessageSquare size={22} />, section: 'menu' },
-    { name: '이용권 관리', path: '/pass-management', icon: <Briefcase size={22} />, section: 'menu' },
-    { name: 'OT배정', path: '/ot-assignment', icon: <Briefcase size={22} />, section: 'menu' },
-    { name: '자판기 매출', path: '/vending-sales', icon: <Briefcase size={22} />, section: 'menu' },
+    { name: '내 업무', path: '/dashboard/my-tasks', icon: <ListChecks size={22} />, section: 'menu' },
+    { name: '전체 업무 보기', path: '/dashboard/all-tasks', icon: <List size={22} />, section: 'menu' },
+    { name: '일일 업무 보고', path: '/dashboard/daily-report', icon: <FileText size={22} />, section: 'menu' },
+    { name: '매출 등록', path: '/dashboard/sales-entry', icon: <DollarSign size={22} />, section: 'menu' },
+    { name: '매출 보고 작성', path: '/dashboard/sales-report-user', icon: <FileText size={22} />, section: 'menu' },
+    { name: '건의사항', path: '/dashboard/suggestions', icon: <MessageSquare size={22} />, section: 'menu' },
+    { name: '이용권 관리', path: '/dashboard/pass-management', icon: <Briefcase size={22} />, section: 'menu' },
+    { name: 'OT배정', path: '/dashboard/ot-assignment', icon: <Briefcase size={22} />, section: 'menu' },
+    { name: '자판기 매출', path: '/dashboard/vending-sales', icon: <Briefcase size={22} />, section: 'menu' },
   ];
 
   const customerMenuItems: SidebarLink[] = [
-    { name: '고객 관리', path: '/customer/list', icon: <Users size={22} />, section: 'customer', roles: ['admin'] },
+    { name: '고객 관리', path: '/dashboard/customer/list', icon: <Users size={22} />, section: 'customer', roles: ['admin'] },
   ];
 
   const adminMenuItems: SidebarLink[] = [
-    { name: '직원 관리', path: '/admin/staff', icon: <Users size={22} />, roles: ['admin'], section: 'admin' },
-    { name: '업무 관리', path: '/admin/tasks', icon: <ClipboardList size={22} />, roles: ['admin'], section: 'admin' }, 
-    { name: '건의사항 관리', path: '/admin/suggestions', icon: <Archive size={22} />, roles: ['admin'], section: 'admin' },
-    { name: '공지사항 관리', path: '/admin/announcements', icon: <Megaphone size={22} />, roles: ['admin'], section: 'admin' },
-    { name: '매출보고 관리', path: '/sales-report', icon: <FileText size={22} />, roles: ['admin'], section: 'admin' },
+    { name: '직원 관리', path: '/dashboard/admin/staff', icon: <Users size={22} />, roles: ['admin'], section: 'admin' },
+    { name: '업무 관리', path: '/dashboard/admin/tasks', icon: <ClipboardList size={22} />, roles: ['admin'], section: 'admin' }, 
+    { name: '건의사항 관리', path: '/dashboard/admin/suggestions', icon: <Archive size={22} />, roles: ['admin'], section: 'admin' },
+    { name: '공지사항 관리', path: '/dashboard/admin/announcements', icon: <Megaphone size={22} />, roles: ['admin'], section: 'admin' },
+    { name: '매출보고 관리', path: '/dashboard/sales-report', icon: <FileText size={22} />, roles: ['admin'], section: 'admin' },
   ];
 
   const links: SidebarLink[] = [...menuItems, ...customerMenuItems, ...adminMenuItems];
@@ -94,8 +77,6 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
   const generalMenuLinks = filteredLinks.filter(link => link.section === 'menu');
   const adminMenuLinks = filteredLinks.filter(link => link.section === 'admin' && user?.role === 'admin');
   const customerMenuLinks = filteredLinks.filter(link => link.section === 'customer' && user?.role === 'admin');
-
-  const handleCustomerMenu = () => setCustomerMenuOpen((v) => !v);
 
   return (
     <div
@@ -241,22 +222,22 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
                 </div>
               )}
               {!open && <div className="mt-6 mb-2 border-t border-indigo-800"></div>}
+              
               {customerMenuLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
                   className={clsx(
                     'flex items-center px-4 py-3 rounded-lg transition-colors',
-                    location.pathname.startsWith('/customer')
+                    location.pathname.startsWith('/dashboard/customer')
                       ? 'bg-primary text-white'
                       : 'hover:bg-indigo-900/30 text-indigo-100',
                     !open && 'justify-center px-2'
                   )}
                   onClick={(e) => {
                     if (isMobile) {
-                      e.preventDefault(); // 기본 링크 동작 방지
-                      setOpen(false); // 사이드바 닫기
-                      // 약간의 지연 후 네비게이션 실행
+                      e.preventDefault();
+                      setOpen(false);
                       setTimeout(() => {
                         navigate(link.path);
                       }, 10);
@@ -277,7 +258,6 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
         <button
           onClick={() => {
             logout();
-            navigate('/login');
           }}
           className={clsx(
             'flex items-center text-indigo-100 hover:text-white rounded-lg bg-indigo-800 hover:bg-indigo-700 transition-colors',

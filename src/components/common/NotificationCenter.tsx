@@ -38,22 +38,22 @@ const NotificationItem = ({ notification, onRead, onDelete }: {
   
   return (
     <div className={`
-      p-3 border-b border-slate-200 dark:border-slate-700 
-      ${notification.isRead ? 'bg-white dark:bg-slate-800' : 'bg-blue-50 dark:bg-blue-900/10'}
+      p-3 border-b border-slate-200 
+      ${notification.isRead ? 'bg-white' : 'bg-blue-50'}
     `}>
       <div className="flex items-start">
         <div className="flex-shrink-0 mt-0.5">
           <NotificationIcon type={notification.type} />
         </div>
         <div className="ml-3 flex-1">
-          <div className="text-sm font-medium text-slate-900 dark:text-white">
+          <div className="text-sm font-medium text-slate-900">
             {notification.title}
           </div>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+          <p className="mt-1 text-sm text-slate-600">
             {notification.message}
           </p>
           <div className="mt-1 flex justify-between items-center">
-            <div className="text-xs text-slate-500 dark:text-slate-500" title={fullDate}>
+            <div className="text-xs text-slate-500" title={fullDate}>
               {timeAgo}
             </div>
             <div className="flex space-x-1">
@@ -61,7 +61,7 @@ const NotificationItem = ({ notification, onRead, onDelete }: {
                 <button
                   onClick={() => onRead(notification.id)}
                   title="읽음으로 표시"
-                  className="p-1 text-blue-500 hover:text-blue-700 dark:hover:text-blue-300"
+                  className="p-1 text-blue-500 hover:text-blue-700"
                 >
                   <Check className="w-3.5 h-3.5" />
                 </button>
@@ -70,7 +70,7 @@ const NotificationItem = ({ notification, onRead, onDelete }: {
                 <Link
                   to={notification.link}
                   title="관련 페이지로 이동"
-                  className="p-1 text-blue-500 hover:text-blue-700 dark:hover:text-blue-300"
+                  className="p-1 text-blue-500 hover:text-blue-700"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                 </Link>
@@ -78,7 +78,7 @@ const NotificationItem = ({ notification, onRead, onDelete }: {
               <button
                 onClick={() => onDelete(notification.id)}
                 title="알림 삭제"
-                className="p-1 text-red-500 hover:text-red-700 dark:hover:text-red-300"
+                className="p-1 text-red-500 hover:text-red-700"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -101,6 +101,10 @@ const NotificationCenter = () => {
   const [isOpen, setIsOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
   
+  // notifications가 undefined일 경우 빈 배열로 처리
+  const safeNotifications = notifications || [];
+  const safeUnreadCount = unreadNotificationsCount || 0;
+  
   // 바깥쪽 클릭 시 알림 센터 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -118,11 +122,11 @@ const NotificationCenter = () => {
   // 알림이 비어 있을 때 보여줄 컴포넌트
   const EmptyNotifications = () => (
     <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-      <Bell className="h-12 w-12 text-slate-300 dark:text-slate-600 mb-4" />
-      <h4 className="text-sm font-medium text-slate-900 dark:text-white mb-1">
+      <Bell className="h-12 w-12 text-slate-300 mb-4" />
+      <h4 className="text-sm font-medium text-slate-900 mb-1">
         알림이 없습니다
       </h4>
-      <p className="text-xs text-slate-500 dark:text-slate-400">
+      <p className="text-xs text-slate-500">
         새로운 알림이 도착하면 여기에 표시됩니다
       </p>
     </div>
@@ -132,12 +136,12 @@ const NotificationCenter = () => {
     <div className="relative" ref={notificationRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-1 rounded-full text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300 focus:outline-none"
+        className="relative p-1 rounded-full text-slate-500 hover:text-slate-600 focus:outline-none"
       >
         <Bell className="h-6 w-6" />
-        {unreadNotificationsCount > 0 && (
+        {safeUnreadCount > 0 && (
           <span className="absolute top-0 right-0 inline-flex items-center justify-center h-4 w-4 rounded-full bg-red-500 text-white text-xs">
-            {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+            {safeUnreadCount > 9 ? '9+' : safeUnreadCount}
           </span>
         )}
       </button>
@@ -149,22 +153,22 @@ const NotificationCenter = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-50"
+            className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-slate-200 z-50"
           >
-            <div className="p-3 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-              <h3 className="font-medium text-slate-900 dark:text-white">알림</h3>
+            <div className="p-3 border-b border-slate-200 flex justify-between items-center">
+              <h3 className="font-medium text-slate-900">알림</h3>
               <div className="flex space-x-1">
-                {unreadNotificationsCount > 0 && (
+                {safeUnreadCount > 0 && (
                   <button
-                    onClick={() => markAllNotificationsAsRead()}
-                    className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300 px-2 py-1 rounded"
+                    onClick={() => markAllNotificationsAsRead?.()}
+                    className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded"
                   >
                     모두 읽음
                   </button>
                 )}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300"
+                  className="text-slate-400 hover:text-slate-500"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -172,13 +176,13 @@ const NotificationCenter = () => {
             </div>
             
             <div className="max-h-[50vh] overflow-y-auto">
-              {notifications.length > 0 ? (
-                notifications.map(notification => (
+              {safeNotifications.length > 0 ? (
+                safeNotifications.map(notification => (
                   <NotificationItem
                     key={notification.id}
                     notification={notification}
-                    onRead={markNotificationAsRead}
-                    onDelete={deleteNotification}
+                    onRead={markNotificationAsRead || (() => {})}
+                    onDelete={deleteNotification || (() => {})}
                   />
                 ))
               ) : (

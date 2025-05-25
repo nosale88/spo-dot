@@ -6,9 +6,16 @@ import {
   Edit3,
   Trash2,
   GripVertical,
+  Save,
+  AlertCircle,
+  Check,
+  X,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTask, Task, TaskStatus, TaskPriority } from '../contexts/TaskContext';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../supabaseClient';
+import type { Database } from '../types/database.types';
 import AddTaskModal from '../components/tasks/AddTaskModal';
 import { format, parseISO } from 'date-fns';
 import { parse as dateFnsParse } from 'date-fns/parse'; 
@@ -17,6 +24,11 @@ import { ko, Locale } from 'date-fns/locale';
 import { startOfWeek, getDay } from 'date-fns'; 
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import '../styles/calendar.css'; // Import custom calendar styles
+import { motion, AnimatePresence } from 'framer-motion';
+import clsx from 'clsx';
+
+type Handover = Database['public']['Tables']['handovers']['Row'];
+type HandoverInput = Database['public']['Tables']['handovers']['Insert'];
 
 const locales = {
   'ko': ko,
@@ -66,26 +78,18 @@ type MyTaskView = 'list' | 'month' | 'week' | 'day';
 
 const MyTasks = () => {
   const { tasks: contextTasks, updateTask, deleteTask } = useTask();
+  const { user } = useAuth();
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState<MyTaskView>('list');
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [selectedDateForNewTask, setSelectedDateForNewTask] = useState<string | undefined>(undefined); // For storing date from calendar click
 
   const [currentHandover, setCurrentHandover] = useState('');
-  const [previousHandovers, setPreviousHandovers] = useState([
-    {
-      id: 'ph1',
-      content: '거래처 A사 계약서 검토 완료, 법무팀 전달 필요',
-      date: '2023-06-19',
-      author: '홍길동',
-    },
-    {
-      id: 'ph2',
-      content: '신규 프로젝트 기획안 초안 작성 중, 50% 완료',
-      date: '2023-06-19',
-      author: '홍길동',
-    },
-  ]);
+  const [handovers, setHandovers] = useState<Handover[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const today = new Date();
   const formattedDate = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][today.getDay()]}요일`;
@@ -98,6 +102,84 @@ const MyTasks = () => {
     allDay: true,
     originalTask: task,
   })), [contextTasks]);
+
+  // 인계사항 데이터 가져오기
+  useEffect(() => {
+    fetchHandovers();
+  }, []);
+
+  const fetchHandovers = async () => {
+    try {
+      setLoading(true);
+      
+      // 최근 7일간의 인계사항 가져오기
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const { data, error } = await supabase
+        .from('handovers')
+        .select('*')
+        .gte('date', sevenDaysAgo.toISOString().split('T')[0])
+        .order('date', { ascending: false })
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      setHandovers(data || []);
+    } catch (err) {
+      console.error('인계사항 불러오기 오류:', err);
+      setError('인계사항을 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveHandover = async () => {
+    if (!currentHandover.trim() || !user) return;
+    
+    try {
+      setSaving(true);
+      
+      const handoverData: HandoverInput = {
+        content: currentHandover.trim(),
+        date: new Date().toISOString().split('T')[0],
+        author_id: user.id,
+        author_name: user.name || '알 수 없음'
+      };
+      
+      const { error } = await supabase
+        .from('handovers')
+        .insert([handoverData]);
+      
+      if (error) throw error;
+      
+      // 성공 시 폼 초기화 및 데이터 새로고침
+      setCurrentHandover('');
+      await fetchHandovers();
+      setSuccess('인계사항이 성공적으로 저장되었습니다.');
+      
+      // 성공 메시지 자동 제거
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('인계사항 저장 오류:', err);
+      setError('인계사항 저장에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 오늘 인계사항과 이전 인계사항 분리
+  const todayDate = new Date().toISOString().split('T')[0];
+  const todayHandovers = handovers.filter(h => h.date === todayDate);
+  const previousHandovers = handovers.filter(h => h.date !== todayDate);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ko-KR', {
+      month: 'short',
+      day: 'numeric',
+      weekday: 'short'
+    });
+  };
 
   const handleTaskStatusChange = (taskId: string, newStatus: TaskStatus) => {
     const taskToUpdate = contextTasks.find(t => t.id === taskId);
@@ -330,38 +412,179 @@ const MyTasks = () => {
         )}
       </section>
 
+      {/* 에러 및 성공 메시지 */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center"
+          >
+            <AlertCircle className="text-red-500 mr-3" size={20} />
+            <span className="text-red-700">{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="ml-auto text-red-500 hover:text-red-700"
+            >
+              <X size={16} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center"
+          >
+            <Check className="text-green-500 mr-3" size={20} />
+            <span className="text-green-700">{success}</span>
+            <button
+              onClick={() => setSuccess(null)}
+              className="ml-auto text-green-500 hover:text-green-700"
+            >
+              <X size={16} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <h2 className="text-xl font-semibold text-slate-700 mb-4">금일 인계사항 작성</h2>
+        {/* 금일 인계사항 작성 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white p-6 rounded-xl shadow-lg"
+        >
+          <h2 className="text-xl font-semibold text-slate-700 mb-4 flex items-center">
+            <Edit3 className="mr-2 text-blue-600" size={20} />
+            금일 인계사항 작성
+          </h2>
+          
+          {/* 오늘 작성된 인계사항이 있으면 표시 */}
+          {todayHandovers.length > 0 && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm font-medium text-blue-800 mb-2">오늘 작성된 인계사항:</p>
+              {todayHandovers.map((handover) => (
+                <div key={handover.id} className="mb-2 last:mb-0">
+                  <p className="text-sm text-blue-700">{handover.content}</p>
+                  <p className="text-xs text-blue-500 mt-1">
+                    {handover.author_name} - {new Date(handover.created_at || '').toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+          
           <textarea
             value={currentHandover}
-            onChange={(e) => setCurrentHandover(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value.length <= 500) {
+                setCurrentHandover(e.target.value);
+              }
+            }}
             rows={5}
             placeholder="오늘 처리해야 할 인계사항을 입력하세요..."
-            className="w-full p-3 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+            className={clsx(
+              "w-full p-3 border rounded-lg text-sm resize-none transition-colors",
+              currentHandover.length > 450 
+                ? "border-orange-300 focus:ring-orange-500 focus:border-orange-500" 
+                : "border-slate-300 focus:ring-blue-500 focus:border-blue-500"
+            )}
+            disabled={saving}
           />
-          <div className="mt-4 flex justify-end">
-            <button className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors">
-              저장
+          <div className="mt-4 flex justify-between items-center">
+            <span className={clsx(
+              "text-xs",
+              currentHandover.length > 450 
+                ? "text-orange-600 font-medium" 
+                : currentHandover.length > 400 
+                  ? "text-yellow-600" 
+                  : "text-slate-500"
+            )}>
+              {currentHandover.length}/500자
+              {currentHandover.length > 450 && (
+                <span className="ml-1 text-orange-500">
+                  ({500 - currentHandover.length}자 남음)
+                </span>
+              )}
+            </span>
+            <button
+              onClick={handleSaveHandover}
+              disabled={!currentHandover.trim() || saving || currentHandover.length > 500}
+              className={clsx(
+                'font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 flex items-center space-x-2',
+                !currentHandover.trim() || saving || currentHandover.length > 500
+                  ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                  : 'bg-green-500 hover:bg-green-600 text-white shadow-lg hover:shadow-xl'
+              )}
+            >
+              {saving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>저장중...</span>
+                </>
+              ) : (
+                <>
+                  <Save size={16} />
+                  <span>저장</span>
+                </>
+              )}
             </button>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <h2 className="text-xl font-semibold text-slate-700 mb-4">전일 인계사항</h2>
-          {previousHandovers.length > 0 ? (
-            <ul className="space-y-3">
-              {previousHandovers.map((item) => (
-                <li key={item.id} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <p className="text-sm text-slate-800">{item.content}</p>
-                  <p className="text-xs text-slate-500 mt-1">{item.author ? `${item.author} - ` : ''}{item.date}</p>
-                </li>
-              ))}
-            </ul>
+        {/* 이전 인계사항 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white p-6 rounded-xl shadow-lg"
+        >
+          <h2 className="text-xl font-semibold text-slate-700 mb-4 flex items-center">
+            <CalendarDays className="mr-2 text-purple-600" size={20} />
+            이전 인계사항
+          </h2>
+          
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+            </div>
+          ) : previousHandovers.length > 0 ? (
+            <div className="space-y-3 max-h-80 overflow-y-auto">
+              <AnimatePresence>
+                {previousHandovers.map((handover, index) => (
+                  <motion.div
+                    key={handover.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors"
+                  >
+                    <p className="text-sm text-slate-800 leading-relaxed">{handover.content}</p>
+                    <div className="flex justify-between items-center mt-2">
+                      <p className="text-xs text-slate-500">
+                        {handover.author_name}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        {formatDate(handover.date)}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
           ) : (
-            <p className="text-sm text-slate-500">전일 인계사항이 없습니다.</p>
+            <div className="text-center py-8">
+              <CalendarDays size={48} className="mx-auto text-slate-300 mb-3" />
+              <p className="text-sm text-slate-500">이전 인계사항이 없습니다.</p>
+            </div>
           )}
-        </div>
+        </motion.div>
       </section>
 
       {isAddTaskModalOpen && (

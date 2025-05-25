@@ -20,15 +20,13 @@
   --color-error: 239 68 68;
   
   --bg-light: 248 250 252;
-  --bg-dark: 15 23 42;
-  
   --text-light: 248 250 252;
   --text-dark: 15 23 42;
 }
 
 body {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  @apply bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100;
+  @apply bg-slate-50 text-slate-900;
   min-height: 100vh;
 }
 
@@ -43,11 +41,11 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-400 dark:bg-slate-600 rounded-full;
+  @apply bg-slate-400 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-500 dark:bg-slate-500;
+  @apply bg-slate-500;
 }
 
 /* 애니메이션 클래스 */
@@ -96,15 +94,15 @@ body {
   }
   
   .btn-outline {
-    @apply border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 focus:ring-slate-200 dark:focus:ring-slate-700;
+    @apply border border-slate-300 hover:bg-slate-100 focus:ring-slate-200;
   }
   
   .card {
-    @apply bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden;
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden;
   }
   
   .form-input {
-    @apply w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50;
+    @apply w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50;
   }
   
   .badge {
@@ -112,22 +110,22 @@ body {
   }
   
   .badge-blue {
-    @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200;
+    @apply bg-blue-100 text-blue-800;
   }
   
   .badge-green {
-    @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
+    @apply bg-green-100 text-green-800;
   }
   
   .badge-red {
-    @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
+    @apply bg-red-100 text-red-800;
   }
   
   .badge-yellow {
-    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200;
+    @apply bg-yellow-100 text-yellow-800;
   }
   
   .badge-purple {
-    @apply bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200;
+    @apply bg-purple-100 text-purple-800;
   }
 }

@@ -65,7 +65,7 @@ const MainLayout = () => {
   );
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} isMobile={isMobile} />
 
       {isMobile && sidebarOpen && (

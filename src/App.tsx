@@ -23,8 +23,10 @@ import AdminTaskManagement from "./pages/admin/TaskManagement";
 import AnnouncementsManagement from "./pages/admin/AnnouncementsManagement";
 import AdminSuggestionsManagement from "./pages/admin/SuggestionsManagement";
 import CustomerList from "./pages/customer/CustomerList";
+import Clients from "./pages/Clients";
 import SalesReport from "./pages/SalesReport";
 import SalesReportUser from "./pages/SalesReportUser";
+import SalesEntry from "./pages/SalesEntry";
 import PassManagement from "./pages/PassManagement";
 import OtAssignment from "./pages/OtAssignment";
 import VendingSales from "./pages/VendingSales";
@@ -53,7 +55,7 @@ function App() {
                     
                     {/* 메인 애플리케이션 경로 */}
                     <Route 
-                      path="/dashboard" 
+                      path="/dashboard/*" 
                       element={
                         <ProtectedRoute>
                           <MainLayout />
@@ -102,13 +104,21 @@ function App() {
                         } 
                       />
                       
-                      <Route path="customer/list" element={<CustomerList />} />
+                      {/* 고객 관리 라우트 */}
+                      <Route 
+                        path="customer/list" 
+                        element={
+                          <ProtectedRoute requiredRole="admin">
+                            <Clients />
+                          </ProtectedRoute>
+                        } 
+                      />
                       <Route path="sales-report" element={<SalesReport />} />
                       <Route path="sales-report-user" element={<SalesReportUser />} />
+                      <Route path="sales-entry" element={<SalesEntry />} />
                       <Route path="pass-management" element={<PassManagement />} />
                       <Route path="ot-assignment" element={<OtAssignment />} />
                       <Route path="vending-sales" element={<VendingSales />} />
-                      <Route path="*" element={<NotFound />} />
                     </Route>
                     
                     {/* 알 수 없는 경로 */}
