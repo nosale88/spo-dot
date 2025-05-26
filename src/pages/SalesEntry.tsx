@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, DollarSign, Search, Filter, X, Check, AlertCircle, Calendar, User, CreditCard, Edit3, Trash2, MoreVertical, Shield } from 'lucide-react';
+import { Plus, Search, Filter, X, Check, AlertCircle, Calendar, User, CreditCard, Edit3, Trash2, MoreVertical, Shield } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import type { Database } from '../types/database.types';
@@ -277,7 +277,7 @@ export default function SalesEntry() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-slate-900 flex items-center">
-                <DollarSign className="mr-3 text-green-600" size={32} />
+                <span className="mr-3 text-green-600 text-4xl font-bold">₩</span>
                 매출 등록
                 <span className={clsx(
                   'ml-3 px-3 py-1 rounded-full text-xs font-medium',
@@ -334,7 +334,7 @@ export default function SalesEntry() {
           >
             <div className="flex items-center">
               <div className="p-3 bg-green-100 rounded-lg">
-                <DollarSign className="text-green-600" size={24} />
+                <span className="text-green-600 text-2xl font-bold">₩</span>
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-slate-600">주간 매출</p>
@@ -351,7 +351,7 @@ export default function SalesEntry() {
           >
             <div className="flex items-center">
               <div className="p-3 bg-purple-100 rounded-lg">
-                <DollarSign className="text-purple-600" size={24} />
+                <span className="text-purple-600 text-2xl font-bold">₩</span>
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-slate-600">월간 매출</p>
@@ -569,7 +569,7 @@ export default function SalesEntry() {
               
               {filteredSales.length === 0 && !loading && (
                 <div className="text-center py-20">
-                  <DollarSign size={64} className="mx-auto text-slate-300 mb-4" />
+                  <span className="mx-auto text-slate-300 mb-4 text-6xl font-bold block">₩</span>
                   <h3 className="text-lg font-medium text-slate-900 mb-2">
                     {searchQuery || selectedPassFilter ? '검색 결과가 없습니다' : '등록된 매출이 없습니다'}
                   </h3>

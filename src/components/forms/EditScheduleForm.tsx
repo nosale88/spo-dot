@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Calendar, Clock, User, FileText, Repeat, CheckSquare } from 'lucide-react';
+import { X, Calendar, Clock, User, FileText, Repeat, CheckSquare, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { useSchedule, Schedule, SessionType, RecurrenceType } from '../../contexts/ScheduleContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -13,7 +13,7 @@ interface EditScheduleFormProps {
 
 const EditScheduleForm = ({ schedule, onClose }: EditScheduleFormProps) => {
   const { updateSchedule } = useSchedule();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   
   const [formData, setFormData] = useState({
     clientName: schedule.clientName,
@@ -28,6 +28,18 @@ const EditScheduleForm = ({ schedule, onClose }: EditScheduleFormProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // OT 세션 수정은 관리자만 가능
+    if (formData.type === 'OT' && !isAdmin) {
+      alert('OT 세션은 관리자만 수정할 수 있습니다.');
+      return;
+    }
+    
+    // 기존 OT 세션을 다른 타입으로 변경하는 것도 관리자만 가능
+    if (schedule.type === 'OT' && formData.type !== 'OT' && !isAdmin) {
+      alert('OT 세션의 유형 변경은 관리자만 가능합니다.');
+      return;
+    }
+    
     updateSchedule(schedule.id, {
       clientName: formData.clientName,
       type: formData.type,
@@ -41,6 +53,9 @@ const EditScheduleForm = ({ schedule, onClose }: EditScheduleFormProps) => {
     onClose();
   };
 
+  // OT 세션이고 관리자가 아닌 경우 읽기 전용 모드
+  const isOTReadOnly = schedule.type === 'OT' && !isAdmin;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -49,25 +64,39 @@ const EditScheduleForm = ({ schedule, onClose }: EditScheduleFormProps) => {
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full"
+        className="bg-white rounded-xl shadow-xl max-w-lg w-full"
         onClick={e => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center">
+        <div className="p-6 border-b border-slate-200 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-slate-900 flex items-center">
             <Calendar className="h-5 w-5 mr-2 text-primary" />
             일정 수정
+            {isOTReadOnly && (
+              <span className="ml-2 text-sm text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                읽기 전용
+              </span>
+            )}
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="text-slate-400 hover:text-slate-600"
           >
             <X size={24} />
           </button>
         </div>
 
+        {isOTReadOnly && (
+          <div className="px-6 py-3 bg-amber-50 border-b border-amber-200">
+            <div className="flex items-center text-amber-700">
+              <Shield size={16} className="mr-2" />
+              <span className="text-sm">OT 세션은 관리자만 수정할 수 있습니다.</span>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               고객 이름
             </label>
             <div className="relative">
@@ -77,30 +106,40 @@ const EditScheduleForm = ({ schedule, onClose }: EditScheduleFormProps) => {
                 required
                 value={formData.clientName}
                 onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                className="form-input pl-10"
+                className={clsx("form-input pl-10", isOTReadOnly && "bg-gray-50 cursor-not-allowed")}
                 placeholder="고객 이름을 입력하세요"
+                disabled={isOTReadOnly}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               세션 유형
             </label>
             <select
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value as SessionType })}
-              className="form-input"
+              className={clsx("form-input", isOTReadOnly && "bg-gray-50 cursor-not-allowed")}
+              disabled={isOTReadOnly}
             >
               <option value="PT">PT 세션</option>
-              <option value="OT">OT 세션</option>
+              <option value="OT" disabled={!isAdmin && schedule.type !== 'OT'}>
+                OT 세션 {!isAdmin && schedule.type !== 'OT' && '(관리자 전용)'}
+              </option>
               <option value="GROUP">그룹 수업</option>
               <option value="CONSULT">상담</option>
             </select>
+            {!isAdmin && !isOTReadOnly && (
+              <div className="mt-1 flex items-center text-amber-600 text-xs">
+                <Shield size={12} className="mr-1" />
+                OT 세션으로 변경은 관리자만 가능합니다.
+              </div>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               날짜
             </label>
             <div className="relative">
@@ -110,14 +149,15 @@ const EditScheduleForm = ({ schedule, onClose }: EditScheduleFormProps) => {
                 required
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="form-input pl-10"
+                className={clsx("form-input pl-10", isOTReadOnly && "bg-gray-50 cursor-not-allowed")}
+                disabled={isOTReadOnly}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 시작 시간
               </label>
               <div className="relative">
@@ -127,13 +167,14 @@ const EditScheduleForm = ({ schedule, onClose }: EditScheduleFormProps) => {
                   required
                   value={formData.startTime}
                   onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                  className="form-input pl-10"
+                  className={clsx("form-input pl-10", isOTReadOnly && "bg-gray-50 cursor-not-allowed")}
+                  disabled={isOTReadOnly}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 종료 시간
               </label>
               <div className="relative">
@@ -143,14 +184,15 @@ const EditScheduleForm = ({ schedule, onClose }: EditScheduleFormProps) => {
                   required
                   value={formData.endTime}
                   onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                  className="form-input pl-10"
+                  className={clsx("form-input pl-10", isOTReadOnly && "bg-gray-50 cursor-not-allowed")}
+                  disabled={isOTReadOnly}
                 />
               </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               메모
             </label>
             <div className="relative">
@@ -158,8 +200,9 @@ const EditScheduleForm = ({ schedule, onClose }: EditScheduleFormProps) => {
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="form-input pl-10 h-24"
+                className={clsx("form-input pl-10 h-24", isOTReadOnly && "bg-gray-50 cursor-not-allowed")}
                 placeholder="세션에 대한 메모를 입력하세요"
+                disabled={isOTReadOnly}
               />
             </div>
           </div>
@@ -170,9 +213,10 @@ const EditScheduleForm = ({ schedule, onClose }: EditScheduleFormProps) => {
               id="isCompleted"
               checked={formData.isCompleted}
               onChange={(e) => setFormData({ ...formData, isCompleted: e.target.checked })}
-              className="form-checkbox h-4 w-4 text-primary"
+              className={clsx("form-checkbox h-4 w-4 text-primary", isOTReadOnly && "cursor-not-allowed")}
+              disabled={isOTReadOnly}
             />
-            <label htmlFor="isCompleted" className="ml-2 text-sm text-slate-700 dark:text-slate-300">
+            <label htmlFor="isCompleted" className={clsx("ml-2 text-sm text-slate-700", isOTReadOnly && "text-gray-500")}>
               완료됨으로 표시
             </label>
           </div>
@@ -181,16 +225,19 @@ const EditScheduleForm = ({ schedule, onClose }: EditScheduleFormProps) => {
             <button
               type="button"
               onClick={onClose}
-              className="btn btn-outline"
+              className="px-4 py-2 text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
             >
-              취소
+              {isOTReadOnly ? '닫기' : '취소'}
             </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-            >
-              저장
-            </button>
+            {!isOTReadOnly && (
+              <button
+                type="submit"
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center"
+              >
+                <CheckSquare size={16} className="mr-2" />
+                저장
+              </button>
+            )}
           </div>
         </form>
       </div>

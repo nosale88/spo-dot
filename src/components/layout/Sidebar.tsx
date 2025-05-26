@@ -18,7 +18,7 @@ import {
   Phone,
   CalendarDays,
   UserCheck,
-  DollarSign,
+
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
@@ -48,7 +48,7 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
     { name: '내 업무', path: '/dashboard/my-tasks', icon: <ListChecks size={22} />, section: 'menu' },
     { name: '전체 업무 보기', path: '/dashboard/all-tasks', icon: <List size={22} />, section: 'menu' },
     { name: '일일 업무 보고', path: '/dashboard/daily-report', icon: <FileText size={22} />, section: 'menu' },
-    { name: '매출 등록', path: '/dashboard/sales-entry', icon: <DollarSign size={22} />, section: 'menu' },
+    { name: '매출 등록', path: '/dashboard/sales-entry', icon: <span className="text-xl font-bold">₩</span>, section: 'menu' },
     { name: '매출 보고 작성', path: '/dashboard/sales-report-user', icon: <FileText size={22} />, section: 'menu' },
     { name: '건의사항', path: '/dashboard/suggestions', icon: <MessageSquare size={22} />, section: 'menu' },
     { name: '이용권 관리', path: '/dashboard/pass-management', icon: <Briefcase size={22} />, section: 'menu' },

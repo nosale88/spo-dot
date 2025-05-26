@@ -1,12 +1,14 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { useCustomer } from '../../contexts/CustomerContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useOT } from '../../contexts/OTContext';
 import { format } from 'date-fns';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { Plus, Search, Filter, FileText, Download } from 'lucide-react';
+import { Plus, Search, Filter, FileText, Download, Shield, UserPlus } from 'lucide-react';
 import type { Customer, ConsultingRecord } from '../../types/customer';
 
 // 고객관리 탭 정의
-const customerTabs = [
+const getCustomerTabs = (isAdmin: boolean) => [
   { label: '전화문의', path: 'phone-inquiry' },
   { label: '회원권(PT포함)상담예약', path: 'membership-reservation' },
   { label: '상담예약', path: 'consulting-reservation' },
@@ -14,7 +16,7 @@ const customerTabs = [
   { label: 'FC LOG', path: 'fc-log' },
   { label: '미등록자DB', path: 'unregistered' },
   { label: '전체DB', path: '' },  // 루트 경로는 빈 문자열
-  { label: 'OT리스트', path: 'ot-list' },
+  ...(isAdmin ? [{ label: 'OT리스트', path: 'ot-list' }] : []),
   { label: '연락망/스케줄', path: 'contact-schedule' },
   { label: '투어만', path: 'tour-only' },
   { label: '질문', path: 'question' },
@@ -34,6 +36,7 @@ interface NewCustomerModalProps {
 }
 
 const NewCustomerModal: React.FC<NewCustomerModalProps> = ({ isOpen, onClose, onSave }) => {
+  const { isAdmin } = useAuth();
   const [newCustomer, setNewCustomer] = useState({
     name: '',
     phone: '',
@@ -301,7 +304,7 @@ const NewCustomerModal: React.FC<NewCustomerModalProps> = ({ isOpen, onClose, on
               
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  OT 횟수
+                  OT 횟수 {!isAdmin && <span className="text-amber-600 text-xs">(관리자 전용)</span>}
                 </label>
                 <input
                   type="number"
@@ -309,8 +312,15 @@ const NewCustomerModal: React.FC<NewCustomerModalProps> = ({ isOpen, onClose, on
                   value={newCustomer.otCount}
                   onChange={handleChange}
                   min="0"
-                  className="mt-1 form-input w-full"
+                  className={`mt-1 form-input w-full ${!isAdmin ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                  disabled={!isAdmin}
                 />
+                {!isAdmin && (
+                  <div className="mt-1 flex items-center text-amber-600 text-xs">
+                    <Shield size={12} className="mr-1" />
+                    OT 횟수는 관리자만 설정할 수 있습니다.
+                  </div>
+                )}
               </div>
               
               <div>
@@ -386,6 +396,7 @@ interface CustomerDetailModalProps {
 }
 
 const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, isOpen, onClose }) => {
+  const { isAdmin } = useAuth();
   const { addConsultingHistory, updateCustomer } = useCustomer();
   const [newRecord, setNewRecord] = useState<ConsultingRecord>({ 
     date: new Date().toISOString().split('T')[0], 
@@ -766,15 +777,24 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, isO
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">OT 횟수</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      OT 횟수 {!isAdmin && <span className="text-amber-600 text-xs">(관리자 전용)</span>}
+                    </label>
                     <input
                       type="number"
                       name="otCount"
                       value={editData.otCount}
                       onChange={handleChange}
                       min="0"
-                      className="form-input w-full"
+                      className={`form-input w-full ${!isAdmin ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                      disabled={!isAdmin}
                     />
+                    {!isAdmin && (
+                      <div className="mt-1 flex items-center text-amber-600 text-xs">
+                        <Shield size={12} className="mr-1" />
+                        OT 횟수는 관리자만 수정할 수 있습니다.
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">레슨 횟수</label>
@@ -991,6 +1011,8 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({ customer, isO
 };
 
 const CustomerList: React.FC = () => {
+  const { isAdmin } = useAuth();
+  const { otMembers, addOTMember } = useOT();
   const { filtered, searchCustomers, addCustomer, customers } = useCustomer();
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
@@ -1040,6 +1062,8 @@ const CustomerList: React.FC = () => {
           result = result.filter(c => c.status === 'withdrawn' || !c.membershipStart);
           break;
         case 'ot-list':
+          // OTContext의 데이터를 사용하여 OT 회원 목록 표시
+          const otMemberIds = otMembers.map(m => m.id);
           result = result.filter(c => c.otCount && c.otCount > 0);
           break;
         case 'contact-schedule':
@@ -1150,6 +1174,20 @@ const CustomerList: React.FC = () => {
 
   const handleSaveNewCustomer = (customerData: Omit<Customer, 'id' | 'registeredAt'>) => {
     addCustomer(customerData);
+    
+    // OT 횟수가 있는 경우 OTContext에도 추가
+    if (customerData.otCount && customerData.otCount > 0) {
+      addOTMember({
+        name: customerData.name,
+        phone: customerData.phone,
+        email: customerData.email || '',
+        otCount: customerData.otCount,
+        totalSessions: customerData.otCount,
+        status: 'pending',
+        notes: customerData.notes || ''
+      });
+    }
+    
     setIsNewModalOpen(false);
   };
 
@@ -1201,6 +1239,7 @@ const CustomerList: React.FC = () => {
   };
 
   // 현재 탭 정보 가져오기
+  const customerTabs = getCustomerTabs(isAdmin);
   const currentTab = tab 
     ? customerTabs.find(t => t.path === tab) 
     : customerTabs.find(t => t.path === '');
@@ -1319,13 +1358,26 @@ const CustomerList: React.FC = () => {
               <Download size={18} />
               <span>내보내기</span>
             </button>
-            <button 
-              onClick={() => setIsNewModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-            >
-              <Plus size={18} />
-              <span>신규 등록</span>
-            </button>
+            {tab === 'ot-list' && isAdmin ? (
+              <button 
+                onClick={() => {
+                  // OT 배정 페이지로 이동하면서 OT 회원 추가 모달 열기
+                  navigate('/dashboard/ot-assignment');
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <UserPlus size={18} />
+                <span>OT 회원 추가</span>
+              </button>
+            ) : (
+              <button 
+                onClick={() => setIsNewModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+              >
+                <Plus size={18} />
+                <span>신규 등록</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1470,44 +1522,90 @@ const CustomerList: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredCustomers.length === 0 ? (
-                <tr><td colSpan={7} className="text-center p-8 text-gray-400">고객이 없습니다.</td></tr>
+              {tab === 'ot-list' ? (
+                // OT 리스트 탭에서는 OTContext의 데이터 표시
+                otMembers.length === 0 ? (
+                  <tr><td colSpan={7} className="text-center p-8 text-gray-400">OT 회원이 없습니다.</td></tr>
+                ) : (
+                  otMembers.map(otMember => (
+                    <tr key={`ot-${otMember.id}`} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 font-medium">{otMember.name}</td>
+                      <td className="px-6 py-4">{otMember.phone}</td>
+                      <td className="px-6 py-4">
+                        <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+                          OT ({otMember.otCount}회)
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          otMember.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          otMember.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
+                          otMember.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {otMember.status === 'pending' ? '대기중' :
+                           otMember.status === 'assigned' ? '배정됨' :
+                           otMember.status === 'completed' ? '완료' : '알 수 없음'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {otMember.assignedStaffId ? 
+                          `담당자 ${otMember.assignedStaffId}` : '-'}
+                      </td>
+                      <td className="px-6 py-4">{format(new Date(otMember.registeredAt), 'yyyy-MM-dd')}</td>
+                      <td className="px-6 py-4 text-center">
+                        <button 
+                          onClick={() => navigate('/dashboard/ot-assignment')}
+                          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                          <FileText size={16} />
+                          <span>관리</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )
               ) : (
-                filteredCustomers.map(customer => (
-                  <tr key={customer.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 font-medium">{customer.name}</td>
-                    <td className="px-6 py-4">{customer.phone}</td>
-                    <td className="px-6 py-4">
-                      {customer.membershipType === 'fitness' ? '헬스' : 
-                       customer.membershipType === 'golf' ? '골프' : 
-                       customer.membershipType === 'tennis' ? '테니스' : 
-                       customer.membershipType === 'combo' ? '복합' : '기타'}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        customer.status === 'active' ? 'bg-green-100 text-green-800' :
-                        customer.status === 'expired' ? 'bg-red-100 text-red-800' :
-                        customer.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {customer.status === 'active' ? '활성' :
-                         customer.status === 'expired' ? '만료' :
-                         customer.status === 'paused' ? '휴면' : '탈퇴'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">{customer.consultant || '-'}</td>
-                    <td className="px-6 py-4">{format(new Date(customer.registeredAt), 'yyyy-MM-dd')}</td>
-                    <td className="px-6 py-4 text-center">
-                      <button 
-                        onClick={() => handleOpenDetail(customer)}
-                        className="inline-flex items-center gap-1 text-primary hover:text-primary-dark transition-colors"
-                      >
-                        <FileText size={16} />
-                        <span>상세</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                // 일반 고객 목록
+                filteredCustomers.length === 0 ? (
+                  <tr><td colSpan={7} className="text-center p-8 text-gray-400">고객이 없습니다.</td></tr>
+                ) : (
+                  filteredCustomers.map(customer => (
+                    <tr key={customer.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 font-medium">{customer.name}</td>
+                      <td className="px-6 py-4">{customer.phone}</td>
+                      <td className="px-6 py-4">
+                        {customer.membershipType === 'fitness' ? '헬스' : 
+                         customer.membershipType === 'golf' ? '골프' : 
+                         customer.membershipType === 'tennis' ? '테니스' : 
+                         customer.membershipType === 'combo' ? '복합' : '기타'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          customer.status === 'active' ? 'bg-green-100 text-green-800' :
+                          customer.status === 'expired' ? 'bg-red-100 text-red-800' :
+                          customer.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {customer.status === 'active' ? '활성' :
+                           customer.status === 'expired' ? '만료' :
+                           customer.status === 'paused' ? '휴면' : '탈퇴'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">{customer.consultant || '-'}</td>
+                      <td className="px-6 py-4">{format(new Date(customer.registeredAt), 'yyyy-MM-dd')}</td>
+                      <td className="px-6 py-4 text-center">
+                        <button 
+                          onClick={() => handleOpenDetail(customer)}
+                          className="inline-flex items-center gap-1 text-primary hover:text-primary-dark transition-colors"
+                        >
+                          <FileText size={16} />
+                          <span>상세</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )
               )}
             </tbody>
           </table>

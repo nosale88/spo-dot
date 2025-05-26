@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Calendar, Clock, User, FileText, Repeat, CheckSquare } from 'lucide-react';
+import { X, Calendar, Clock, User, FileText, Repeat, CheckSquare, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { useSchedule, SessionType, RecurrenceType } from '../../contexts/ScheduleContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,7 +12,7 @@ interface AddScheduleFormProps {
 
 const AddScheduleForm = ({ onClose, initialDate }: AddScheduleFormProps) => {
   const { addSchedule } = useSchedule();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   
   const [formData, setFormData] = useState({
     clientName: '',
@@ -27,6 +27,12 @@ const AddScheduleForm = ({ onClose, initialDate }: AddScheduleFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // OT 세션은 관리자만 생성 가능
+    if (formData.type === 'OT' && !isAdmin) {
+      alert('OT 세션은 관리자만 생성할 수 있습니다.');
+      return;
+    }
     
     addSchedule({
       clientName: formData.clientName,
@@ -52,17 +58,17 @@ const AddScheduleForm = ({ onClose, initialDate }: AddScheduleFormProps) => {
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full"
+        className="bg-white rounded-xl shadow-xl max-w-lg w-full"
         onClick={e => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center">
+        <div className="p-6 border-b border-slate-200 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-slate-900 flex items-center">
             <Calendar className="h-5 w-5 mr-2 text-primary" />
             일정 추가
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="text-slate-400 hover:text-slate-600"
           >
             <X size={24} />
           </button>
@@ -70,7 +76,7 @@ const AddScheduleForm = ({ onClose, initialDate }: AddScheduleFormProps) => {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               고객 이름
             </label>
             <div className="relative">
@@ -87,7 +93,7 @@ const AddScheduleForm = ({ onClose, initialDate }: AddScheduleFormProps) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               세션 유형
             </label>
             <select
@@ -96,14 +102,22 @@ const AddScheduleForm = ({ onClose, initialDate }: AddScheduleFormProps) => {
               className="form-input"
             >
               <option value="PT">PT 세션</option>
-              <option value="OT">OT 세션</option>
+              <option value="OT" disabled={!isAdmin}>
+                OT 세션 {!isAdmin && '(관리자 전용)'}
+              </option>
               <option value="GROUP">그룹 수업</option>
               <option value="CONSULT">상담</option>
             </select>
+            {!isAdmin && (
+              <div className="mt-1 flex items-center text-amber-600 text-xs">
+                <Shield size={12} className="mr-1" />
+                OT 세션은 관리자만 생성할 수 있습니다.
+              </div>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               날짜
             </label>
             <div className="relative">
@@ -120,7 +134,7 @@ const AddScheduleForm = ({ onClose, initialDate }: AddScheduleFormProps) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 시작 시간
               </label>
               <div className="relative">
@@ -136,7 +150,7 @@ const AddScheduleForm = ({ onClose, initialDate }: AddScheduleFormProps) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 종료 시간
               </label>
               <div className="relative">
@@ -153,7 +167,7 @@ const AddScheduleForm = ({ onClose, initialDate }: AddScheduleFormProps) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               반복
             </label>
             <div className="relative">
@@ -173,7 +187,7 @@ const AddScheduleForm = ({ onClose, initialDate }: AddScheduleFormProps) => {
           
           {formData.recurrence !== 'none' && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 반복 종료 날짜
               </label>
               <div className="relative">
@@ -190,7 +204,7 @@ const AddScheduleForm = ({ onClose, initialDate }: AddScheduleFormProps) => {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               메모
             </label>
             <div className="relative">
@@ -198,8 +212,9 @@ const AddScheduleForm = ({ onClose, initialDate }: AddScheduleFormProps) => {
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="form-input pl-10 h-24"
-                placeholder="세션에 대한 메모를 입력하세요"
+                className="form-input pl-10 pt-10"
+                rows={3}
+                placeholder="추가 메모를 입력하세요"
               />
             </div>
           </div>
@@ -208,14 +223,15 @@ const AddScheduleForm = ({ onClose, initialDate }: AddScheduleFormProps) => {
             <button
               type="button"
               onClick={onClose}
-              className="btn btn-outline"
+              className="px-4 py-2 text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
             >
               취소
             </button>
             <button
               type="submit"
-              className="btn btn-primary"
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center"
             >
+              <CheckSquare size={16} className="mr-2" />
               일정 추가
             </button>
           </div>

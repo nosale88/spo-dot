@@ -6,6 +6,7 @@ import { AnnouncementProvider } from "./contexts/AnnouncementContext";
 import { TaskProvider } from "./contexts/TaskContext";
 import { SuggestionProvider } from "./contexts/SuggestionContext";
 import { CustomerProvider } from "./contexts/CustomerContext";
+import { OTProvider } from "./contexts/OTContext";
 import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
 import Login from "./pages/auth/Login";
@@ -42,7 +43,8 @@ function App() {
             <TaskProvider>
               <SuggestionProvider>
                 <CustomerProvider>
-                  <Routes>
+                  <OTProvider>
+                    <Routes>
                     {/* 루트 페이지 리디렉션 */}
                     <Route path="/" element={<Navigate to="/auth/login" replace />} />
                     
@@ -124,6 +126,7 @@ function App() {
                     {/* 알 수 없는 경로 */}
                     <Route path="*" element={<Navigate to="/auth/login" replace />} />
                   </Routes>
+                  </OTProvider>
                 </CustomerProvider>
               </SuggestionProvider>
             </TaskProvider>

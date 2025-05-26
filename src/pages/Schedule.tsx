@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, Calendar, Clock, User, CheckSquare, MoreHorizontal, X, Edit, Trash, Dumbbell, Users as GroupIcon, UserCheck, MessageCircle } from 'lucide-react';
+import { Plus, Search, Filter, Calendar, Clock, User, CheckSquare, MoreHorizontal, X, Edit, Trash, Dumbbell, Users as GroupIcon, UserCheck, MessageCircle, Shield } from 'lucide-react';
 import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addMonths, subMonths, addWeeks, subWeeks, parseISO, isSameDay, isSameMonth, getDate, getDaysInMonth, getDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import AddScheduleForm from '../components/forms/AddScheduleForm';
@@ -24,7 +24,7 @@ function useEscClose(closeFn: () => void, enabled: boolean) {
 }
 
 const Schedule = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { schedules, filteredSchedules, filterSchedules, markScheduleComplete, deleteSchedule } = useSchedule();
   
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -161,6 +161,14 @@ const Schedule = () => {
   
   // 일정 삭제
   const handleDeleteSchedule = (id: string) => {
+    const scheduleToDelete = schedules.find(s => s.id === id);
+    
+    // OT 세션 삭제는 관리자만 가능
+    if (scheduleToDelete?.type === 'OT' && !isAdmin) {
+      alert('OT 세션은 관리자만 삭제할 수 있습니다.');
+      return;
+    }
+    
     if (window.confirm('이 일정을 삭제하시겠습니까?')) {
       deleteSchedule(id);
       if (selectedSchedule?.id === id) {
@@ -631,24 +639,28 @@ const Schedule = () => {
                 일정 상세 정보
               </h2>
               <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => {
-                    setShowEditForm(true);
-                    setShowDetails(false);
-                  }}
-                  className="text-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
-                >
-                  <Edit size={20} />
-                </button>
-                <button
-                  onClick={() => handleDeleteSchedule(selectedSchedule.id)}
-                  className="text-red-500 hover:text-red-600 dark:hover:text-red-400"
-                >
-                  <Trash size={20} />
-                </button>
+                {(selectedSchedule.type !== 'OT' || isAdmin) && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowEditForm(true);
+                        setShowDetails(false);
+                      }}
+                      className="text-blue-500 hover:text-blue-600"
+                    >
+                      <Edit size={20} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSchedule(selectedSchedule.id)}
+                      className="text-red-500 hover:text-red-600"
+                    >
+                      <Trash size={20} />
+                    </button>
+                  </>
+                )}
                 <button
                   onClick={() => setShowDetails(false)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  className="text-slate-400 hover:text-slate-600"
                 >
                   <X size={24} />
                 </button>
@@ -664,7 +676,7 @@ const Schedule = () => {
                   )}>
                     {getSessionTypeText(selectedSchedule.type)}
                   </span>
-                  <h3 className="mt-2 text-xl font-bold text-slate-900 dark:text-white">{selectedSchedule.clientName}</h3>
+                  <h3 className="mt-2 text-xl font-bold text-slate-900">{selectedSchedule.clientName}</h3>
                 </div>
                 
                 <button 
@@ -672,13 +684,22 @@ const Schedule = () => {
                   className={clsx(
                     "p-2 rounded",
                     selectedSchedule.isCompleted 
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                      ? "bg-green-100 text-green-700" 
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                   )}
                 >
                   {selectedSchedule.isCompleted ? '완료됨' : '완료로 표시'}
                 </button>
               </div>
+              
+              {selectedSchedule.type === 'OT' && !isAdmin && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4">
+                  <div className="flex items-center text-amber-700">
+                    <Shield size={16} className="mr-2" />
+                    <span className="text-sm">OT 세션은 관리자만 수정 및 삭제할 수 있습니다.</span>
+                  </div>
+                </div>
+              )}
               
               <div className="flex items-center space-x-4 mt-4">
                 <div className="flex items-center text-slate-700 dark:text-slate-300">
