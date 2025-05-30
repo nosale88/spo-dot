@@ -134,13 +134,13 @@ const Schedule = () => {
   const getSessionTypeColor = (type: SessionType) => {
     switch (type) {
       case 'PT':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+        return 'bg-blue-600 text-white shadow-sm';
       case 'OT':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+        return 'bg-green-600 text-white shadow-sm';
       case 'GROUP':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
+        return 'bg-purple-600 text-white shadow-sm';
       case 'CONSULT':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300';
+        return 'bg-orange-600 text-white shadow-sm';
     }
   };
   
@@ -199,653 +199,227 @@ const Schedule = () => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="space-y-6"
+      className="min-h-screen bg-slate-50 p-6"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">일정 관리</h1>
-        
-        <div className="flex items-center space-x-2">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={18} className="text-slate-400" />
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* 헤더 섹션 */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 flex items-center">
+                <Calendar className="mr-3 text-blue-600" size={32} />
+                일정 관리
+              </h1>
+              <p className="text-slate-600 mt-2">트레이너 스케줄과 회원 예약을 관리하세요</p>
             </div>
-            <input
-              type="text"
-              placeholder="고객 또는 트레이너 검색"
-              className="form-input pl-10 py-2 text-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          
-          <select
-            className="form-input py-2 text-sm"
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value as SessionType | 'all')}
-          >
-            <option value="all">모든 유형</option>
-            <option value="PT">PT 세션</option>
-            <option value="OT">OT 세션</option>
-            <option value="GROUP">그룹 수업</option>
-            <option value="CONSULT">상담</option>
-          </select>
-          
-          <button 
-            onClick={() => setShowAddForm(true)}
-            className="btn btn-primary inline-flex items-center px-4 py-2 rounded-full transition-transform hover:scale-105 shadow-md hover:shadow-lg"
-          >
-            <Plus size={18} className="mr-1.5" />
-            일정 추가
-          </button>
-        </div>
-      </div>
-
-      {/* 일정 보기 컨트롤 */}
-      <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm">
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setCurrentView('day')}
-            className={clsx(
-              'px-3 py-1.5 rounded text-sm font-medium',
-              currentView === 'day' 
-                ? 'bg-primary text-white' 
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600'
-            )}
-          >
-            일간
-          </button>
-          <button
-            onClick={() => setCurrentView('week')}
-            className={clsx(
-              'px-3 py-1.5 rounded text-sm font-medium',
-              currentView === 'week' 
-                ? 'bg-primary text-white' 
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600'
-            )}
-          >
-            주간
-          </button>
-          <button
-            onClick={() => setCurrentView('month')}
-            className={clsx(
-              'px-3 py-1.5 rounded text-sm font-medium',
-              currentView === 'month' 
-                ? 'bg-primary text-white' 
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600'
-            )}
-          >
-            월간
-          </button>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <button 
-            onClick={handlePrevious}
-            className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m15 18-6-6 6-6" />
-            </svg>
-          </button>
-          
-          <button
-            onClick={handleToday}
-            className="px-3 py-1 rounded text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-          >
-            오늘
-          </button>
-          
-          <button 
-            onClick={handleNext}
-            className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m9 18 6-6-6-6" />
-            </svg>
-          </button>
-          
-          <h3 className="text-lg font-medium text-slate-900 dark:text-white">
-            {currentView === 'day' 
-              ? format(currentDate, 'yyyy년 M월 d일 (EEEE)', { locale: ko }) 
-              : currentView === 'week'
-                ? `${format(startOfWeek(currentDate, { locale: ko }), 'yyyy년 M월 d일')} ~ ${format(addDays(startOfWeek(currentDate, { locale: ko }), 6), 'M월 d일')}`
-                : format(currentDate, 'yyyy년 M월', { locale: ko })
-            }
-          </h3>
-        </div>
-        
-        <div className="w-20"> {/* 우측 여백용 */}
-        </div>
-      </div>
-      
-      {/* 일정 내용 - 일간 보기 */}
-      {currentView === 'day' && (
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm overflow-hidden">
-          <div className="p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-              {format(currentDate, 'M월 d일 (EEEE)', { locale: ko })}의 일정
-            </h3>
             
-            <div className="space-y-3">
-              {filteredSchedules.filter(schedule => 
-                isSameDay(parseISO(schedule.date), currentDate)
-              ).sort((a, b) => a.startTime.localeCompare(b.startTime)).map(schedule => (
-                <div 
-                  key={schedule.id}
-                  className={clsx(
-                    "p-4 rounded-lg border transition-colors cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50",
-                    schedule.isCompleted 
-                      ? "border-green-200 bg-green-50 dark:bg-green-900/10 dark:border-green-900/30" 
-                      : "border-slate-200 dark:border-slate-700"
-                  )}
-                  onClick={() => {
-                    setSelectedSchedule(schedule);
-                    setShowDetails(true);
-                  }}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3">
-                      <div className="mt-0.5">
-                        <span className={clsx(
-                          "px-2 py-1 rounded-full text-xs font-medium",
-                          getSessionTypeColor(schedule.type)
-                        )}>
-                          {getSessionTypeText(schedule.type)}
-                        </span>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-medium text-slate-900 dark:text-white">{schedule.clientName}</h4>
-                        <div className="flex items-center space-x-3 mt-1 text-sm">
-                          <span className="flex items-center text-slate-600 dark:text-slate-400">
-                            <Clock size={14} className="mr-1.5" />
-                            {schedule.startTime} - {schedule.endTime}
-                          </span>
-                          <span className="flex items-center text-slate-600 dark:text-slate-400">
-                            <User size={14} className="mr-1.5" />
-                            {schedule.trainerName}
-                          </span>
-                        </div>
-                        
-                        {schedule.notes && (
-                          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{schedule.notes}</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCompleteToggle(schedule.id, schedule.isCompleted);
-                        }}
-                        className={clsx(
-                          "p-1.5 rounded-full",
-                          schedule.isCompleted 
-                            ? "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400" 
-                            : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                        )}
-                      >
-                        <CheckSquare size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            {/* 검색 및 필터 */}
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="relative">
+                <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="고객 또는 트레이너 검색"
+                  className="pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
               
-              {filteredSchedules.filter(schedule => 
-                isSameDay(parseISO(schedule.date), currentDate)
-              ).length === 0 && (
-                <div className="py-8 text-center">
-                  <p className="text-slate-500 dark:text-slate-400">이 날짜에 예정된 일정이 없습니다.</p>
-                  <button 
-                    onClick={() => setShowAddForm(true)}
-                    className="mt-4 inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary hover:text-primary-dark"
-                  >
-                    <Plus size={16} className="mr-1.5" />
-                    일정 추가하기
-                  </button>
-                </div>
-              )}
+              <select
+                className="px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value as SessionType | 'all')}
+              >
+                <option value="all">모든 유형</option>
+                <option value="PT">PT 세션</option>
+                <option value="OT">OT 세션</option>
+                <option value="GROUP">그룹 수업</option>
+                <option value="CONSULT">상담</option>
+              </select>
+              
+              <button 
+                onClick={() => setShowAddForm(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg flex items-center space-x-2 transition-all hover:scale-105 shadow-md hover:shadow-lg"
+              >
+                <Plus size={20} />
+                <span>일정 추가</span>
+              </button>
             </div>
           </div>
         </div>
-      )}
-      
-      {/* 일정 내용 - 주간 보기 */}
-      {currentView === 'week' && (
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm overflow-hidden">
-          <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-700">
-            {getWeekSchedules().map((day, index) => (
-              <div 
-                key={index} 
+
+        {/* 일정 보기 컨트롤 */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* 뷰 모드 선택 */}
+            <div className="flex space-x-2 bg-slate-100 p-1 rounded-lg">
+              <button
+                onClick={() => setCurrentView('day')}
                 className={clsx(
-                  "py-2 text-center font-medium border-r last:border-r-0 border-slate-200 dark:border-slate-700",
-                  isSameDay(day.date, new Date()) && "bg-primary-50 dark:bg-primary-900/10"
+                  'px-4 py-2 rounded-md text-sm font-medium transition-all',
+                  currentView === 'day' 
+                    ? 'bg-blue-600 text-white shadow-sm' 
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-white'
                 )}
               >
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {format(day.date, 'EEEE', { locale: ko })}
-                </p>
-                <p className={clsx(
-                  "text-lg font-semibold",
-                  isSameDay(day.date, new Date()) 
-                    ? "text-primary" 
-                    : "text-slate-900 dark:text-white"
-                )}>
-                  {format(day.date, 'd')}
-                </p>
+                일간
+              </button>
+              <button
+                onClick={() => setCurrentView('week')}
+                className={clsx(
+                  'px-4 py-2 rounded-md text-sm font-medium transition-all',
+                  currentView === 'week' 
+                    ? 'bg-blue-600 text-white shadow-sm' 
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-white'
+                )}
+              >
+                주간
+              </button>
+              <button
+                onClick={() => setCurrentView('month')}
+                className={clsx(
+                  'px-4 py-2 rounded-md text-sm font-medium transition-all',
+                  currentView === 'month' 
+                    ? 'bg-blue-600 text-white shadow-sm' 
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-white'
+                )}
+              >
+                월간
+              </button>
+            </div>
+            
+            {/* 날짜 네비게이션 */}
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={handlePrevious}
+                  className="p-2 rounded-lg border border-slate-300 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
+                </button>
+                
+                <button
+                  onClick={handleToday}
+                  className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:text-slate-900 hover:bg-slate-50 font-medium text-sm transition-colors"
+                >
+                  오늘
+                </button>
+                
+                <button 
+                  onClick={handleNext}
+                  className="p-2 rounded-lg border border-slate-300 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </button>
               </div>
-            ))}
+              
+              {/* 현재 날짜 표시 */}
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {currentView === 'day' 
+                    ? format(currentDate, 'yyyy년 M월 d일 (EEEE)', { locale: ko }) 
+                    : currentView === 'week'
+                      ? `${format(startOfWeek(currentDate, { locale: ko }), 'yyyy년 M월 d일')} ~ ${format(addDays(startOfWeek(currentDate, { locale: ko }), 6), 'M월 d일')}`
+                      : format(currentDate, 'yyyy년 M월', { locale: ko })
+                  }
+                </h3>
+              </div>
+            </div>
           </div>
-          
-          <div className="grid grid-cols-7 h-[calc(100vh-350px)] min-h-[500px]">
-            {getWeekSchedules().map((day, index) => (
-              <div 
-                key={index} 
-                className={clsx(
-                  "border-r last:border-r-0 border-slate-200 dark:border-slate-700 p-2 overflow-y-auto",
-                  isSameDay(day.date, new Date()) && "bg-primary-50 dark:bg-primary-900/10"
-                )}
-              >
-                {day.schedules.map(schedule => (
+        </div>
+        
+        {/* 일정 내용 - 일간 보기 */}
+        {currentView === 'day' && (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="p-6 space-y-4">
+              <h3 className="text-lg font-semibold text-slate-900 flex items-center">
+                <Calendar className="mr-2 text-blue-600" size={20} />
+                {format(currentDate, 'M월 d일 (EEEE)', { locale: ko })}의 일정
+              </h3>
+              
+              <div className="space-y-3">
+                {filteredSchedules.filter(schedule => 
+                  isSameDay(parseISO(schedule.date), currentDate)
+                ).sort((a, b) => a.startTime.localeCompare(b.startTime)).map(schedule => (
                   <div 
                     key={schedule.id}
                     className={clsx(
-                      "p-2 mb-2 rounded-lg border transition-colors cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50",
+                      "p-4 rounded-lg border transition-colors cursor-pointer hover:shadow-sm",
                       schedule.isCompleted 
-                        ? "border-green-200 bg-green-50 dark:bg-green-900/10 dark:border-green-900/30" 
-                        : "border-slate-200 dark:border-slate-700"
+                        ? "border-green-200 bg-green-50" 
+                        : "border-slate-200 bg-white hover:border-slate-300"
                     )}
                     onClick={() => {
                       setSelectedSchedule(schedule);
                       setShowDetails(true);
                     }}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className={clsx(
-                        "px-1.5 py-0.5 rounded-full text-xs font-medium",
-                        getSessionTypeColor(schedule.type)
-                      )}>
-                        {getSessionTypeText(schedule.type)}
-                      </span>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-3">
+                        <div className="mt-0.5">
+                          <span className={clsx(
+                            "px-2 py-1 rounded-full text-xs font-medium",
+                            getSessionTypeColor(schedule.type)
+                          )}>
+                            {getSessionTypeText(schedule.type)}
+                          </span>
+                        </div>
+                        
+                        <div>
+                          <h4 className="font-medium text-slate-900">{schedule.clientName}</h4>
+                          <div className="flex items-center space-x-3 mt-1 text-sm">
+                            <span className="flex items-center text-slate-600">
+                              <Clock size={14} className="mr-1.5" />
+                              {schedule.startTime} - {schedule.endTime}
+                            </span>
+                            <span className="flex items-center text-slate-600">
+                              <User size={14} className="mr-1.5" />
+                              {schedule.trainerName}
+                            </span>
+                          </div>
+                          
+                          {schedule.notes && (
+                            <p className="mt-2 text-sm text-slate-500">{schedule.notes}</p>
+                          )}
+                        </div>
+                      </div>
                       
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCompleteToggle(schedule.id, schedule.isCompleted);
-                        }}
-                        className={clsx(
-                          "p-1 rounded-full",
-                          schedule.isCompleted 
-                            ? "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400" 
-                            : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                        )}
-                      >
-                        <CheckSquare size={14} />
-                      </button>
-                    </div>
-                    
-                    <h4 className="mt-1 font-medium text-sm text-slate-900 dark:text-white truncate">{schedule.clientName}</h4>
-                    
-                    <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                      {schedule.startTime} - {schedule.endTime}
+                      <div className="flex items-center space-x-2">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCompleteToggle(schedule.id, schedule.isCompleted);
+                          }}
+                          className={clsx(
+                            "p-2 rounded-lg border-2 transition-all hover:scale-105",
+                            schedule.isCompleted 
+                              ? "text-green-700 bg-green-100 border-green-300 hover:bg-green-200 shadow-sm" 
+                              : "text-slate-600 bg-white border-slate-300 hover:text-green-600 hover:border-green-300 hover:bg-green-50 shadow-sm"
+                          )}
+                          title={schedule.isCompleted ? "완료됨" : "완료로 표시"}
+                        >
+                          <CheckSquare size={18} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
                 
-                {day.schedules.length === 0 && (
-                  <div 
-                    className="h-full flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer hover:border-primary dark:hover:border-primary transition-colors"
-                    onClick={() => {
-                      setCurrentDate(day.date);
-                      setShowAddForm(true);
-                    }}
-                  >
-                    <span className="text-slate-400 dark:text-slate-500 text-sm">
-                      <Plus size={18} className="mx-auto mb-1" />
-                      일정 추가
-                    </span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* 일정 내용 - 월간 보기 */}
-      {currentView === 'month' && (
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm overflow-hidden">
-          {/* 요일 헤더 */}
-          <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-700">
-            {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (
-              <div key={index} className="py-2 text-center font-medium text-slate-500 dark:text-slate-400">
-                {day}요일
-              </div>
-            ))}
-          </div>
-          
-          {/* 달력 */}
-          <div className="grid grid-cols-7 grid-rows-6 h-[calc(100vh-300px)] min-h-[600px]">
-            {getMonthSchedules().map((day, index) => (
-              <div 
-                key={index} 
-                className={clsx(
-                  "border-r border-b last:border-r-0 border-slate-200 dark:border-slate-700 p-1 overflow-hidden",
-                  !day.isCurrentMonth && "bg-slate-50 dark:bg-slate-800/50",
-                  isSameDay(day.date, new Date()) && "ring-2 ring-primary ring-offset-2 bg-primary-50 dark:bg-primary-900/10"
-                )}
-              >
-                <div className="flex justify-between items-center">
-                  <span 
-                    className={clsx(
-                      "flex items-center justify-center w-6 h-6 rounded-full text-sm font-medium cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700",
-                      isSameDay(day.date, new Date()) && "bg-primary text-white hover:bg-primary-dark",
-                      !isSameDay(day.date, new Date()) && day.isCurrentMonth ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-500"
-                    )}
-                    onClick={() => day.schedules.length > 0 && handleExpandDay(day.date, day.schedules)}
-                  >
-                    {format(day.date, 'd')}
-                  </span>
-                  
-                  {day.isCurrentMonth && (
+                {filteredSchedules.filter(schedule => 
+                  isSameDay(parseISO(schedule.date), currentDate)
+                ).length === 0 && (
+                  <div className="py-12 text-center">
+                    <Calendar className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+                    <h4 className="text-lg font-medium text-slate-900 mb-2">일정이 없습니다</h4>
+                    <p className="text-slate-500 mb-4">이 날짜에 예정된 일정이 없습니다.</p>
                     <button 
-                      className="text-primary hover:text-primary-dark p-1 rounded-full"
-                      onClick={() => {
-                        setCurrentDate(day.date);
-                        setShowAddForm(true);
-                      }}
-                    >
-                      <Plus size={14} />
-                    </button>
-                  )}
-                </div>
-                
-                <div className="mt-1 space-y-1 max-h-[80%] overflow-hidden">
-                  {day.schedules.slice(0, 3).map(schedule => (
-                    <div 
-                      key={schedule.id}
-                      className={clsx(
-                        "p-1 text-xs rounded truncate cursor-pointer text-white",
-                        schedule.type === 'PT' && "bg-blue-500 dark:bg-blue-600",
-                        schedule.type === 'OT' && "bg-green-500 dark:bg-green-600",
-                        schedule.type === 'GROUP' && "bg-purple-500 dark:bg-purple-600",
-                        schedule.type === 'CONSULT' && "bg-orange-500 dark:bg-orange-600",
-                        schedule.isCompleted && "opacity-60"
-                      )}
-                      onClick={() => {
-                        setSelectedSchedule(schedule);
-                        setShowDetails(true);
-                      }}
-                    >
-                      <span className="flex items-center">
-                        {getSessionTypeIcon(schedule.type)}
-                        {schedule.startTime.slice(0, 5)} {schedule.clientName}
-                      </span>
-                    </div>
-                  ))}
-                  
-                  {day.schedules.length > 3 && (
-                    <div 
-                      className="text-xs text-center text-slate-500 dark:text-slate-400 cursor-pointer hover:text-primary"
-                      onClick={() => handleExpandDay(day.date, day.schedules)}
-                    >
-                      +{day.schedules.length - 3}개 더보기
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      {/* 일정 추가 폼 */}
-      {showAddForm && (
-        <AddScheduleForm 
-          initialDate={format(currentDate, 'yyyy-MM-dd')} 
-          onClose={() => setShowAddForm(false)} 
-        />
-      )}
-      
-      {/* 일정 수정 폼 */}
-      {showEditForm && selectedSchedule && (
-        <EditScheduleForm 
-          schedule={selectedSchedule} 
-          onClose={() => {
-            setShowEditForm(false);
-            setSelectedSchedule(null);
-          }} 
-        />
-      )}
-      
-      {/* 일정 상세 보기 */}
-      {showDetails && selectedSchedule && (
-        useEscClose(() => setShowDetails(false), true),
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
-          onClick={() => setShowDetails(false)}
-        >
-          <div 
-            className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center">
-                <Calendar className="h-5 w-5 mr-2 text-primary" />
-                일정 상세 정보
-              </h2>
-              <div className="flex items-center space-x-2">
-                {(selectedSchedule.type !== 'OT' || isAdmin) && (
-                  <>
-                    <button
-                      onClick={() => {
-                        setShowEditForm(true);
-                        setShowDetails(false);
-                      }}
-                      className="text-blue-500 hover:text-blue-600"
-                    >
-                      <Edit size={20} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSchedule(selectedSchedule.id)}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <Trash size={20} />
-                    </button>
-                  </>
-                )}
-                <button
-                  onClick={() => setShowDetails(false)}
-                  className="text-slate-400 hover:text-slate-600"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-6 space-y-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <span className={clsx(
-                    "px-2 py-1 rounded-full text-xs font-medium",
-                    getSessionTypeColor(selectedSchedule.type)
-                  )}>
-                    {getSessionTypeText(selectedSchedule.type)}
-                  </span>
-                  <h3 className="mt-2 text-xl font-bold text-slate-900">{selectedSchedule.clientName}</h3>
-                </div>
-                
-                <button 
-                  onClick={() => handleCompleteToggle(selectedSchedule.id, selectedSchedule.isCompleted)}
-                  className={clsx(
-                    "p-2 rounded",
-                    selectedSchedule.isCompleted 
-                      ? "bg-green-100 text-green-700" 
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  )}
-                >
-                  {selectedSchedule.isCompleted ? '완료됨' : '완료로 표시'}
-                </button>
-              </div>
-              
-              {selectedSchedule.type === 'OT' && !isAdmin && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4">
-                  <div className="flex items-center text-amber-700">
-                    <Shield size={16} className="mr-2" />
-                    <span className="text-sm">OT 세션은 관리자만 수정 및 삭제할 수 있습니다.</span>
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex items-center space-x-4 mt-4">
-                <div className="flex items-center text-slate-700 dark:text-slate-300">
-                  <Calendar size={18} className="mr-2 text-primary" />
-                  <span>{format(parseISO(selectedSchedule.date), 'yyyy년 M월 d일 (EEEE)', { locale: ko })}</span>
-                </div>
-                
-                <div className="flex items-center text-slate-700 dark:text-slate-300">
-                  <Clock size={18} className="mr-2 text-primary" />
-                  <span>{selectedSchedule.startTime} - {selectedSchedule.endTime}</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center text-slate-700 dark:text-slate-300">
-                <User size={18} className="mr-2 text-primary" />
-                <span>담당 트레이너: {selectedSchedule.trainerName}</span>
-              </div>
-              
-              {selectedSchedule.notes && (
-                <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
-                  <h4 className="text-sm font-medium text-slate-900 dark:text-white mb-2">메모</h4>
-                  <p className="text-slate-700 dark:text-slate-300">{selectedSchedule.notes}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* 날짜별 일정 확장 보기 모달 */}
-      {expandedDay && (
-        useEscClose(() => setExpandedDay(null), true),
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
-          onClick={() => setExpandedDay(null)}
-        >
-          <div 
-            className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full max-h-[80vh] flex flex-col"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center">
-                <Calendar className="h-5 w-5 mr-2 text-primary" />
-                {format(expandedDay, 'yyyy년 M월 d일 (EEEE)', { locale: ko })}의 일정
-              </h2>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => {
-                    setCurrentDate(expandedDay);
-                    setShowAddForm(true);
-                    setExpandedDay(null);
-                  }}
-                  className="text-primary hover:text-primary-dark"
-                >
-                  <Plus size={20} />
-                </button>
-                <button
-                  onClick={() => setExpandedDay(null)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-4 overflow-y-auto flex-grow">
-              <div className="space-y-3">
-                {daySchedules.length > 0 ? (
-                  daySchedules
-                    .sort((a, b) => a.startTime.localeCompare(b.startTime))
-                    .map(schedule => (
-                      <div 
-                        key={schedule.id}
-                        className={clsx(
-                          "p-3 rounded-lg border transition-colors cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50",
-                          schedule.isCompleted 
-                            ? "border-green-200 bg-green-50 dark:bg-green-900/10 dark:border-green-900/30" 
-                            : "border-slate-200 dark:border-slate-700"
-                        )}
-                        onClick={() => {
-                          setSelectedSchedule(schedule);
-                          setShowDetails(true);
-                          setExpandedDay(null);
-                        }}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start space-x-3">
-                            <div className="mt-0.5">
-                              <span className={clsx(
-                                "px-2 py-1 rounded-full text-xs font-medium",
-                                getSessionTypeColor(schedule.type)
-                              )}>
-                                {getSessionTypeText(schedule.type)}
-                              </span>
-                            </div>
-                            
-                            <div>
-                              <h4 className="font-medium text-slate-900 dark:text-white">{schedule.clientName}</h4>
-                              <div className="flex items-center space-x-3 mt-1 text-sm">
-                                <span className="flex items-center text-slate-600 dark:text-slate-400">
-                                  <Clock size={14} className="mr-1.5" />
-                                  {schedule.startTime} - {schedule.endTime}
-                                </span>
-                                <span className="flex items-center text-slate-600 dark:text-slate-400">
-                                  <User size={14} className="mr-1.5" />
-                                  {schedule.trainerName}
-                                </span>
-                              </div>
-                              
-                              {schedule.notes && (
-                                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{schedule.notes}</p>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCompleteToggle(schedule.id, schedule.isCompleted);
-                              }}
-                              className={clsx(
-                                "p-1.5 rounded-full",
-                                schedule.isCompleted 
-                                  ? "text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400" 
-                                  : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                              )}
-                            >
-                              <CheckSquare size={16} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                ) : (
-                  <div className="py-8 text-center">
-                    <p className="text-slate-500 dark:text-slate-400">이 날짜에 예정된 일정이 없습니다.</p>
-                    <button 
-                      onClick={() => {
-                        setCurrentDate(expandedDay);
-                        setShowAddForm(true);
-                        setExpandedDay(null);
-                      }}
-                      className="mt-4 inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary hover:text-primary-dark"
+                      onClick={() => setShowAddForm(true)}
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       <Plus size={16} className="mr-1.5" />
                       일정 추가하기
@@ -854,22 +428,490 @@ const Schedule = () => {
                 )}
               </div>
             </div>
+          </div>
+        )}
+        
+        {/* 일정 내용 - 주간 보기 */}
+        {currentView === 'week' && (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            {/* 주간 헤더 */}
+            <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
+              {getWeekSchedules().map((day, index) => (
+                <div 
+                  key={index} 
+                  className={clsx(
+                    "py-4 px-2 text-center font-medium border-r last:border-r-0 border-slate-200",
+                    isSameDay(day.date, new Date()) && "bg-blue-50 border-blue-200"
+                  )}
+                >
+                  <p className="text-sm text-slate-500 mb-1">
+                    {format(day.date, 'EEEE', { locale: ko })}
+                  </p>
+                  <p className={clsx(
+                    "text-lg font-semibold",
+                    isSameDay(day.date, new Date()) 
+                      ? "text-blue-600" 
+                      : "text-slate-900"
+                  )}>
+                    {format(day.date, 'd')}
+                  </p>
+                </div>
+              ))}
+            </div>
             
-            <div className="p-4 border-t border-slate-200 dark:border-slate-700 text-center">
-              <button
-                onClick={() => {
-                  setCurrentDate(expandedDay);
-                  setCurrentView('day');
-                  setExpandedDay(null);
-                }}
-                className="btn btn-outline-primary text-sm font-medium"
-              >
-                일간 보기로 전환
-              </button>
+            {/* 주간 캘린더 그리드 */}
+            <div className="grid grid-cols-7 min-h-[500px]" style={{ height: 'calc(100vh - 400px)' }}>
+              {getWeekSchedules().map((day, index) => (
+                <div 
+                  key={index} 
+                  className={clsx(
+                    "border-r last:border-r-0 border-slate-200 p-3 overflow-y-auto",
+                    isSameDay(day.date, new Date()) && "bg-blue-50/30"
+                  )}
+                >
+                  <div className="space-y-2">
+                    {day.schedules.map(schedule => (
+                      <div 
+                        key={schedule.id}
+                        className={clsx(
+                          "p-3 rounded-lg border transition-colors cursor-pointer hover:shadow-sm",
+                          schedule.isCompleted 
+                            ? "border-green-200 bg-green-50" 
+                            : "border-slate-200 bg-white hover:border-slate-300"
+                        )}
+                        onClick={() => {
+                          setSelectedSchedule(schedule);
+                          setShowDetails(true);
+                        }}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className={clsx(
+                            "px-2 py-1 rounded-full text-xs font-medium",
+                            getSessionTypeColor(schedule.type)
+                          )}>
+                            {getSessionTypeText(schedule.type)}
+                          </span>
+                          
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCompleteToggle(schedule.id, schedule.isCompleted);
+                            }}
+                            className={clsx(
+                              "p-2 rounded-lg border-2 transition-all hover:scale-105",
+                              schedule.isCompleted 
+                                ? "text-green-700 bg-green-100 border-green-300 hover:bg-green-200 shadow-sm" 
+                                : "text-slate-600 bg-white border-slate-300 hover:text-green-600 hover:border-green-300 hover:bg-green-50 shadow-sm"
+                            )}
+                            title={schedule.isCompleted ? "완료됨" : "완료로 표시"}
+                          >
+                            <CheckSquare size={18} />
+                          </button>
+                        </div>
+                        
+                        <h4 className="font-medium text-sm text-slate-900 truncate mb-1">{schedule.clientName}</h4>
+                        
+                        <div className="text-xs text-slate-600">
+                          {schedule.startTime} - {schedule.endTime}
+                        </div>
+                        
+                        <div className="text-xs text-slate-500 mt-1">
+                          {schedule.trainerName}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {day.schedules.length === 0 && (
+                      <div 
+                        className="h-32 flex flex-col items-center justify-center border-2 border-dashed border-blue-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all hover:scale-105 group"
+                        onClick={() => {
+                          setCurrentDate(day.date);
+                          setShowAddForm(true);
+                        }}
+                      >
+                        <Plus size={24} className="text-blue-500 mb-2 group-hover:text-blue-600" />
+                        <span className="text-blue-600 text-sm font-medium text-center group-hover:text-blue-700">
+                          일정 추가
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </motion.div>
-      )}
+        )}
+        
+        {/* 일정 내용 - 월간 보기 */}
+        {currentView === 'month' && (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            {/* 요일 헤더 */}
+            <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
+              {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (
+                <div key={index} className="py-3 text-center font-semibold text-slate-700 border-r last:border-r-0 border-slate-200">
+                  {day}요일
+                </div>
+              ))}
+            </div>
+            
+            {/* 달력 그리드 */}
+            <div className="grid grid-cols-7 grid-rows-6 min-h-[600px]" style={{ height: 'calc(100vh - 350px)' }}>
+              {getMonthSchedules().map((day, index) => (
+                <div 
+                  key={index} 
+                  className={clsx(
+                    "border-r border-b last:border-r-0 border-slate-200 p-2 overflow-hidden relative",
+                    !day.isCurrentMonth && "bg-slate-50",
+                    isSameDay(day.date, new Date()) && "bg-blue-50 ring-1 ring-blue-200"
+                  )}
+                >
+                  {/* 날짜와 일정 추가 버튼 */}
+                  <div className="flex justify-between items-center mb-2">
+                    <span 
+                      className={clsx(
+                        "flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium cursor-pointer transition-colors",
+                        isSameDay(day.date, new Date()) 
+                          ? "bg-blue-600 text-white" 
+                          : day.isCurrentMonth 
+                            ? "text-slate-900 hover:bg-slate-100" 
+                            : "text-slate-400"
+                      )}
+                      onClick={() => day.schedules.length > 0 && handleExpandDay(day.date, day.schedules)}
+                    >
+                      {format(day.date, 'd')}
+                    </span>
+                    
+                    {day.isCurrentMonth && (
+                      <button 
+                        className="text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-300 hover:border-blue-600 p-1.5 rounded-lg transition-all hover:scale-110 shadow-sm"
+                        onClick={() => {
+                          setCurrentDate(day.date);
+                          setShowAddForm(true);
+                        }}
+                        title="일정 추가"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* 일정 목록 */}
+                  <div className="space-y-1 max-h-24 overflow-hidden">
+                    {day.schedules.slice(0, 3).map(schedule => (
+                      <div 
+                        key={schedule.id}
+                        className={clsx(
+                          "p-1.5 text-xs rounded cursor-pointer text-white font-medium truncate transition-opacity hover:opacity-80",
+                          schedule.type === 'PT' && "bg-blue-500",
+                          schedule.type === 'OT' && "bg-green-500",
+                          schedule.type === 'GROUP' && "bg-purple-500",
+                          schedule.type === 'CONSULT' && "bg-orange-500",
+                          schedule.isCompleted && "opacity-60"
+                        )}
+                        onClick={() => {
+                          setSelectedSchedule(schedule);
+                          setShowDetails(true);
+                        }}
+                        title={`${schedule.startTime} ${schedule.clientName} (${schedule.trainerName})`}
+                      >
+                        <span className="flex items-center">
+                          {getSessionTypeIcon(schedule.type)}
+                          <span className="ml-1">
+                            {schedule.startTime.slice(0, 5)} {schedule.clientName}
+                          </span>
+                        </span>
+                      </div>
+                    ))}
+                    
+                    {day.schedules.length > 3 && (
+                      <div 
+                        className="text-xs text-center text-slate-500 cursor-pointer hover:text-blue-600 font-medium py-1"
+                        onClick={() => handleExpandDay(day.date, day.schedules)}
+                      >
+                        +{day.schedules.length - 3}개 더
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* 일정 추가 폼 */}
+        {showAddForm && (
+          <AddScheduleForm 
+            initialDate={format(currentDate, 'yyyy-MM-dd')} 
+            onClose={() => setShowAddForm(false)} 
+          />
+        )}
+        
+        {/* 일정 수정 폼 */}
+        {showEditForm && selectedSchedule && (
+          <EditScheduleForm 
+            schedule={selectedSchedule} 
+            onClose={() => {
+              setShowEditForm(false);
+              setSelectedSchedule(null);
+            }} 
+          />
+        )}
+        
+        {/* 일정 상세 보기 */}
+        {showDetails && selectedSchedule && (
+          useEscClose(() => setShowDetails(false), true),
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+            onClick={() => setShowDetails(false)}
+          >
+            <div 
+              className="bg-white rounded-xl shadow-2xl max-w-lg w-full border border-slate-200"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-slate-200 flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-slate-900 flex items-center">
+                  <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+                  일정 상세 정보
+                </h2>
+                <div className="flex items-center space-x-2">
+                  {(selectedSchedule.type !== 'OT' || isAdmin) && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setShowEditForm(true);
+                          setShowDetails(false);
+                        }}
+                        className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="수정"
+                      >
+                        <Edit size={20} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSchedule(selectedSchedule.id)}
+                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                        title="삭제"
+                      >
+                        <Trash size={20} />
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => setShowDetails(false)}
+                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className={clsx(
+                      "px-3 py-1 rounded-full text-xs font-medium",
+                      getSessionTypeColor(selectedSchedule.type)
+                    )}>
+                      {getSessionTypeText(selectedSchedule.type)}
+                    </span>
+                    <h3 className="mt-3 text-xl font-bold text-slate-900">{selectedSchedule.clientName}</h3>
+                  </div>
+                  
+                  <button 
+                    onClick={() => handleCompleteToggle(selectedSchedule.id, selectedSchedule.isCompleted)}
+                    className={clsx(
+                      "px-4 py-2 rounded-lg font-medium transition-colors",
+                      selectedSchedule.isCompleted 
+                        ? "bg-green-100 text-green-700 hover:bg-green-200" 
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    )}
+                  >
+                    {selectedSchedule.isCompleted ? '완료됨' : '완료로 표시'}
+                  </button>
+                </div>
+                
+                {selectedSchedule.type === 'OT' && !isAdmin && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <div className="flex items-center text-amber-700">
+                      <Shield size={16} className="mr-2" />
+                      <span className="text-sm">OT 세션은 관리자만 수정 및 삭제할 수 있습니다.</span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="space-y-3">
+                  <div className="flex items-center text-slate-700">
+                    <Calendar size={18} className="mr-3 text-blue-600" />
+                    <span>{format(parseISO(selectedSchedule.date), 'yyyy년 M월 d일 (EEEE)', { locale: ko })}</span>
+                  </div>
+                  
+                  <div className="flex items-center text-slate-700">
+                    <Clock size={18} className="mr-3 text-blue-600" />
+                    <span>{selectedSchedule.startTime} - {selectedSchedule.endTime}</span>
+                  </div>
+                  
+                  <div className="flex items-center text-slate-700">
+                    <User size={18} className="mr-3 text-blue-600" />
+                    <span>담당 트레이너: {selectedSchedule.trainerName}</span>
+                  </div>
+                </div>
+                
+                {selectedSchedule.notes && (
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    <h4 className="text-sm font-medium text-slate-900 mb-2">메모</h4>
+                    <p className="text-slate-700">{selectedSchedule.notes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* 날짜별 일정 확장 보기 모달 */}
+        {expandedDay && (
+          useEscClose(() => setExpandedDay(null), true),
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+            onClick={() => setExpandedDay(null)}
+          >
+            <div 
+              className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[80vh] flex flex-col border border-slate-200"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-slate-200 flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-slate-900 flex items-center">
+                  <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+                  {format(expandedDay, 'yyyy년 M월 d일 (EEEE)', { locale: ko })}의 일정
+                </h2>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      setCurrentDate(expandedDay);
+                      setShowAddForm(true);
+                      setExpandedDay(null);
+                    }}
+                    className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="일정 추가"
+                  >
+                    <Plus size={20} />
+                  </button>
+                  <button
+                    onClick={() => setExpandedDay(null)}
+                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-4 overflow-y-auto flex-grow">
+                <div className="space-y-3">
+                  {daySchedules.length > 0 ? (
+                    daySchedules
+                      .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                      .map(schedule => (
+                        <div 
+                          key={schedule.id}
+                          className={clsx(
+                            "p-3 rounded-lg border transition-colors cursor-pointer hover:shadow-sm",
+                            schedule.isCompleted 
+                              ? "border-green-200 bg-green-50" 
+                              : "border-slate-200 bg-white hover:border-slate-300"
+                          )}
+                          onClick={() => {
+                            setSelectedSchedule(schedule);
+                            setShowDetails(true);
+                            setExpandedDay(null);
+                          }}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-start space-x-3">
+                              <div className="mt-0.5">
+                                <span className={clsx(
+                                  "px-2 py-1 rounded-full text-xs font-medium",
+                                  getSessionTypeColor(schedule.type)
+                                )}>
+                                  {getSessionTypeText(schedule.type)}
+                                </span>
+                              </div>
+                              
+                              <div>
+                                <h4 className="font-medium text-slate-900">{schedule.clientName}</h4>
+                                <div className="flex items-center space-x-3 mt-1 text-sm">
+                                  <span className="flex items-center text-slate-600">
+                                    <Clock size={14} className="mr-1.5" />
+                                    {schedule.startTime} - {schedule.endTime}
+                                  </span>
+                                  <span className="flex items-center text-slate-600">
+                                    <User size={14} className="mr-1.5" />
+                                    {schedule.trainerName}
+                                  </span>
+                                </div>
+                                
+                                {schedule.notes && (
+                                  <p className="mt-2 text-sm text-slate-500">{schedule.notes}</p>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCompleteToggle(schedule.id, schedule.isCompleted);
+                                }}
+                                className={clsx(
+                                  "p-2 rounded-lg border-2 transition-all hover:scale-105",
+                                  schedule.isCompleted 
+                                    ? "text-green-700 bg-green-100 border-green-300 hover:bg-green-200 shadow-sm" 
+                                    : "text-slate-600 bg-white border-slate-300 hover:text-green-600 hover:border-green-300 hover:bg-green-50 shadow-sm"
+                                )}
+                                title={schedule.isCompleted ? "완료됨" : "완료로 표시"}
+                              >
+                                <CheckSquare size={18} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                  ) : (
+                    <div className="py-8 text-center">
+                      <p className="text-slate-500">이 날짜에 예정된 일정이 없습니다.</p>
+                      <button 
+                        onClick={() => {
+                          setCurrentDate(expandedDay);
+                          setShowAddForm(true);
+                          setExpandedDay(null);
+                        }}
+                        className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                      >
+                        <Plus size={16} className="mr-1.5" />
+                        일정 추가하기
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="p-4 border-t border-slate-200 text-center">
+                <button
+                  onClick={() => {
+                    setCurrentDate(expandedDay);
+                    setCurrentView('day');
+                    setExpandedDay(null);
+                  }}
+                  className="px-4 py-2 border border-blue-600 text-blue-600 hover:bg-blue-50 rounded-lg font-medium text-sm transition-colors"
+                >
+                  일간 보기로 전환
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </motion.div>
   );
 };

@@ -23,13 +23,9 @@ const Login = () => {
     setError(null);
     
     try {
-      const result = await login(data.email, data.password);
-      if (result.error) {
-        setError(result.error.message);
-      } else {
-        // 로그인 성공 시 대시보드로 리디렉션
-        navigate('/dashboard');
-      }
+      await login(data.email, data.password);
+      // 로그인 성공 시 대시보드로 리디렉션
+      navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.');
     } finally {

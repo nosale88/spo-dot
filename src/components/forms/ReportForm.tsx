@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Save, Send, FileText, Calendar, Upload, Plus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useReport, Report, ReportType, ReportCategory } from '../../contexts/ReportContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNotification } from '../../contexts/NotificationContext';
+import { notificationService } from '../../services/notificationService';
 
 interface ReportFormProps {
   onClose: () => void;
@@ -16,7 +16,6 @@ interface ReportFormProps {
 const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps) => {
   const { createReport, updateReport } = useReport();
   const { user } = useAuth();
-  const { showToast } = useNotification();
   
   const isEditMode = !!report;
   
@@ -108,7 +107,7 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent, saveAsDraft: boolean = true) => {
+  const handleSubmit = async (e: React.FormEvent, saveAsDraft = true) => {
     e.preventDefault();
     
     if (!user) return;
@@ -136,11 +135,23 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
           attachments: [...(report.attachments || []), ...attachments]
         });
         
-        showToast(
-          'success',
+        console.log(
           saveAsDraft ? '보고서가 저장되었습니다' : '보고서가 제출되었습니다',
           formData.title
         );
+
+        // 🚀 자동 알림: 보고서 제출시 관리자에게 알림 (임시저장이 아닌 경우)
+        if (!saveAsDraft) {
+          try {
+            await notificationService.notifyDailyReportSubmitted({
+              id: report.id,
+              authorName: user.name,
+              date: format(new Date(), 'yyyy-MM-dd')
+            });
+          } catch (error) {
+            console.error('보고서 제출 알림 실패:', error);
+          }
+        }
       } else {
         // Create new report
         const reportId = createReport({
@@ -152,18 +163,29 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
           attachments
         });
         
-        showToast(
-          'success',
+        console.log(
           saveAsDraft ? '보고서가 저장되었습니다' : '보고서가 제출되었습니다',
           formData.title
         );
+
+        // 🚀 자동 알림: 보고서 제출시 관리자에게 알림 (임시저장이 아닌 경우)
+        if (!saveAsDraft && reportId) {
+          try {
+            await notificationService.notifyDailyReportSubmitted({
+              id: reportId,
+              authorName: user.name,
+              date: format(new Date(), 'yyyy-MM-dd')
+            });
+          } catch (error) {
+            console.error('보고서 제출 알림 실패:', error);
+          }
+        }
       }
       
       onClose();
     } catch (error) {
       console.error('Error saving report:', error);
-      showToast(
-        'error',
+      console.log(
         '오류',
         '보고서 저장 중 오류가 발생했습니다'
       );

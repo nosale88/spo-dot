@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTask, Task, TaskPriority, TaskCategory } from '../../contexts/TaskContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { X, Save } from 'lucide-react';
+import { X, Save, Loader2 } from 'lucide-react';
 
 interface AddTaskModalProps {
   isOpen: boolean;
@@ -20,8 +20,9 @@ type TaskFormData = {
 };
 
 const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDueDate }) => {
-  const { addTask } = useTask();
+  const { addTask, loading } = useTask();
   const { user: currentUser } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     control,
     handleSubmit,
@@ -41,30 +42,46 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
       }
     } else if (!isOpen) {
       reset();
+      setIsSubmitting(false);
     }
   }, [isOpen, initialDueDate, setValue, reset]);
 
-  const onSubmit = (data: TaskFormData) => {
+  const onSubmit = async (data: TaskFormData) => {
     if (!currentUser) {
       console.error('User not logged in');
       return;
     }
 
-    const newTaskPayload: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> = {
-      title: data.title,
-      description: data.description,
-      dueDate: new Date(data.dueDate).toISOString(),
-      priority: data.priority,
-      category: data.category,
-      status: 'pending', 
-      assignedTo: `user-${data.assignedToName.replace(/\s+/g, '').toLowerCase()}`, 
-      assignedToName: data.assignedToName,
-      assignedBy: currentUser.id,
-      assignedByName: currentUser.name || 'Unknown User',
-    };
-    addTask(newTaskPayload);
-    reset();
-    onClose();
+    setIsSubmitting(true);
+
+    try {
+      const newTaskPayload: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> = {
+        title: data.title,
+        description: data.description,
+        dueDate: new Date(data.dueDate).toISOString(),
+        priority: data.priority,
+        category: data.category,
+        status: 'pending', 
+        assignedTo: [`user-${data.assignedToName.replace(/\s+/g, '').toLowerCase()}`], // Array now
+        assignedToName: [data.assignedToName], // Array now
+        assignedBy: currentUser.id,
+        assignedByName: currentUser.name || 'Unknown User',
+      };
+      
+      const taskId = await addTask(newTaskPayload);
+      
+      if (taskId) {
+        console.log('✅ 업무가 성공적으로 추가되었습니다:', taskId);
+        reset();
+        onClose();
+      } else {
+        console.error('❌ 업무 추가 실패');
+      }
+    } catch (error) {
+      console.error('업무 추가 중 오류:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -224,15 +241,26 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
               type="button"
               onClick={() => { reset(); onClose(); }}
               className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md border border-slate-300"
+              disabled={isSubmitting}
             >
               취소
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md flex items-center space-x-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSubmitting || loading}
             >
-              <Save size={16} />
-              <span>저장</span>
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>저장 중...</span>
+                </>
+              ) : (
+                <>
+                  <Save size={16} />
+                  <span>저장</span>
+                </>
+              )}
             </button>
           </div>
         </form>

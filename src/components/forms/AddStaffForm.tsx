@@ -3,6 +3,7 @@ import { X, Save, User, Shield, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { useUser, UserStatus, Staff } from '../../contexts/UserContext';
+import { UserPosition, positionInfo } from '../../types/permissions';
 import clsx from 'clsx';
 
 export interface AddStaffFormProps {
@@ -39,7 +40,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
     confirmPassword: '',
     status: 'active' as UserStatus,
     department: '',
-    position: '',
+    position: '' as UserPosition,
     hireDate: format(new Date(), 'yyyy-MM-dd'),
     role: 'staff' as 'staff' | 'admin',
     permissions: [] as string[]
@@ -386,8 +387,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       직책
                       <span className="text-red-500 ml-1">*</span>
                     </label>
-                    <input
-                      type="text"
+                    <select
                       name="position"
                       value={formData.position}
                       onChange={handleChange}
@@ -395,9 +395,15 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                         'form-input w-full',
                         errors.position ? 'border-red-500 dark:border-red-500' : ''
                       )}
-                      placeholder="직책 (예: 매니저, 사원)"
                       required
-                    />
+                    >
+                      <option value="">직책 선택</option>
+                      {Object.entries(positionInfo).map(([key, info]) => (
+                        <option key={key} value={key as UserPosition}>
+                          {info.name}
+                        </option>
+                      ))}
+                    </select>
                     {errors.position && (
                       <p className="mt-1 text-sm text-red-500">{errors.position}</p>
                     )}

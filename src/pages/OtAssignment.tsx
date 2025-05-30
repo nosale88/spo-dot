@@ -23,7 +23,7 @@ const AddOTMemberModal = ({ isOpen, onClose }: AddOTMemberModalProps) => {
     name: '',
     phone: '',
     email: '',
-    otCount: 8,
+    otCount: 1,
     preferredDays: [] as string[],
     preferredTimes: [] as string[],
     notes: ''
@@ -55,7 +55,7 @@ const AddOTMemberModal = ({ isOpen, onClose }: AddOTMemberModalProps) => {
       name: '',
       phone: '',
       email: '',
-      otCount: 8,
+      otCount: 1,
       preferredDays: [],
       preferredTimes: [],
       notes: ''
@@ -146,14 +146,28 @@ const AddOTMemberModal = ({ isOpen, onClose }: AddOTMemberModalProps) => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 OT 횟수
               </label>
-              <input
-                type="number"
-                value={formData.otCount}
-                onChange={(e) => setFormData({ ...formData, otCount: parseInt(e.target.value) || 0 })}
-                className="form-input w-full"
-                min="1"
-                max="50"
-              />
+              <div className="flex gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value={1}
+                    checked={formData.otCount === 1}
+                    onChange={(e) => setFormData({ ...formData, otCount: parseInt(e.target.value) })}
+                    className="mr-2"
+                  />
+                  <span>1회</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value={2}
+                    checked={formData.otCount === 2}
+                    onChange={(e) => setFormData({ ...formData, otCount: parseInt(e.target.value) })}
+                    className="mr-2"
+                  />
+                  <span>2회</span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -584,7 +598,13 @@ export default function OtAssignment() {
                       <Phone size={14} className="mr-1" />
                       <span className="text-sm">{member.phone}</span>
                     </div>
-                    <div className="text-xs text-gray-500">등록일: {member.registeredAt}</div>
+                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <span>등록일: {member.registeredAt}</span>
+                      <span>•</span>
+                      <span className="font-medium text-blue-600">
+                        {member.otCount === 1 ? '1회 OT' : '2회 OT'}
+                      </span>
+                    </div>
                   </div>
                   
                   {isAdmin && (
@@ -754,7 +774,8 @@ export default function OtAssignment() {
                       </div>
                       
                       <div className="text-xs text-gray-700">
-                        진행: {progress.completedSessions}/{progress.totalSessions} 회
+                        진행: {progress.completedSessions}/{progress.totalSessions} 회 
+                        {progress.totalSessions === 1 ? ' (1회 OT)' : ' (2회 OT)'}
                       </div>
                       
                       <div className="w-full bg-gray-200 rounded-full h-2">
@@ -788,16 +809,38 @@ export default function OtAssignment() {
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         assignedStaff 
                           ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                          : member.assignedStaffId
+                            ? 'bg-green-600 text-white hover:bg-green-700'
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
-                      disabled={!!assignedStaff}
+                      disabled={!!assignedStaff || !member.assignedStaffId}
                       onClick={() => {
-                        if (!member.assignedStaffId) {
+                        if (member.assignedStaffId && !assignedStaff) {
+                          // 실제 배정 수행
+                          updateOTMember(member.id, { 
+                            status: 'assigned' 
+                          });
+                          
+                          // 진행상황 초기화 (이미 있지 않다면)
+                          const progressKey = `${member.id}-${member.assignedStaffId}`;
+                          if (!otProgress[progressKey]) {
+                            updateProgress(progressKey, {
+                              memberId: member.id,
+                              staffId: parseInt(member.assignedStaffId),
+                              totalSessions: member.otCount || 1,
+                              completedSessions: 0,
+                              contactMade: false,
+                              sessions: []
+                            });
+                          }
+                          
+                          showToast(`${staffList?.find(s => s.id === member.assignedStaffId)?.name} 트레이너에게 배정 완료!`);
+                        } else if (!member.assignedStaffId) {
                           showToast('담당자를 먼저 선택해주세요!');
                         }
                       }}
                     >
-                      {assignedStaff ? '배정됨' : '배정하기'}
+                      {assignedStaff ? '배정됨' : member.assignedStaffId ? '배정하기' : '담당자 선택 필요'}
                     </button>
                   )}
                 </div>
@@ -958,6 +1001,13 @@ export default function OtAssignment() {
                       
                       {/* 세션 목록 */}
                       <div className="space-y-2">
+                        <div className="mb-3">
+                          <h5 className="text-sm font-medium text-gray-700 mb-2">진행된 일자 체크</h5>
+                          <div className="text-xs text-gray-500 mb-2">
+                            완료된 세션: {progress.completedSessions}회 / 총 {progress.totalSessions}회
+                          </div>
+                        </div>
+                        
                         {progress.sessions.map((session, index) => (
                           <div key={session.id} className={`p-3 rounded-lg border ${session.completed ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
                             <div className="flex items-center justify-between">
@@ -966,20 +1016,36 @@ export default function OtAssignment() {
                                   type="checkbox"
                                   checked={session.completed}
                                   onChange={(e) => handleSessionComplete(showProgressModal, session.id, e.target.checked)}
-                                  className="form-checkbox"
+                                  className="form-checkbox text-green-600 focus:ring-green-500"
                                 />
                                 <div>
-                                  <div className="font-medium">
-                                    {session.date} {session.time}
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium text-sm">
+                                      {session.date} {session.time}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      (세션 {index + 1})
+                                    </span>
                                   </div>
                                   {session.notes && (
-                                    <div className="text-sm text-gray-600">{session.notes}</div>
+                                    <div className="text-sm text-gray-600 mt-1">{session.notes}</div>
                                   )}
                                 </div>
                               </div>
-                              <span className={`px-2 py-1 rounded text-xs ${session.completed ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-                                {session.completed ? '완료' : '예정'}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                  session.completed 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-gray-100 text-gray-600'
+                                }`}>
+                                  {session.completed ? '✓ 완료' : '○ 예정'}
+                                </span>
+                                {session.completed && (
+                                  <span className="text-xs text-green-600">
+                                    진행됨
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -1014,8 +1080,14 @@ export default function OtAssignment() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       부서
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      배정된 회원 수
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      배정 회원수
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      진행 회원수
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      완료 회원수
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       배정된 회원
@@ -1027,6 +1099,11 @@ export default function OtAssignment() {
                     const assignedMembers = otMembers.filter(member => 
                       member.assignedStaffId === staff.id
                     );
+                    
+                    // 상태별 회원수 계산
+                    const assignedCount = assignedMembers.filter(member => member.status === 'assigned').length;
+                    const completedCount = assignedMembers.filter(member => member.status === 'completed').length;
+                    const totalAssignedCount = assignedMembers.length;
 
                     return (
                       <tr key={staff.id} className="hover:bg-gray-50">
@@ -1036,9 +1113,19 @@ export default function OtAssignment() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-500">{staff.department || '부서 미지정'}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {assignedMembers.length}명
+                            {totalAssignedCount}명
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            {assignedCount}명
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {completedCount}명
                           </span>
                         </td>
                         <td className="px-6 py-4">
@@ -1053,7 +1140,7 @@ export default function OtAssignment() {
                     );
                   }) : (
                     <tr>
-                      <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                      <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                         등록된 직원이 없습니다.
                       </td>
                     </tr>

@@ -1,89 +1,205 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabaseApiService } from '../services/supabaseApi';
 
 // 알림 유형 타입
 export type NotificationType = 'info' | 'warning' | 'success' | 'error';
 
+interface MenuBadges {
+  announcements: number;
+  tasks: number;
+  dailyReports: number;
+  manuals: number;
+  notifications: number;
+  suggestions: number;
+}
+
 interface NotificationContextType {
-  showToast: (type: NotificationType, title: string, message: string, duration?: number) => void;
-  dismissToast: () => void;
-  isToastVisible: boolean;
-  toastType: NotificationType;
-  toastTitle: string;
-  toastMessage: string;
+  badges: MenuBadges;
+  refreshBadges: () => Promise<void>;
+  updateBadge: (menu: keyof MenuBadges, count: number) => void;
+  markAsRead: (menu: keyof MenuBadges, itemId?: string) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-export const NotificationProvider = ({ children }: { children: ReactNode }) => {
-  const [isToastVisible, setIsToastVisible] = useState(false);
-  const [toastType, setToastType] = useState<NotificationType>('info');
-  const [toastTitle, setToastTitle] = useState('');
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastDuration, setToastDuration] = useState(3000);
-  const [toastTimeoutId, setToastTimeoutId] = useState<number | undefined>(undefined);
+export function NotificationProvider({ children }: { children: ReactNode }) {
+  const [badges, setBadges] = useState<MenuBadges>({
+    announcements: 0,
+    tasks: 0,
+    dailyReports: 0,
+    manuals: 0,
+    notifications: 0,
+    suggestions: 0,
+  });
 
-  const showToast = (
-    type: NotificationType,
-    title: string,
-    message: string,
-    duration = 3000
-  ) => {
-    // 이미 표시 중인 토스트가 있으면 해당 타이머 제거
-    if (toastTimeoutId) {
-      window.clearTimeout(toastTimeoutId);
-      setToastTimeoutId(undefined);
+  const refreshBadges = async () => {
+    try {
+      const currentUserId = localStorage.getItem('currentUserId');
+      if (!currentUserId) return;
+
+      // 병렬로 모든 뱃지 카운트 조회
+      const [
+        unreadAnnouncements,
+        myPendingTasks,
+        todayReports,
+        newManuals,
+        unreadNotifications,
+        pendingSuggestions
+      ] = await Promise.all([
+        getUnreadAnnouncementsCount(currentUserId),
+        getMyPendingTasksCount(currentUserId),
+        getTodayReportsCount(),
+        getNewManualsCount(),
+        getUnreadNotificationsCount(currentUserId),
+        getPendingSuggestionsCount()
+      ]);
+
+      setBadges({
+        announcements: unreadAnnouncements,
+        tasks: myPendingTasks,
+        dailyReports: todayReports,
+        manuals: newManuals,
+        notifications: unreadNotifications,
+        suggestions: pendingSuggestions,
+      });
+    } catch (error) {
+      console.error('Failed to refresh badges:', error);
     }
-
-    // 토스트 상태 업데이트
-    setToastType(type);
-    setToastTitle(title);
-    setToastMessage(message);
-    setToastDuration(duration);
-    setIsToastVisible(true);
-
-    // 지정된 시간 후 토스트 숨기기
-    const timeoutId = window.setTimeout(() => {
-      setIsToastVisible(false);
-    }, duration);
-
-    setToastTimeoutId(Number(timeoutId));
   };
 
-  const dismissToast = () => {
-    setIsToastVisible(false);
-    if (toastTimeoutId) {
-      window.clearTimeout(toastTimeoutId);
-      setToastTimeoutId(undefined);
-    }
+  const updateBadge = (menu: keyof MenuBadges, count: number) => {
+    setBadges(prev => ({ ...prev, [menu]: count }));
   };
 
-  // 컴포넌트 언마운트 시 타이머 정리
+  const markAsRead = (menu: keyof MenuBadges, itemId?: string) => {
+    setBadges(prev => ({ 
+      ...prev, 
+      [menu]: Math.max(0, prev[menu] - 1) 
+    }));
+  };
+
+  // 초기 로드 및 주기적 업데이트
   useEffect(() => {
-    return () => {
-      if (toastTimeoutId) {
-        window.clearTimeout(toastTimeoutId);
-      }
-    };
-  }, [toastTimeoutId]);
+    refreshBadges();
+    
+    // 30초마다 뱃지 업데이트
+    const interval = setInterval(refreshBadges, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <NotificationContext.Provider
-      value={{
-        showToast,
-        dismissToast,
-        isToastVisible,
-        toastType,
-        toastTitle,
-        toastMessage
-      }}
-    >
+    <NotificationContext.Provider value={{ badges, refreshBadges, updateBadge, markAsRead }}>
       {children}
     </NotificationContext.Provider>
   );
-};
+}
 
-export const useNotification = () => {
+export function useNotification() {
   const context = useContext(NotificationContext);
-  if (!context) throw new Error("useNotification must be used within a NotificationProvider");
+  if (context === undefined) {
+    throw new Error('useNotification must be used within a NotificationProvider');
+  }
   return context;
-}; 
+}
+
+// 각 뱃지 카운트 조회 함수들
+async function getUnreadAnnouncementsCount(userId: string): Promise<number> {
+  try {
+    const response = await supabaseApiService.announcements.getAll();
+    const announcements = response.data;
+    
+    // 사용자가 읽지 않은 공지사항 수 (active하고 읽지 않은 것들)
+    const unreadCount = announcements.filter(ann => 
+      ann.isActive && !ann.readBy?.includes(userId)
+    ).length;
+    
+    return unreadCount;
+  } catch (error) {
+    console.error('Failed to get unread announcements count:', error);
+    return 0;
+  }
+}
+
+async function getMyPendingTasksCount(userId: string): Promise<number> {
+  try {
+    const response = await supabaseApiService.tasks.getAll({ 
+      status: 'pending' 
+    });
+    
+    // 나에게 할당된 대기 중인 업무 수
+    const myPendingTasks = response.data.filter(task => 
+      task.assigneeId === userId && task.status === 'pending'
+    ).length;
+    
+    return myPendingTasks;
+  } catch (error) {
+    console.error('Failed to get pending tasks count:', error);
+    return 0;
+  }
+}
+
+async function getTodayReportsCount(): Promise<number> {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const response = await supabaseApiService.dailyReports.getAll({
+      dateFrom: today,
+      dateTo: today
+    });
+    
+    // 오늘 작성된 보고서 수 (새로운 보고서 표시)
+    return response.data.length;
+  } catch (error) {
+    console.error('Failed to get today reports count:', error);
+    return 0;
+  }
+}
+
+async function getNewManualsCount(): Promise<number> {
+  try {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    
+    const response = await supabaseApiService.manuals.getAll();
+    
+    // 최근 7일 내 작성된 메뉴얼 수
+    const newManuals = response.data.filter(manual => 
+      new Date(manual.createdAt) > weekAgo
+    ).length;
+    
+    return newManuals;
+  } catch (error) {
+    console.error('Failed to get new manuals count:', error);
+    return 0;
+  }
+}
+
+async function getUnreadNotificationsCount(userId: string): Promise<number> {
+  try {
+    const notifications = await supabaseApiService.notifications.getAll();
+    
+    // 읽지 않은 알림 수
+    const unreadCount = notifications.filter(notification => 
+      !notification.isRead
+    ).length;
+    
+    return unreadCount;
+  } catch (error) {
+    console.error('Failed to get unread notifications count:', error);
+    return 0;
+  }
+}
+
+async function getPendingSuggestionsCount(): Promise<number> {
+  try {
+    const response = await supabaseApiService.suggestions.getAll({ 
+      status: 'pending' 
+    });
+    
+    // 대기 중인 건의사항 수 (관리자용)
+    return response.data.length;
+  } catch (error) {
+    console.error('Failed to get pending suggestions count:', error);
+    return 0;
+  }
+} 

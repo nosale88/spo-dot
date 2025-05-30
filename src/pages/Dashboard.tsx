@@ -1,196 +1,407 @@
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   Bell,
   Megaphone,
-  Briefcase, // 총 업무
-  Loader2, // 진행 중 (Zap 대신 사용)
-  CheckCircle2, // 완료
-  AlertTriangle, // 중요 업무
+  Briefcase,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  Users,
+  Calendar,
+  TrendingUp,
+  FileText,
+  MessageSquare,
+  ArrowRight,
+  Timer,
+  Target,
+  BarChart3,
+  Zap
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useTask } from '../contexts/TaskContext';
+import { useAnnouncement } from '../contexts/AnnouncementContext';
+import { useMember } from '../contexts/MemberContext';
+import { format, isToday, isTomorrow, differenceInDays, startOfDay, endOfDay, isAfter, isBefore } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import clsx from 'clsx';
 
-interface Task {
-  id: string;
-  title: string;
-  team: string;
-  status: '진행중' | '완료';
-  dueDate: string;
-  priority: '높음' | '중간' | '낮음';
-}
+// 퀴즈 타임 배지 컴포넌트
+const QuickActionBadge = ({ icon, label, count, color, link }: {
+  icon: React.ReactNode;
+  label: string;
+  count: number;
+  color: string;
+  link: string;
+}) => (
+  <Link to={link}>
+    <motion.div 
+      whileHover={{ scale: 1.02 }}
+      className={`p-4 rounded-xl shadow-sm border border-gray-200 bg-white hover:shadow-md transition-all cursor-pointer`}
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-600">{label}</p>
+          <p className={`text-2xl font-bold ${color}`}>{count}</p>
+        </div>
+        <div className={`p-3 rounded-full ${color.replace('text-', 'bg-').replace('-600', '-100')}`}>
+          {icon}
+        </div>
+      </div>
+    </motion.div>
+  </Link>
+);
 
-interface Announcement {
-  id: string;
-  title: string;
-  date: string;
-  contentSnippet: string;
-}
-
-const summaryStats = [
-  { title: '총 업무', value: 12, icon: <Briefcase size={28} className="text-blue-500" />, bgColor: 'bg-blue-100' },
-  { title: '진행 중', value: 5, icon: <Loader2 size={28} className="text-yellow-500" />, bgColor: 'bg-yellow-100' },
-  { title: '완료', value: 7, icon: <CheckCircle2 size={28} className="text-green-500" />, bgColor: 'bg-green-100' },
-  { title: '중요 업무', value: 3, icon: <AlertTriangle size={28} className="text-red-500" />, bgColor: 'bg-red-100' },
-];
-
-const tasks: Task[] = [
-  {
-    id: '1',
-    title: '월간 보고서 작성',
-    team: '마케팅팀',
-    status: '진행중',
-    dueDate: '오늘',
-    priority: '높음',
-  },
-  {
-    id: '2',
-    title: '고객 미팅 준비',
-    team: '영업팀',
-    status: '진행중',
-    dueDate: '내일',
-    priority: '중간',
-  },
-  {
-    id: '3',
-    title: '이메일 회신',
-    team: '관리팀',
-    status: '완료',
-    dueDate: '오늘',
-    priority: '낮음',
-  },
-];
-
-const announcements: Announcement[] = [
-  {
-    id: '1',
-    title: '전체 회의 안내',
-    date: '2023-06-20',
-    contentSnippet: '이번 주 금요일 오후 3시에 전체 회의가 있습니다.',
-  },
-  {
-    id: '2',
-    title: '시스템 점검 안내',
-    date: '2023-06-18',
-    contentSnippet: '6월 25일 오전 2시부터 4시까지 시스템 점검이 있을 예정입니다.',
-  },
-  {
-    id: '3',
-    title: '신규 프로젝트 시작',
-    date: '2023-06-15',
-    contentSnippet: '7월부터 신규 프로젝트가 시작됩니다. 관련 부서는 준비 바랍니다.',
-  },
-];
-
-const getPriorityClass = (priority: Task['priority']) => {
+// 업무 우선순위 색상
+const getPriorityColor = (priority: string) => {
   switch (priority) {
-    case '높음': return 'bg-red-500';
-    case '중간': return 'bg-orange-500';
-    case '낮음': return 'bg-green-500';
+    case 'high': return 'bg-red-500';
+    case 'medium': return 'bg-yellow-500';
+    case 'low': return 'bg-green-500';
     default: return 'bg-gray-500';
   }
 };
 
-const getStatusClass = (status: Task['status']) => {
+// 업무 상태 색상
+const getStatusColor = (status: string) => {
   switch (status) {
-    case '진행중': return 'bg-yellow-100 text-yellow-800';
-    case '완료': return 'bg-green-100 text-green-800';
+    case 'pending': return 'bg-yellow-100 text-yellow-800';
+    case 'in_progress': return 'bg-blue-100 text-blue-800';
+    case 'completed': return 'bg-green-100 text-green-800';
+    case 'cancelled': return 'bg-red-100 text-red-800';
     default: return 'bg-gray-100 text-gray-800';
   }
 };
 
+// 업무 상태 라벨
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case 'pending': return '대기중';
+    case 'in_progress': return '진행중';
+    case 'completed': return '완료';
+    case 'cancelled': return '취소됨';
+    default: return status;
+  }
+};
+
 const Dashboard = () => {
+  const { user } = useAuth();
+  const { tasks } = useTask();
+  const { announcements } = useAnnouncement();
+  const { members } = useMember();
+
+  // 오늘 날짜
   const today = new Date();
-  const formattedDate = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 ${
-    ['일', '월', '화', '수', '목', '금', '토'][today.getDay()]
-  }요일`;
+  const formattedDate = format(today, 'yyyy년 MM월 dd일 EEEE', { locale: ko });
+
+  // 내 업무 필터링
+  const myTasks = tasks.filter(task => 
+    task.assignedTo.includes(user?.id || '') || task.assignedBy === user?.id
+  );
+
+  // 오늘 마감 업무
+  const todayTasks = myTasks.filter(task => {
+    if (!task.dueDate) return false;
+    return isToday(new Date(task.dueDate));
+  });
+
+  // 내일 마감 업무
+  const tomorrowTasks = myTasks.filter(task => {
+    if (!task.dueDate) return false;
+    return isTomorrow(new Date(task.dueDate));
+  });
+
+  // 지연된 업무
+  const overdueTasks = myTasks.filter(task => {
+    if (!task.dueDate || task.status === 'completed') return false;
+    return isBefore(new Date(task.dueDate), startOfDay(today));
+  });
+
+  // 진행중인 업무
+  const inProgressTasks = myTasks.filter(task => task.status === 'in-progress');
+
+  // 완료된 업무 (이번 주)
+  const completedThisWeek = myTasks.filter(task => {
+    if (task.status !== 'completed' || !task.updatedAt) return false;
+    const completedDate = new Date(task.updatedAt);
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    return isAfter(completedDate, weekAgo);
+  }).length;
+
+  // 중요한 업무
+  const highPriorityTasks = myTasks.filter(task => 
+    task.priority === 'high' && task.status !== 'completed'
+  );
+
+  // 최근 공지사항 (상위 3개)
+  const recentAnnouncements = announcements
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 3);
+
+  // 업무 통계
+  const taskStats = [
+    {
+      label: '오늘 마감',
+      count: todayTasks.length,
+      color: 'text-red-600',
+      icon: <Timer size={24} />,
+      link: '/dashboard/my-tasks'
+    },
+    {
+      label: '진행중',
+      count: inProgressTasks.length,
+      color: 'text-blue-600',
+      icon: <Zap size={24} />,
+      link: '/dashboard/my-tasks'
+    },
+    {
+      label: '이번주 완료',
+      count: completedThisWeek,
+      color: 'text-green-600',
+      icon: <CheckCircle2 size={24} />,
+      link: '/dashboard/my-tasks'
+    },
+    {
+      label: '중요 업무',
+      count: highPriorityTasks.length,
+      color: 'text-orange-600',
+      icon: <AlertTriangle size={24} />,
+      link: '/dashboard/my-tasks'
+    }
+  ];
+
+  // 위젯 애니메이션
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1 }
+  };
 
   return (
-    <div className="p-6 bg-slate-100 min-h-screen">
-      {/* 1. 상단 바 */}
-      <header className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-slate-800">대시보드</h1>
-        <div className="flex items-center space-x-4">
-          <button aria-label="Notifications" className="relative">
-            <Bell className="text-slate-600 hover:text-slate-800 transition-colors" size={24} />
-            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-          </button>
-          <span className="text-sm text-slate-600">{formattedDate}</span>
+    <motion.div 
+      className="p-4 sm:p-6 lg:p-8 space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* 헤더 */}
+      <motion.header variants={itemVariants} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            안녕하세요, {user?.name}님 👋
+          </h1>
+          <p className="text-gray-600 mt-1">{formattedDate}</p>
         </div>
-      </header>
+        <div className="flex items-center gap-3">
+          <Link 
+            to="/dashboard/my-tasks"
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+          >
+            <Briefcase size={20} />
+            내 업무 보기
+          </Link>
+        </div>
+      </motion.header>
 
-      {/* 2. 공지사항 배너 */}
-      <div className="bg-blue-600 text-white p-3 rounded-lg flex items-center space-x-3 mb-6 shadow-md">
-        <Megaphone size={24} className="flex-shrink-0" />
-        <p className="text-sm font-medium">공지사항: 이번 주 금요일 오후 3시에 전체 회의가 있습니다. 모든 직원은 참석해주세요.</p>
-      </div>
-
-      {/* 3. 요약 카드 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {summaryStats.map((stat) => (
-          <div key={stat.title} className={`p-5 rounded-xl shadow-lg flex items-center space-x-4 ${stat.bgColor}`}>
-            <div className={`p-3 rounded-full ${stat.bgColor.replace('-100', '-200')}`}>
-              {stat.icon}
-            </div>
+      {/* 긴급 알림 배너 */}
+      {overdueTasks.length > 0 && (
+        <motion.div 
+          variants={itemVariants}
+          className="bg-red-50 border border-red-200 rounded-lg p-4"
+        >
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="text-red-500" size={24} />
             <div>
-              <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-              <p className="text-3xl font-bold text-gray-800">{stat.value}</p>
+              <p className="text-red-800 font-medium">
+                지연된 업무가 {overdueTasks.length}개 있습니다
+              </p>
+              <p className="text-red-600 text-sm">
+                마감일이 지난 업무를 확인해주세요.
+              </p>
             </div>
+            <Link 
+              to="/dashboard/my-tasks"
+              className="ml-auto bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
+            >
+              확인하기
+            </Link>
           </div>
+        </motion.div>
+      )}
+
+      {/* 업무 통계 카드 */}
+      <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {taskStats.map((stat, index) => (
+          <QuickActionBadge key={index} {...stat} />
         ))}
-      </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 4. 오늘의 업무 테이블 */} 
-        <section className="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
-          <h2 className="text-xl font-semibold mb-6 text-slate-700">오늘의 업무</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px]">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">업무</th>
-                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">상태</th>
-                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">마감일</th>
-                  <th className="pb-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider">중요도</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.map((task) => (
-                  <tr key={task.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="py-4 pr-3">
-                      <p className="font-semibold text-slate-800">{task.title}</p>
-                      <p className="text-xs text-slate-500">{task.team}</p>
-                    </td>
-                    <td className="py-4 pr-3">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClass(task.status)}`}>
-                        {task.status}
+        {/* 오늘의 업무 */}
+        <motion.section variants={itemVariants} className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Calendar className="text-indigo-600" size={24} />
+              오늘의 업무
+            </h2>
+            <Link 
+              to="/dashboard/my-tasks"
+              className="text-indigo-600 hover:text-indigo-700 text-sm font-medium flex items-center gap-1"
+            >
+              전체 보기 <ArrowRight size={16} />
+            </Link>
+          </div>
+          
+          {todayTasks.length === 0 ? (
+            <div className="text-center py-8">
+              <CheckCircle2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">오늘 마감인 업무가 없습니다</p>
+              <p className="text-gray-400 text-sm">새로운 업무를 추가하거나 기존 업무를 확인해보세요</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {todayTasks.slice(0, 5).map((task) => (
+                <div key={task.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${getPriorityColor(task.priority)}`} />
+                    <div>
+                      <h3 className="font-medium text-gray-900">{task.title}</h3>
+                      <p className="text-sm text-gray-600">{task.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                      {getStatusLabel(task.status)}
+                    </span>
+                    {task.dueDate && (
+                      <span className="text-sm text-gray-500">
+                        {format(new Date(task.dueDate), 'HH:mm')}
                       </span>
-                    </td>
-                    <td className="py-4 pr-3 text-sm text-slate-700">{task.dueDate}</td>
-                    <td className="py-4 text-center">
-                      <span className={`inline-block h-3 w-3 rounded-full ${getPriorityClass(task.priority)}`}></span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {todayTasks.length > 5 && (
+                <div className="text-center pt-4">
+                  <Link 
+                    to="/dashboard/my-tasks"
+                    className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+                  >
+                    +{todayTasks.length - 5}개 더 보기
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+        </motion.section>
 
-        {/* 5. 최근 공지사항 목록 */} 
-        <section className="bg-white p-6 rounded-xl shadow-lg">
-          <h2 className="text-xl font-semibold mb-6 text-slate-700">최근 공지사항</h2>
-          <div className="space-y-5">
-            {announcements.map((announcement) => (
-              <div key={announcement.id} className="pb-4 border-b border-slate-100 last:border-b-0">
-                <h3 className="font-semibold text-slate-800 mb-1">{announcement.title}</h3>
-                <p className="text-xs text-slate-500 mb-1.5">{announcement.date}</p>
-                <p className="text-sm text-slate-600 mb-2 line-clamp-2">{announcement.contentSnippet}</p>
-                <button className="text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-full transition-colors">
-                  필독
-                </button>
+        {/* 사이드 패널 */}
+        <div className="space-y-6">
+          {/* 내일의 업무 미리보기 */}
+          <motion.section variants={itemVariants} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Clock className="text-yellow-600" size={20} />
+              내일 마감 업무
+            </h3>
+            {tomorrowTasks.length === 0 ? (
+              <p className="text-gray-500 text-sm">내일 마감인 업무가 없습니다</p>
+            ) : (
+              <div className="space-y-3">
+                {tomorrowTasks.slice(0, 3).map((task) => (
+                  <div key={task.id} className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
+                    <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`} />
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 text-sm">{task.title}</p>
+                      <p className="text-xs text-gray-600">{task.description}</p>
+                    </div>
+                  </div>
+                ))}
+                {tomorrowTasks.length > 3 && (
+                  <p className="text-xs text-gray-500 text-center">+{tomorrowTasks.length - 3}개 더</p>
+                )}
               </div>
-            ))}
-          </div>
-        </section>
+            )}
+          </motion.section>
+
+          {/* 최근 공지사항 */}
+          <motion.section variants={itemVariants} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Megaphone className="text-blue-600" size={20} />
+                공지사항
+              </h3>
+              <Link 
+                to="/dashboard/announcements"
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                전체보기
+              </Link>
+            </div>
+            {recentAnnouncements.length === 0 ? (
+              <p className="text-gray-500 text-sm">최근 공지사항이 없습니다</p>
+            ) : (
+              <div className="space-y-4">
+                {recentAnnouncements.map((announcement) => (
+                  <div key={announcement.id} className="border-b border-gray-100 last:border-b-0 pb-3 last:pb-0">
+                    <h4 className="font-medium text-gray-900 text-sm mb-1">{announcement.title}</h4>
+                    <p className="text-xs text-gray-600 mb-2">
+                      {format(new Date(announcement.createdAt), 'MM.dd', { locale: ko })}
+                    </p>
+                    <p className="text-xs text-gray-500 line-clamp-2">
+                      {announcement.content.length > 50 
+                        ? `${announcement.content.substring(0, 50)}...` 
+                        : announcement.content
+                      }
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.section>
+
+          {/* 빠른 작업 */}
+          <motion.section variants={itemVariants} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Target className="text-green-600" size={20} />
+              빠른 작업
+            </h3>
+            <div className="space-y-3">
+              <Link 
+                to="/dashboard/daily-report"
+                className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <FileText className="text-blue-600" size={20} />
+                <span className="text-sm font-medium text-gray-900">일일 보고서 작성</span>
+              </Link>
+              <Link 
+                to="/dashboard/suggestions"
+                className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <MessageSquare className="text-green-600" size={20} />
+                <span className="text-sm font-medium text-gray-900">건의사항 작성</span>
+              </Link>
+              <Link 
+                to="/dashboard/schedules"
+                className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Calendar className="text-purple-600" size={20} />
+                <span className="text-sm font-medium text-gray-900">일정 관리</span>
+              </Link>
+            </div>
+          </motion.section>
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

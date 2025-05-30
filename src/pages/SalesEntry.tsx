@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, Filter, X, Check, AlertCircle, Calendar, User, CreditCard, Edit3, Trash2, MoreVertical, Shield } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { useUser } from '../contexts/UserContext';
 import type { Database } from '../types/database.types';
 import clsx from 'clsx';
 
@@ -12,6 +13,7 @@ type Sale = Database['public']['Tables']['sales']['Row'] & { pass_name?: string 
 
 export default function SalesEntry() {
   const { user, isAdmin } = useAuth();
+  const { staff } = useUser();
   const [passes, setPasses] = useState<Pass[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [form, setForm] = useState<SaleInput>({ 
@@ -20,6 +22,10 @@ export default function SalesEntry() {
     pass_id: null,
     sale_date: new Date().toISOString().split('T')[0]
   });
+  const [staffId, setStaffId] = useState<string>('');
+  const [discountType, setDiscountType] = useState<'amount' | 'percentage'>('amount');
+  const [discountValue, setDiscountValue] = useState<number>(0);
+  
   const [paymentMethod, setPaymentMethod] = useState<string>('cash');
   const [notes, setNotes] = useState<string>('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -218,11 +224,26 @@ export default function SalesEntry() {
       pass_id: null,
       sale_date: new Date().toISOString().split('T')[0]
     });
+    setStaffId('');
+    setDiscountType('amount');
+    setDiscountValue(0);
     setPaymentMethod('cash');
     setNotes('');
     setEditingId(null);
     setShowForm(false);
   };
+
+  // 할인된 최종 금액 계산
+  const finalAmount = useMemo(() => {
+    if (!form.amount || discountValue <= 0) return form.amount;
+    
+    if (discountType === 'amount') {
+      return Math.max(0, form.amount - discountValue);
+    } else {
+      const discountAmount = (form.amount * discountValue) / 100;
+      return Math.max(0, form.amount - discountAmount);
+    }
+  }, [form.amount, discountType, discountValue]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('ko-KR', {
@@ -637,6 +658,24 @@ export default function SalesEntry() {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
+                        담당자
+                      </label>
+                      <select
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        value={staffId}
+                        onChange={(e) => setStaffId(e.target.value)}
+                      >
+                        <option value="">담당자 선택 (선택사항)</option>
+                        {staff?.map(member => (
+                          <option key={member.id} value={member.id}>
+                            {member.name} - {member.position || '직원'}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
                         이용권
                       </label>
                       <select
@@ -679,6 +718,79 @@ export default function SalesEntry() {
                         </div>
                       </div>
                     </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        할인 유형
+                      </label>
+                      <div className="flex space-x-3">
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="discountType"
+                            value="amount"
+                            checked={discountType === 'amount'}
+                            onChange={(e) => setDiscountType(e.target.value as 'amount' | 'percentage')}
+                            className="mr-2 text-green-600 focus:ring-green-500"
+                          />
+                          <span className="text-sm">금액 할인</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name="discountType"
+                            value="percentage"
+                            checked={discountType === 'percentage'}
+                            onChange={(e) => setDiscountType(e.target.value as 'amount' | 'percentage')}
+                            className="mr-2 text-green-600 focus:ring-green-500"
+                          />
+                          <span className="text-sm">% 할인</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        할인 {discountType === 'amount' ? '금액' : '비율'}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          placeholder={discountType === 'amount' ? '할인 금액을 입력하세요' : '할인 비율을 입력하세요 (예: 10)'}
+                          className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          value={discountValue || ''}
+                          onChange={(e) => setDiscountValue(Number(e.target.value))}
+                          min="0"
+                          max={discountType === 'percentage' ? '100' : undefined}
+                        />
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                          <span className="text-slate-500 text-sm">
+                            {discountType === 'amount' ? '원' : '%'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {discountValue > 0 && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-600">원가:</span>
+                          <span className="font-medium">{formatCurrency(form.amount)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm mt-1">
+                          <span className="text-slate-600">
+                            할인 ({discountType === 'amount' ? formatCurrency(discountValue) : `${discountValue}%`}):
+                          </span>
+                          <span className="font-medium text-red-600">
+                            -{formatCurrency(discountType === 'amount' ? discountValue : (form.amount * discountValue) / 100)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-lg font-bold mt-2 pt-2 border-t border-blue-300">
+                          <span className="text-slate-800">최종 금액:</span>
+                          <span className="text-green-600">{formatCurrency(finalAmount)}</span>
+                        </div>
+                      </div>
+                    )}
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">

@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'staff';
+export type UserRole = 'admin' | 'reception' | 'fitness' | 'tennis' | 'golf';
 export type Team = 'Reception' | 'Fitness' | 'Golf' | 'Tennis';
 
 export interface User {

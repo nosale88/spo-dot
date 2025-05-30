@@ -6,9 +6,23 @@ import {
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { useUser, Notification, NotificationType } from '../../contexts/UserContext';
 import { useNotification } from '../../contexts/NotificationContext';
+import { supabaseApiService } from '../../services/supabaseApi';
+import { useAuth } from '../../contexts/AuthContext';
 import { Link } from 'react-router-dom';
+
+type NotificationType = 'info' | 'warning' | 'success' | 'error';
+
+interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  link?: string;
+  userId: string;
+}
 
 const NotificationIcon = ({ type }: { type: NotificationType }) => {
   switch (type) {
@@ -91,20 +105,69 @@ const NotificationItem = ({ notification, onRead, onDelete }: {
 };
 
 const NotificationCenter = () => {
-  const { 
-    notifications, 
-    unreadNotificationsCount, 
-    markNotificationAsRead, 
-    markAllNotificationsAsRead, 
-    deleteNotification 
-  } = useUser();
+  const { badges } = useNotification();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
   
-  // notifications가 undefined일 경우 빈 배열로 처리
-  const safeNotifications = notifications || [];
-  const safeUnreadCount = unreadNotificationsCount || 0;
-  
+  // 알림 데이터 로드
+  const loadNotifications = async () => {
+    if (!user?.id) return;
+    
+    setLoading(true);
+    try {
+      const response = await supabaseApiService.notifications.getByUserId(user.id);
+      setNotifications(response.data);
+    } catch (error) {
+      console.error('알림 로드 실패:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 알림 읽음 처리
+  const markAsRead = async (notificationId: string) => {
+    try {
+      await supabaseApiService.notifications.markAsRead(notificationId);
+      setNotifications(prev => prev.map(notif => 
+        notif.id === notificationId ? { ...notif, isRead: true } : notif
+      ));
+    } catch (error) {
+      console.error('알림 읽음 처리 실패:', error);
+    }
+  };
+
+  // 알림 삭제
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      await supabaseApiService.notifications.delete(notificationId);
+      setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
+    } catch (error) {
+      console.error('알림 삭제 실패:', error);
+    }
+  };
+
+  // 모든 알림 읽음 처리
+  const markAllAsRead = async () => {
+    if (!user?.id) return;
+    
+    try {
+      await supabaseApiService.notifications.markAllAsRead(user.id);
+      setNotifications(prev => prev.map(notif => ({ ...notif, isRead: true })));
+    } catch (error) {
+      console.error('모든 알림 읽음 처리 실패:', error);
+    }
+  };
+
+  // 알림 센터 열릴 때마다 데이터 로드
+  useEffect(() => {
+    if (isOpen) {
+      loadNotifications();
+    }
+  }, [isOpen, user?.id]);
+
   // 바깥쪽 클릭 시 알림 센터 닫기
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -118,6 +181,8 @@ const NotificationCenter = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   // 알림이 비어 있을 때 보여줄 컴포넌트
   const EmptyNotifications = () => (
@@ -139,9 +204,9 @@ const NotificationCenter = () => {
         className="relative p-1 rounded-full text-slate-500 hover:text-slate-600 focus:outline-none"
       >
         <Bell className="h-6 w-6" />
-        {safeUnreadCount > 0 && (
+        {unreadCount > 0 && (
           <span className="absolute top-0 right-0 inline-flex items-center justify-center h-4 w-4 rounded-full bg-red-500 text-white text-xs">
-            {safeUnreadCount > 9 ? '9+' : safeUnreadCount}
+            {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
@@ -156,12 +221,14 @@ const NotificationCenter = () => {
             className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-slate-200 z-50"
           >
             <div className="p-3 border-b border-slate-200 flex justify-between items-center">
-              <h3 className="font-medium text-slate-900">알림</h3>
+              <h3 className="font-medium text-slate-900">
+                알림 {notifications.length > 0 && `(${unreadCount}/${notifications.length})`}
+              </h3>
               <div className="flex space-x-1">
-                {safeUnreadCount > 0 && (
+                {unreadCount > 0 && (
                   <button
-                    onClick={() => markAllNotificationsAsRead?.()}
-                    className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded"
+                    onClick={markAllAsRead}
+                    className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200"
                   >
                     모두 읽음
                   </button>
@@ -176,13 +243,17 @@ const NotificationCenter = () => {
             </div>
             
             <div className="max-h-[50vh] overflow-y-auto">
-              {safeNotifications.length > 0 ? (
-                safeNotifications.map(notification => (
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                </div>
+              ) : notifications.length > 0 ? (
+                notifications.map(notification => (
                   <NotificationItem
                     key={notification.id}
                     notification={notification}
-                    onRead={markNotificationAsRead || (() => {})}
-                    onDelete={deleteNotification || (() => {})}
+                    onRead={markAsRead}
+                    onDelete={deleteNotification}
                   />
                 ))
               ) : (

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useTask, TaskComment } from '../../contexts/TaskContext';
@@ -14,21 +14,35 @@ const TaskComments = ({ taskId, comments }: TaskCommentsProps) => {
   const { addComment } = useTask();
   const { user } = useAuth();
   const [newComment, setNewComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const handleAddComment = () => {
-    if (!newComment.trim() || !user) return;
+  const handleAddComment = async () => {
+    if (!newComment.trim() || !user || isSubmitting) return;
     
-    addComment(taskId, {
-      content: newComment,
-      authorId: user.id,
-      authorName: user.name
-    });
+    setIsSubmitting(true);
     
-    setNewComment('');
+    try {
+      const success = await addComment(taskId, {
+        content: newComment,
+        authorId: user.id,
+        authorName: user.name
+      });
+      
+      if (success) {
+        setNewComment('');
+        console.log('✅ 댓글이 성공적으로 추가되었습니다.');
+      } else {
+        console.error('❌ 댓글 추가 실패');
+      }
+    } catch (error) {
+      console.error('댓글 추가 중 오류:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !isSubmitting) {
       e.preventDefault();
       handleAddComment();
     }
@@ -74,13 +88,18 @@ const TaskComments = ({ taskId, comments }: TaskCommentsProps) => {
           onKeyDown={handleKeyDown}
           placeholder="댓글을 입력하세요..."
           className="form-input pr-12 w-full min-h-[80px]"
+          disabled={isSubmitting}
         />
         <button
           onClick={handleAddComment}
-          disabled={!newComment.trim()}
+          disabled={!newComment.trim() || isSubmitting}
           className="absolute right-2 bottom-2 p-2 rounded-full bg-primary text-white disabled:opacity-50 disabled:pointer-events-none"
         >
-          <Send size={18} />
+          {isSubmitting ? (
+            <Loader2 size={18} className="animate-spin" />
+          ) : (
+            <Send size={18} />
+          )}
         </button>
       </div>
     </div>

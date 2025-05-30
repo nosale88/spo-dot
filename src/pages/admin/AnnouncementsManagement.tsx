@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useAnnouncement } from '../../contexts/AnnouncementContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { Announcement } from '../../types'; 
 import { format, parseISO } from 'date-fns';
 import { Edit3, Trash2, PlusCircle, CheckSquare, Square } from 'lucide-react';
 
-const MOCK_USER_ID = 'admin'; // 실제 로그인 유저 id로 대체 가능
+
 
 const AnnouncementsManagement: React.FC = () => {
+  const { user } = useAuth();
   const {
     announcements,
     loading,
@@ -35,9 +37,8 @@ const AnnouncementsManagement: React.FC = () => {
     return (
       a.title?.toLowerCase().includes(q) ||
       a.content?.toLowerCase().includes(q) ||
-      (a.targetAudience || '').toLowerCase().includes(q) ||
-      (a.isPublished ? '게시됨' : '게시 안됨').includes(q) ||
-      (a.category || '').toLowerCase().includes(q) ||
+      (a.targetRoles || []).some(role => role.toLowerCase().includes(q)) ||
+      (a.isActive ? '게시됨' : '게시 안됨').includes(q) ||
       (a.tags || []).some(tag => tag.toLowerCase().includes(q))
     );
   }), [announcements, search]);
@@ -45,11 +46,21 @@ const AnnouncementsManagement: React.FC = () => {
   const handleOpenModal = (announcement?: Announcement) => {
     if (announcement) {
       setCurrentAnnouncement({ ...announcement });
-      setCategoryInput(announcement.category || '');
+      setCategoryInput(''); // category는 tags에 포함
       setTagsInput((announcement.tags || []).join(','));
       setIsEditMode(true);
     } else {
-      setCurrentAnnouncement({ title: '', content: '', targetAudience: 'all', category: '', tags: [] });
+      setCurrentAnnouncement({ 
+        title: '', 
+        content: '', 
+        targetRoles: ['all'], 
+        tags: [],
+        priority: 'medium',
+        isPinned: false,
+        isActive: true,
+        authorId: user?.id || '',
+        authorName: user?.name || ''
+      });
       setCategoryInput('');
       setTagsInput('');
       setIsEditMode(false);
@@ -85,9 +96,13 @@ const AnnouncementsManagement: React.FC = () => {
         const newAnnouncementData: Omit<Announcement, 'id' | 'createdAt' | 'updatedAt'> = {
           title: currentAnnouncement.title,
           content: currentAnnouncement.content,
-          targetAudience: currentAnnouncement.targetAudience || 'all',
-          category,
+          targetRoles: currentAnnouncement.targetRoles || ['all'],
           tags,
+          priority: currentAnnouncement.priority || 'medium',
+          isPinned: currentAnnouncement.isPinned || false,
+          isActive: currentAnnouncement.isActive || true,
+          authorId: currentAnnouncement.authorId || user?.id || '',
+          authorName: currentAnnouncement.authorName || user?.name || ''
         };
         await addAnnouncement(newAnnouncementData);
       }
@@ -128,12 +143,6 @@ const AnnouncementsManagement: React.FC = () => {
 
   // 공지 클릭 시 읽음 처리
   const handleAnnouncementClick = (announcement: Announcement) => {
-    if (!announcement.readBy?.includes(MOCK_USER_ID)) {
-      updateAnnouncement({
-        ...announcement,
-        readBy: [...(announcement.readBy || []), MOCK_USER_ID],
-      });
-    }
     handleOpenModal(announcement);
   };
 
@@ -248,18 +257,18 @@ const AnnouncementsManagement: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap cursor-pointer" onClick={() => handleAnnouncementClick(announcement)}>
                       <div className="text-sm font-semibold text-slate-900 truncate max-w-xs" title={announcement.title}>
                         {announcement.title}
-                        {!(announcement.readBy || []).includes(MOCK_USER_ID) && (
+                        {!(announcement.readBy || []).includes(user?.id || '') && (
                           <span className="ml-2 inline-block px-2 py-0.5 text-xs bg-red-500 text-white rounded-full align-middle">NEW</span>
                         )}
                       </div>
                       <div className="text-xs text-slate-500 truncate max-w-xs" title={announcement.content}>{announcement.content.substring(0, 50) + (announcement.content.length > 50 ? '...' : '')}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
-                      {announcement.targetAudience === 'all' ? '전체' : announcement.targetAudience}
+                      {announcement.targetRoles?.join(', ') || '전체'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${announcement.isPublished ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {announcement.isPublished ? '게시됨' : '게시 안됨'}
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${announcement.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {announcement.isActive ? '게시됨' : '게시 안됨'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
@@ -354,14 +363,14 @@ const AnnouncementsManagement: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="targetAudience" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="targetRoles" className="block text-sm font-medium text-slate-700 mb-1">
                   대상
                 </label>
                 <select
-                  id="targetAudience"
-                  name="targetAudience"
-                  value={currentAnnouncement.targetAudience || 'all'}
-                  onChange={handleInputChange}
+                  id="targetRoles"
+                  name="targetRoles"
+                  value={currentAnnouncement.targetRoles?.join(',') || 'all'}
+                  onChange={e => setTagsInput(e.target.value)}
                   className="mt-1 block w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all"
                 >
                   <option value="all">전체</option>
@@ -369,21 +378,6 @@ const AnnouncementsManagement: React.FC = () => {
                   <option value="staff">직원</option>
                   {/* Add more specific roles/groups if needed */}
                 </select>
-              </div>
-
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-slate-700 mb-1">
-                  카테고리
-                </label>
-                <input
-                  type="text"
-                  id="category"
-                  name="category"
-                  value={categoryInput}
-                  onChange={e => setCategoryInput(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm placeholder-slate-400 transition-all"
-                  placeholder="예: 일반, 이벤트, 시스템"
-                />
               </div>
 
               <div>

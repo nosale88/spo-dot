@@ -9,6 +9,8 @@ import {
 import { useState } from 'react';
 import { useUser, Staff } from '../../contexts/UserContext'; // useUser, Staff import
 import AddStaffForm from '../../components/forms/AddStaffForm'; // AddStaffForm import
+import EditStaffForm from '../../components/forms/EditStaffForm'; // EditStaffForm import
+import PermissionsForm from '../../components/forms/PermissionsForm'; // PermissionsForm import
 
 const getStatusBadgeClass = (status: Staff['status']) => { // Staff['status'] 사용
   // UserContext의 UserStatus 타입 ('active', 'inactive', 'pending', 'suspended') 에 맞춰 조정 필요
@@ -23,10 +25,9 @@ const getStatusBadgeClass = (status: Staff['status']) => { // Staff['status'] �
 const StaffManagement = () => {
   const { staff: staffList, deleteUser: deleteStaffMember } = useUser(); // UserContext에서 staff 목록과 삭제 함수 가져오기
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  // TODO: Add states for edit/permissions modals
-  const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
-
+  const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
 
   const today = new Date();
   const formattedDate = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][today.getDay()]
@@ -43,7 +44,7 @@ const StaffManagement = () => {
   // TODO: Implement edit and delete handlers
   const handleEditStaff = (staffMember: Staff) => {
     setEditingStaff(staffMember);
-    // setIsEditModalOpen(true); // 수정 모달 상태 관리 필요
+    setIsEditModalOpen(true);
     console.log('Edit staff:', staffMember);
   };
 
@@ -158,11 +159,21 @@ const StaffManagement = () => {
         <AddStaffForm onClose={handleCloseAddModal} />
       )}
 
-      {/* TODO: 직원 수정 모달 */}
-      {/* {isEditModalOpen && editingStaff && ( <EditStaffForm staff={editingStaff} onClose={() => setIsEditModalOpen(false)} /> )} */}
+      {/* 직원 수정 모달 */}
+      {isEditModalOpen && editingStaff && (
+        <EditStaffForm 
+          staff={editingStaff} 
+          onClose={() => setIsEditModalOpen(false)} 
+        />
+      )}
 
-      {/* TODO: 권한 설정 모달 */}
-      {/* {isPermissionsModalOpen && editingStaff && ( <PermissionsForm staff={editingStaff} onClose={() => setIsPermissionsModalOpen(false)} /> )} */}
+      {/* 권한 설정 모달 */}
+      {isPermissionsModalOpen && editingStaff && (
+        <PermissionsForm 
+          staff={editingStaff} 
+          onClose={() => setIsPermissionsModalOpen(false)} 
+        />
+      )}
 
     </div>
   );

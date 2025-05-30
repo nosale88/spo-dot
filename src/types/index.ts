@@ -169,19 +169,206 @@ export interface Announcement {
   id: string;
   title: string;
   content: string;
+  authorId: string;
+  authorName: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  tags: string[];
+  expiryDate?: string;
+  isPinned: boolean;
+  isActive: boolean;
+  targetRoles: string[];
+  readBy: string[];
   createdAt: string;
   updatedAt: string;
-  authorId?: string;
-  isPublished: boolean;
-  targetAudience?: string;
-  showInBanner?: boolean;
-  category?: string;
-  tags?: string[];
-  readBy?: string[];
-  attachments?: Attachment[];
-  priority?: 'low' | 'medium' | 'high';
-  startDate?: string;
-  endDate?: string;
+  attachments?: {
+    id: string;
+    name: string;
+    url: string;
+    size: number;
+  }[];
 }
 
-// 직원(사용자) 상태 타입 (UserContext에서 사용)
+// 권한 시스템에서 UserRole과 UserPosition 가져오기
+import { UserRole, UserPosition } from './permissions';
+
+// 공통 타입 정의 - 새로운 부서별 역할 시스템 사용
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  department?: string;
+  position?: UserPosition;
+  avatar?: string;
+  team?: string;
+  isActive?: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  assigneeId: string;
+  assigneeName: string;
+  assignerId: string;
+  assignerName: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  dueDate: string;
+  createdAt: string;
+  updatedAt: string;
+  category: string;
+  tags: string[];
+  comments: TaskComment[];
+}
+
+export interface TaskComment {
+  id: string;
+  taskId: string;
+  authorId: string;
+  authorName: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface DailyReport {
+  id: string;
+  authorId: string;
+  authorName: string;
+  date: string;
+  tasks: {
+    id: string;
+    title: string;
+    status: 'completed' | 'in_progress' | 'pending';
+    description: string;
+  }[];
+  issues: string;
+  tomorrow: string;
+  images: {
+    id: string;
+    url: string;
+    name: string;
+    description?: string;
+  }[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Manual {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  authorId: string;
+  authorName: string;
+  createdAt: string;
+  updatedAt: string;
+  viewCount: number;
+  isPublished: boolean;
+  version: number;
+  lastEditedBy?: string;
+}
+
+export interface SalesEntry {
+  id: string;
+  date: string;
+  authorId: string;
+  authorName: string;
+  revenue: number;
+  membershipSales: number;
+  ptSales: number;
+  supplySales: number;
+  vendingSales: number;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  membershipType: 'basic' | 'premium' | 'vip';
+  membershipStart: string;
+  membershipEnd: string;
+  status: 'active' | 'expired' | 'suspended';
+  personalTrainer?: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Suggestion {
+  id: string;
+  title: string;
+  content: string;
+  category: 'facility' | 'service' | 'program' | 'other';
+  authorId: string;
+  authorName: string;
+  status: 'pending' | 'in_review' | 'approved' | 'rejected' | 'implemented';
+  priority: 'low' | 'medium' | 'high';
+  adminResponse?: string;
+  adminResponseBy?: string;
+  adminResponseAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// API 응답 타입
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  error?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// 필터 및 검색 타입
+export interface FilterOptions {
+  search?: string;
+  category?: string;
+  status?: string;
+  priority?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  authorId?: string;
+  tags?: string[];
+}
+
+// 통계 타입
+export interface DashboardStats {
+  totalTasks: number;
+  completedTasks: number;
+  pendingTasks: number;
+  overdueTasks: number;
+  totalUsers: number;
+  activeCustomers: number;
+  monthlyRevenue: number;
+  dailyReports: number;
+  announcements: number;
+  suggestions: number;
+}
+
+// 알림 타입
+export interface Notification {
+  id: string;
+  type: 'task' | 'announcement' | 'suggestion' | 'system';
+  title: string;
+  message: string;
+  userId: string;
+  isRead: boolean;
+  relatedId?: string; // 관련 데이터의 ID
+  relatedType?: 'task' | 'announcement' | 'suggestion';
+  createdAt: string;
+}

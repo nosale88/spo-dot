@@ -1,5 +1,9 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { addDays } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
+import { notificationService } from '../services/notificationService';
+import { supabase } from '../lib/supabase';
+import { useAuth } from './AuthContext';
 
 // 업무 우선순위
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -64,144 +68,239 @@ interface TaskFilterOptions {
 interface TaskContextType {
   tasks: Task[];
   filteredTasks: Task[];
+  loading: boolean;
+  error: string | null;
   filterTasks: (options: TaskFilterOptions) => void;
-  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateTask: (id: string, updatedData: Partial<Task>) => void;
-  deleteTask: (id: string) => void;
-  addComment: (taskId: string, comment: Omit<TaskComment, 'id' | 'createdAt'>) => void;
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string | null>;
+  updateTask: (id: string, updatedData: Partial<Task>) => Promise<boolean>;
+  deleteTask: (id: string) => Promise<boolean>;
+  addComment: (taskId: string, comment: Omit<TaskComment, 'id' | 'createdAt'>) => Promise<boolean>;
   addAttachment: (taskId: string, attachment: Omit<TaskAttachment, 'id'>) => void;
   deleteAttachment: (taskId: string, attachmentId: string) => void;
+  fetchTasks: () => Promise<void>;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
 export const TaskProvider = ({ children }: { children: ReactNode }) => {
-  // 샘플 업무 생성 함수를 먼저 정의
-  const generateSampleTasks = (): Task[] => {
-    const today = new Date();
-    const tomorrow = addDays(today, 1);
-    const nextWeek = addDays(today, 7);
-    
-    const sampleTasks: Task[] = [
-      {
-        id: 'task-1',
-        title: '장비 유지보수: 트레드밀 #3',
-        description: '정기 점검 및 벨트 조정이 필요합니다. 소모품 교체도 확인해 주세요.',
-        status: 'pending',
-        priority: 'high',
-        category: 'maintenance',
-        dueDate: tomorrow.toISOString(),
-        createdAt: today.toISOString(),
-        updatedAt: today.toISOString(),
-        assignedTo: ['user-1'],
-        assignedToName: ['김철수'],
-        assignedBy: 'admin-1',
-        assignedByName: '관리자',
-        comments: [
-          {
-            id: 'comment-1',
-            content: '부품 주문이 필요할 수 있습니다.',
-            createdAt: today.toISOString(),
-            authorId: 'admin-1',
-            authorName: '관리자'
-          }
-        ]
-      },
-      {
-        id: 'task-2',
-        title: '신규 PT 플랜 작성',
-        description: '신규 회원을 위한 8주 체중 감량 프로그램을 작성해주세요.',
-        status: 'in-progress',
-        priority: 'medium',
-        category: 'client',
-        dueDate: nextWeek.toISOString(),
-        createdAt: addDays(today, -2).toISOString(),
-        updatedAt: today.toISOString(),
-        assignedTo: ['user-2'],
-        assignedToName: ['박지민'],
-        assignedBy: 'admin-1',
-        assignedByName: '관리자'
-      },
-      {
-        id: 'task-3',
-        title: '회원 상담: 김영희',
-        description: '체중 감량 진행 상황과 식단 계획에 대해 상담해주세요.',
-        status: 'completed',
-        priority: 'medium',
-        category: 'client',
-        dueDate: addDays(today, -1).toISOString(),
-        createdAt: addDays(today, -3).toISOString(),
-        updatedAt: addDays(today, -1).toISOString(),
-        completedAt: addDays(today, -1).toISOString(),
-        assignedTo: ['user-3'],
-        assignedToName: ['최준호'],
-        assignedBy: 'admin-1',
-        assignedByName: '관리자',
-        comments: [
-          {
-            id: 'comment-2',
-            content: '상담 완료했습니다. 현재 2kg 감량 성공했으며, 새로운 식단 계획 전달했습니다.',
-            createdAt: addDays(today, -1).toISOString(),
-            authorId: 'user-3',
-            authorName: '최준호'
-          }
-        ]
-      },
-      {
-        id: 'task-4',
-        title: '월간 보고서 작성',
-        description: '4월 회원 등록 현황과 PT 실적을 포함한 월간 보고서를 작성해주세요.',
-        status: 'pending',
-        priority: 'high',
-        category: 'administrative',
-        dueDate: addDays(today, 3).toISOString(),
-        createdAt: today.toISOString(),
-        updatedAt: today.toISOString(),
-        assignedTo: ['admin-2'],
-        assignedToName: ['이영희'],
-        assignedBy: 'admin-1',
-        assignedByName: '관리자'
-      },
-      {
-        id: 'task-5',
-        title: '신규 트레이너 교육',
-        description: '새로 입사한 트레이너에게 시스템 사용법과 업무 프로세스를 교육해주세요.',
-        status: 'in-progress',
-        priority: 'urgent',
-        category: 'training',
-        dueDate: tomorrow.toISOString(),
-        createdAt: addDays(today, -1).toISOString(),
-        updatedAt: today.toISOString(),
-        assignedTo: ['user-3'],
-        assignedToName: ['최준호'],
-        assignedBy: 'admin-1',
-        assignedByName: '관리자'
-      }
-    ];
-    
-    return sampleTasks;
-  };
+  const { user } = useAuth();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // 로컬 스토리지에서 업무 정보 불러오기
-  const [tasks, setTasks] = useState<Task[]>(() => {
+  // 🔄 localStorage 데이터를 Supabase로 마이그레이션
+  const migrateLocalStorageData = useCallback(async () => {
+    if (!user) return;
+
     const savedTasks = localStorage.getItem('tasks');
-    if (savedTasks) {
-      return JSON.parse(savedTasks);
+    if (!savedTasks) return;
+
+    try {
+      const localTasks: Task[] = JSON.parse(savedTasks);
+      console.log(`📦 로컬 스토리지에서 ${localTasks.length}개의 업무를 발견했습니다.`);
+      
+      if (localTasks.length === 0) {
+        localStorage.removeItem('tasks');
+        return;
+      }
+
+      // 기존 Supabase 데이터 확인
+      const { data: existingTasks } = await supabase
+        .from('tasks')
+        .select('id')
+        .limit(1);
+
+      // 이미 Supabase에 데이터가 있으면 마이그레이션 하지 않음
+      if (existingTasks && existingTasks.length > 0) {
+        console.log('✅ Supabase에 이미 데이터가 있어 마이그레이션을 건너뜁니다.');
+        localStorage.removeItem('tasks');
+        return;
+      }
+
+      let migratedCount = 0;
+      for (const localTask of localTasks) {
+        try {
+          // 담당자 ID 매핑 (이름으로 실제 사용자 찾기)
+          let assignedToId = null;
+          if (localTask.assignedTo.length > 0) {
+            const { data: foundUser } = await supabase
+              .from('users')
+              .select('id')
+              .eq('name', localTask.assignedToName[0])
+              .single();
+            
+            if (foundUser) {
+              assignedToId = foundUser.id;
+            }
+          }
+
+          // Supabase에 업무 생성
+          const { data: newTask, error: insertError } = await supabase
+            .from('tasks')
+            .insert({
+              title: localTask.title,
+              description: localTask.description,
+              status: localTask.status,
+              priority: localTask.priority,
+              category: localTask.category,
+              due_date: localTask.dueDate,
+              assigned_to: assignedToId,
+              created_by: user.id,
+              tags: localTask.assignedToName
+            })
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error(`업무 마이그레이션 실패: ${localTask.title}`, insertError);
+            continue;
+          }
+
+          // 댓글 마이그레이션
+          if (localTask.comments && localTask.comments.length > 0 && newTask) {
+            for (const comment of localTask.comments) {
+              await supabase
+                .from('task_comments')
+                .insert({
+                  task_id: newTask.id,
+                  author_id: user.id, // 현재 사용자로 설정
+                  author_name: comment.authorName,
+                  content: comment.content
+                });
+            }
+          }
+
+          migratedCount++;
+        } catch (err) {
+          console.error(`업무 "${localTask.title}" 마이그레이션 중 오류:`, err);
+        }
+      }
+
+      console.log(`✅ ${migratedCount}개의 업무가 성공적으로 마이그레이션되었습니다.`);
+      
+      // 마이그레이션 완료 후 localStorage 정리
+      localStorage.removeItem('tasks');
+      
+    } catch (err) {
+      console.error('마이그레이션 실패:', err);
     }
-    // 샘플 데이터
-    return generateSampleTasks();
-  });
-  
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>(tasks);
-  
-  // 업무 정보가 변경될 때마다 로컬 스토리지에 저장
+  }, [user]);
+
+  // Supabase에서 Task 데이터를 가져와서 내부 인터페이스로 변환
+  const convertSupabaseTaskToTask = useCallback(async (supabaseTask: any): Promise<Task> => {
+    // 담당자 정보 조회
+    const assignedToArray = Array.isArray(supabaseTask.assigned_to) 
+      ? supabaseTask.assigned_to 
+      : [supabaseTask.assigned_to].filter(Boolean);
+
+    const assignedToNames: string[] = [];
+    
+    if (assignedToArray.length > 0) {
+      const { data: assignedUsers } = await supabase
+        .from('users')
+        .select('id, name')
+        .in('id', assignedToArray);
+      
+      if (assignedUsers) {
+        assignedToNames.push(...assignedUsers.map(u => u.name));
+      }
+    }
+
+    // 배정자 정보 조회
+    let assignedByName = 'Unknown';
+    if (supabaseTask.created_by) {
+      const { data: creatorUser } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', supabaseTask.created_by)
+        .single();
+      
+      if (creatorUser) {
+        assignedByName = creatorUser.name;
+      }
+    }
+
+    // 댓글 조회
+    const { data: commentsData } = await supabase
+      .from('task_comments')
+      .select('*')
+      .eq('task_id', supabaseTask.id)
+      .order('created_at', { ascending: true });
+
+    const comments: TaskComment[] = commentsData ? commentsData.map(comment => ({
+      id: comment.id,
+      content: comment.content,
+      createdAt: comment.created_at,
+      authorId: comment.author_id,
+      authorName: comment.author_name
+    })) : [];
+
+    // 상태 변환 (데이터베이스의 in_progress를 프론트엔드의 in-progress로 변환)
+    const convertedStatus = supabaseTask.status === 'in_progress' ? 'in-progress' : supabaseTask.status;
+
+    return {
+      id: supabaseTask.id,
+      title: supabaseTask.title,
+      description: supabaseTask.description,
+      status: convertedStatus as TaskStatus,
+      priority: supabaseTask.priority,
+      category: supabaseTask.category || 'general',
+      dueDate: supabaseTask.due_date,
+      createdAt: supabaseTask.created_at,
+      updatedAt: supabaseTask.updated_at,
+      assignedTo: assignedToArray,
+      assignedToName: assignedToNames,
+      assignedBy: supabaseTask.created_by,
+      assignedByName: assignedByName,
+      completedAt: supabaseTask.status === 'completed' ? supabaseTask.updated_at : undefined,
+      comments: comments,
+      attachments: [] // TODO: 첨부파일 기능은 나중에 구현
+    };
+  }, []);
+
+  // 업무 목록 조회
+  const fetchTasks = useCallback(async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data: supabaseTasks, error: fetchError } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (fetchError) throw fetchError;
+
+      if (supabaseTasks) {
+        const convertedTasks = await Promise.all(
+          supabaseTasks.map(task => convertSupabaseTaskToTask(task))
+        );
+        setTasks(convertedTasks);
+        setFilteredTasks(convertedTasks);
+      }
+    } catch (err) {
+      console.error('업무 조회 실패:', err);
+      setError('업무 목록을 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  }, [user, convertSupabaseTaskToTask]);
+
+  // 초기 데이터 로드
   useEffect(() => {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-    setFilteredTasks(tasks); // 기본적으로 모든 업무를 표시
-  }, [tasks]);
-  
+    if (user) {
+      // 먼저 마이그레이션 시도 후 데이터 로드
+      migrateLocalStorageData().finally(() => {
+        fetchTasks();
+      });
+    }
+  }, [user, migrateLocalStorageData, fetchTasks]);
+
   // 업무 필터링
-  const filterTasks = (options: TaskFilterOptions) => {
+  const filterTasks = useCallback((options: TaskFilterOptions) => {
     let filtered = [...tasks];
     
     if (options.status && options.status !== 'all') {
@@ -238,73 +337,284 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     }
     
     setFilteredTasks(filtered);
-  };
-  
+  }, [tasks]);
+
   // 업무 추가
-  const addTask = (newTask: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const now = new Date().toISOString();
-    const task: Task = {
-      ...newTask,
-      id: `task-${Date.now()}`,
-      createdAt: now,
-      updatedAt: now,
-      comments: [],
-      attachments: []
-    };
-    
-    setTasks(prevTasks => [task, ...prevTasks]);
-  };
-  
+  const addTask = useCallback(async (newTaskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
+    if (!user) return null;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 담당자가 여러 명일 경우 첫 번째만 assigned_to에 저장 (DB 제약 조건)
+      const assignedToId = newTaskData.assignedTo.length > 0 ? newTaskData.assignedTo[0] : null;
+
+      // 상태 변환 (프론트엔드의 in-progress를 데이터베이스의 in_progress로 변환)
+      const convertedStatus = newTaskData.status === 'in-progress' ? 'in_progress' : newTaskData.status;
+
+      const { data: newSupabaseTask, error: insertError } = await supabase
+        .from('tasks')
+        .insert({
+          title: newTaskData.title,
+          description: newTaskData.description,
+          status: convertedStatus,
+          priority: newTaskData.priority,
+          category: newTaskData.category,
+          due_date: newTaskData.dueDate,
+          assigned_to: assignedToId,
+          created_by: user.id,
+          tags: newTaskData.assignedToName // 임시로 태그에 담당자 이름 저장
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      if (newSupabaseTask) {
+        const convertedTask = await convertSupabaseTaskToTask(newSupabaseTask);
+        setTasks(prevTasks => [convertedTask, ...prevTasks]);
+        setFilteredTasks(prevTasks => [convertedTask, ...prevTasks]);
+
+        // 🚀 자동 알림: 업무 배정 알림 발송
+        if (newTaskData.assignedTo.length > 0) {
+          try {
+            for (let i = 0; i < newTaskData.assignedTo.length; i++) {
+              const assigneeId = newTaskData.assignedTo[i];
+              const assigneeName = newTaskData.assignedToName[i] || 'Unknown';
+
+              await notificationService.notifyTaskAssignment({
+                id: convertedTask.id,
+                title: convertedTask.title,
+                assigneeId: assigneeId,
+                assigneeName: assigneeName,
+                assignerName: newTaskData.assignedByName,
+                dueDate: convertedTask.dueDate
+              });
+            }
+          } catch (error) {
+            console.error('업무 배정 알림 실패:', error);
+          }
+        }
+
+        return convertedTask.id;
+      }
+    } catch (err) {
+      console.error('업무 추가 실패:', err);
+      setError('업무 추가 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+
+    return null;
+  }, [user, convertSupabaseTaskToTask]);
+
   // 업무 수정
-  const updateTask = (id: string, updatedData: Partial<Task>) => {
-    const now = new Date().toISOString();
-    
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === id 
-          ? { 
-              ...task, 
-              ...updatedData, 
-              updatedAt: now,
-              completedAt: 
-                updatedData.status === 'completed' && task.status !== 'completed'
-                  ? now
-                  : task.completedAt
-            } 
-          : task
-      )
-    );
-  };
-  
+  const updateTask = useCallback(async (id: string, updatedData: Partial<Task>): Promise<boolean> => {
+    if (!user) return false;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const updatePayload: any = {};
+      
+      if (updatedData.title !== undefined) updatePayload.title = updatedData.title;
+      if (updatedData.description !== undefined) updatePayload.description = updatedData.description;
+      if (updatedData.status !== undefined) {
+        // 상태 변환 (프론트엔드의 in-progress를 데이터베이스의 in_progress로 변환)
+        updatePayload.status = updatedData.status === 'in-progress' ? 'in_progress' : updatedData.status;
+      }
+      if (updatedData.priority !== undefined) updatePayload.priority = updatedData.priority;
+      if (updatedData.category !== undefined) updatePayload.category = updatedData.category;
+      if (updatedData.dueDate !== undefined) updatePayload.due_date = updatedData.dueDate;
+      if (updatedData.assignedTo !== undefined && updatedData.assignedTo.length > 0) {
+        updatePayload.assigned_to = updatedData.assignedTo[0];
+      }
+
+      const { error: updateError } = await supabase
+        .from('tasks')
+        .update(updatePayload)
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      // 로컬 상태 업데이트
+      setTasks(prevTasks => 
+        prevTasks.map(task => 
+          task.id === id 
+            ? { 
+                ...task, 
+                ...updatedData, 
+                updatedAt: new Date().toISOString(),
+                completedAt: 
+                  updatedData.status === 'completed' && task.status !== 'completed'
+                    ? new Date().toISOString()
+                    : task.completedAt
+              } 
+            : task
+        )
+      );
+
+      setFilteredTasks(prevTasks => 
+        prevTasks.map(task => 
+          task.id === id 
+            ? { 
+                ...task, 
+                ...updatedData, 
+                updatedAt: new Date().toISOString(),
+                completedAt: 
+                  updatedData.status === 'completed' && task.status !== 'completed'
+                    ? new Date().toISOString()
+                    : task.completedAt
+              } 
+            : task
+        )
+      );
+
+      // 🚀 자동 알림: 업무 완료시 배정자에게 알림
+      if (updatedData.status === 'completed') {
+        const task = tasks.find(t => t.id === id);
+        if (task && task.assignedBy) {
+          try {
+            await notificationService.notifyTaskCompletion({
+              id: task.id,
+              title: task.title,
+              assignerId: task.assignedBy,
+              assigneeName: user.name
+            });
+          } catch (error) {
+            console.error('업무 완료 알림 실패:', error);
+          }
+        }
+      }
+
+      return true;
+    } catch (err) {
+      console.error('업무 수정 실패:', err);
+      setError('업무 수정 중 오류가 발생했습니다.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [user, tasks]);
+
   // 업무 삭제
-  const deleteTask = (id: string) => {
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
-  };
-  
+  const deleteTask = useCallback(async (id: string): Promise<boolean> => {
+    if (!user) return false;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 관련 댓글 먼저 삭제
+      await supabase
+        .from('task_comments')
+        .delete()
+        .eq('task_id', id);
+
+      // 업무 삭제
+      const { error: deleteError } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) throw deleteError;
+
+      setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+      setFilteredTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+
+      return true;
+    } catch (err) {
+      console.error('업무 삭제 실패:', err);
+      setError('업무 삭제 중 오류가 발생했습니다.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   // 댓글 추가
-  const addComment = (taskId: string, comment: Omit<TaskComment, 'id' | 'createdAt'>) => {
-    const now = new Date().toISOString();
-    const newComment: TaskComment = {
-      ...comment,
-      id: `comment-${Date.now()}`,
-      createdAt: now
-    };
-    
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === taskId 
-          ? { 
-              ...task, 
-              comments: [...(task.comments || []), newComment],
-              updatedAt: now
-            } 
-          : task
-      )
-    );
-  };
-  
-  // 첨부 파일 추가
-  const addAttachment = (taskId: string, attachment: Omit<TaskAttachment, 'id'>) => {
+  const addComment = useCallback(async (taskId: string, comment: Omit<TaskComment, 'id' | 'createdAt'>): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { data: newComment, error: insertError } = await supabase
+        .from('task_comments')
+        .insert({
+          task_id: taskId,
+          author_id: comment.authorId,
+          author_name: comment.authorName,
+          content: comment.content
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      if (newComment) {
+        const convertedComment: TaskComment = {
+          id: newComment.id,
+          content: newComment.content,
+          createdAt: newComment.created_at,
+          authorId: newComment.author_id,
+          authorName: newComment.author_name
+        };
+
+        // 로컬 상태 업데이트
+        setTasks(prevTasks => 
+          prevTasks.map(task => 
+            task.id === taskId 
+              ? { 
+                  ...task, 
+                  comments: [...(task.comments || []), convertedComment],
+                  updatedAt: new Date().toISOString()
+                } 
+              : task
+          )
+        );
+
+        setFilteredTasks(prevTasks => 
+          prevTasks.map(task => 
+            task.id === taskId 
+              ? { 
+                  ...task, 
+                  comments: [...(task.comments || []), convertedComment],
+                  updatedAt: new Date().toISOString()
+                } 
+              : task
+          )
+        );
+
+        // 🚀 자동 알림: 댓글 추가시 관련자들에게 알림
+        const task = tasks.find(t => t.id === taskId);
+        if (task && (task.assignedTo.length > 0 || task.assignedBy)) {
+          try {
+            await notificationService.notifyTaskComment({
+              taskId: task.id,
+              taskTitle: task.title,
+              authorName: comment.authorName,
+              assigneeId: task.assignedTo[0] || '',
+              assignerId: task.assignedBy || '',
+              authorId: comment.authorId
+            });
+          } catch (error) {
+            console.error('댓글 알림 실패:', error);
+          }
+        }
+
+        return true;
+      }
+    } catch (err) {
+      console.error('댓글 추가 실패:', err);
+      setError('댓글 추가 중 오류가 발생했습니다.');
+    }
+
+    return false;
+  }, [user, tasks]);
+
+  // 첨부 파일 추가 (임시 구현)
+  const addAttachment = useCallback((taskId: string, attachment: Omit<TaskAttachment, 'id'>) => {
     const newAttachment: TaskAttachment = {
       ...attachment,
       id: `attachment-${Date.now()}`
@@ -321,10 +631,22 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
           : task
       )
     );
-  };
-  
-  // 첨부 파일 삭제
-  const deleteAttachment = (taskId: string, attachmentId: string) => {
+
+    setFilteredTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId 
+          ? { 
+              ...task, 
+              attachments: [...(task.attachments || []), newAttachment],
+              updatedAt: new Date().toISOString()
+            } 
+          : task
+      )
+    );
+  }, []);
+
+  // 첨부 파일 삭제 (임시 구현)
+  const deleteAttachment = useCallback((taskId: string, attachmentId: string) => {
     setTasks(prevTasks => 
       prevTasks.map(task => 
         task.id === taskId 
@@ -336,20 +658,35 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
           : task
       )
     );
-  };
-  
+
+    setFilteredTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId 
+          ? { 
+              ...task, 
+              attachments: (task.attachments || []).filter(a => a.id !== attachmentId),
+              updatedAt: new Date().toISOString()
+            } 
+          : task
+      )
+    );
+  }, []);
+
   return (
     <TaskContext.Provider 
       value={{ 
         tasks, 
-        filteredTasks, 
+        filteredTasks,
+        loading,
+        error,
         filterTasks, 
         addTask, 
         updateTask, 
         deleteTask, 
         addComment, 
         addAttachment, 
-        deleteAttachment 
+        deleteAttachment,
+        fetchTasks
       }}
     >
       {children}

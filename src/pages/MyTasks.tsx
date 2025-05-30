@@ -10,6 +10,7 @@ import {
   AlertCircle,
   Check,
   X,
+  Edit,
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { useTask, Task, TaskStatus, TaskPriority } from '../contexts/TaskContext';
@@ -78,7 +79,7 @@ type MyTaskView = 'list' | 'month' | 'week' | 'day';
 
 const MyTasks = () => {
   const { tasks: contextTasks, updateTask, deleteTask } = useTask();
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState<MyTaskView>('list');
   const [calendarDate, setCalendarDate] = useState(new Date());
@@ -91,17 +92,29 @@ const MyTasks = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  // 현재 사용자에게 배정된 업무만 필터링
+  const myTasks = useMemo(() => {
+    if (!user) return [];
+    
+    return contextTasks.filter(task => {
+      // assignedTo 배열에 현재 사용자 ID가 포함되어 있는지 확인
+      return task.assignedTo && task.assignedTo.includes(user.id);
+    });
+  }, [contextTasks, user]);
+
   const today = new Date();
   const formattedDate = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][today.getDay()]}요일`;
   
-  const calendarEvents = useMemo(() => contextTasks.map(task => ({
+  const calendarEvents = useMemo(() => myTasks.map(task => ({
     id: task.id,
     title: task.title,
     start: parseISO(task.dueDate),
     end: parseISO(task.dueDate),
     allDay: true,
     originalTask: task,
-  })), [contextTasks]);
+  })), [myTasks]);
 
   // 인계사항 데이터 가져오기
   useEffect(() => {
@@ -112,20 +125,23 @@ const MyTasks = () => {
     try {
       setLoading(true);
       
-      // 최근 7일간의 인계사항 가져오기
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const { data, error } = await supabase
-        .from('handovers')
-        .select('*')
-        .gte('date', sevenDaysAgo.toISOString().split('T')[0])
-        .order('date', { ascending: false })
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      setHandovers(data || []);
+      // 로컬 저장소에서 인계사항 가져오기
+      const storedHandovers = localStorage.getItem('handovers');
+      if (storedHandovers) {
+        const parsedHandovers = JSON.parse(storedHandovers);
+        // 최근 7일간의 데이터만 필터링
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        const filteredHandovers = parsedHandovers.filter((h: Handover) => {
+          const handoverDate = new Date(h.date);
+          return handoverDate >= sevenDaysAgo;
+        });
+        
+        setHandovers(filteredHandovers);
+      } else {
+        setHandovers([]);
+      }
     } catch (err) {
       console.error('인계사항 불러오기 오류:', err);
       setError('인계사항을 불러오는데 실패했습니다.');
@@ -140,18 +156,25 @@ const MyTasks = () => {
     try {
       setSaving(true);
       
-      const handoverData: HandoverInput = {
+      const handoverData: Handover = {
+        id: `handover-${Date.now()}`,
         content: currentHandover.trim(),
         date: new Date().toISOString().split('T')[0],
         author_id: user.id,
-        author_name: user.name || '알 수 없음'
+        author_name: user.name || '알 수 없음',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
       
-      const { error } = await supabase
-        .from('handovers')
-        .insert([handoverData]);
+      // 기존 인계사항 가져오기
+      const storedHandovers = localStorage.getItem('handovers');
+      const existingHandovers = storedHandovers ? JSON.parse(storedHandovers) : [];
       
-      if (error) throw error;
+      // 새 인계사항 추가
+      const updatedHandovers = [handoverData, ...existingHandovers];
+      
+      // 로컬 저장소에 저장
+      localStorage.setItem('handovers', JSON.stringify(updatedHandovers));
       
       // 성공 시 폼 초기화 및 데이터 새로고침
       setCurrentHandover('');
@@ -163,6 +186,9 @@ const MyTasks = () => {
     } catch (err) {
       console.error('인계사항 저장 오류:', err);
       setError('인계사항 저장에 실패했습니다.');
+      
+      // 에러 메시지 자동 제거
+      setTimeout(() => setError(null), 5000);
     } finally {
       setSaving(false);
     }
@@ -182,17 +208,41 @@ const MyTasks = () => {
   };
 
   const handleTaskStatusChange = (taskId: string, newStatus: TaskStatus) => {
-    const taskToUpdate = contextTasks.find(t => t.id === taskId);
+    if (!hasPermission('tasks.update')) {
+      setError('권한이 없습니다. 업무 상태를 변경할 권한이 없습니다.');
+      setTimeout(() => setError(null), 5000);
+      return;
+    }
+    
+    const taskToUpdate = myTasks.find(t => t.id === taskId);
     if (taskToUpdate) {
       updateTask(taskId, { ...taskToUpdate, status: newStatus, updatedAt: new Date().toISOString() });
+      setSuccess('업무 상태가 변경되었습니다.');
+      setTimeout(() => setSuccess(null), 3000);
     }
   };
 
   const handleTaskDelete = (taskId: string) => {
-    deleteTask(taskId);
+    if (!hasPermission('tasks.delete')) {
+      setError('권한이 없습니다. 업무 삭제 권한이 없습니다.');
+      setTimeout(() => setError(null), 5000);
+      return;
+    }
+    
+    if (window.confirm('정말로 이 업무를 삭제하시겠습니까?')) {
+      deleteTask(taskId);
+      setSuccess('업무가 삭제되었습니다.');
+      setTimeout(() => setSuccess(null), 3000);
+    }
   };
 
   const handleSelectSlot = (slotInfo: SlotInfo) => {
+    if (!hasPermission('tasks.create')) {
+      setError('권한이 없습니다. 업무 생성 권한이 없습니다.');
+      setTimeout(() => setError(null), 5000);
+      return;
+    }
+    
     const selectedDateStr = slotInfo.start.toISOString().split('T')[0];
     setSelectedDateForNewTask(selectedDateStr);
     setIsAddTaskModalOpen(true);
@@ -250,7 +300,21 @@ const MyTasks = () => {
   return (
     <div className="p-6 bg-slate-100 min-h-screen">
       <header className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-slate-800">내 업무</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">내 업무</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-sm text-slate-600">
+              {user?.name || '사용자'}님
+            </span>
+            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+              hasPermission('admin.dashboard') 
+                ? 'bg-blue-100 text-blue-800' 
+                : 'bg-gray-100 text-gray-600'
+            }`}>
+              {hasPermission('admin.dashboard') ? '관리자' : '일반 사용자'}
+            </span>
+          </div>
+        </div>
         <div className="flex items-center space-x-4">
           <button aria-label="Notifications" className="relative">
             <Bell className="text-slate-600 hover:text-slate-800 transition-colors" size={24} />
@@ -299,15 +363,17 @@ const MyTasks = () => {
                 오늘
               </button>
             )}
-            <button 
-              onClick={() => {
-                setSelectedDateForNewTask(undefined); // Clear any previously selected date for general add
-                setIsAddTaskModalOpen(true);
-              }} 
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center space-x-2 transition-colors">
-              <PlusSquare size={18} />
-              <span>업무 추가</span>
-            </button>
+            {hasPermission('tasks.create') && (
+              <button 
+                onClick={() => {
+                  setSelectedDateForNewTask(undefined); // Clear any previously selected date for general add
+                  setIsAddTaskModalOpen(true);
+                }} 
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center space-x-2 transition-colors">
+                <PlusSquare size={18} />
+                <span>업무 추가</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -326,10 +392,10 @@ const MyTasks = () => {
                 </tr>
               </thead>
               <tbody>
-                {contextTasks.length === 0 ? (
+                {myTasks.length === 0 ? (
                   <tr><td colSpan={7} className="text-center py-10 text-slate-500">표시할 업무가 없습니다.</td></tr>
                 ) : (
-                  contextTasks.map((task) => (
+                  myTasks.map((task) => (
                     <tr key={task.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors group">
                       <td className="py-3 pr-3">
                         <div className="flex items-center">
@@ -340,12 +406,16 @@ const MyTasks = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 pr-3 text-sm text-slate-700">{task.assignedToName}</td>
+                      <td className="py-3 pr-3 text-sm text-slate-700">{Array.isArray(task.assignedToName) ? task.assignedToName.join(', ') : task.assignedToName}</td>
                       <td className="py-3 pr-3">
                         <select 
                           value={task.status}
                           onChange={(e) => handleTaskStatusChange(task.id, e.target.value as TaskStatus)}
-                          className="text-sm p-1.5 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
+                          disabled={!hasPermission('tasks.update')}
+                          className={`text-sm p-1.5 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                            !hasPermission('tasks.update') ? 'bg-gray-100 cursor-not-allowed text-gray-500' : 'bg-white'
+                          }`}
+                          title={!hasPermission('tasks.update') ? '업무 수정 권한이 없습니다' : ''}
                         >
                           {taskStatusOptions.map(statusValue => (
                               <option key={statusValue} value={statusValue}>{getStatusDisplayName(statusValue)}</option>
@@ -360,14 +430,40 @@ const MyTasks = () => {
                       </td>
                       <td className="py-3 pr-3 text-sm text-slate-700 text-center">{task.category}</td>
                       <td className="py-3 text-center">
-                        <div className="flex justify-center space-x-2">
-                          <button className="text-slate-500 hover:text-blue-600 transition-colors" title="수정">
-                            <Edit3 size={18} />
-                          </button>
-                          <button onClick={() => handleTaskDelete(task.id)} className="text-slate-500 hover:text-red-600 transition-colors" title="삭제">
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
+                        {hasPermission('tasks.update') || hasPermission('tasks.delete') ? (
+                          <div className="flex justify-center space-x-2">
+                            {hasPermission('tasks.update') && (
+                              <button 
+                                onClick={() => {
+                                  setEditingTask(task);
+                                }} 
+                                className="text-slate-500 hover:text-blue-600 transition-colors" 
+                                title="수정"
+                              >
+                                <Edit size={14} />
+                              </button>
+                            )}
+                            {hasPermission('tasks.delete') && (
+                              <button 
+                                onClick={() => {
+                                  if (window.confirm('정말로 이 업무를 삭제하시겠습니까?')) {
+                                    handleTaskDelete(task.id);
+                                  }
+                                }} 
+                                className="text-slate-500 hover:text-red-600 transition-colors" 
+                                title="삭제"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex justify-center">
+                            <span className="text-xs text-gray-400 px-2 py-1 bg-gray-100 rounded">
+                              읽기 전용
+                            </span>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -595,7 +691,84 @@ const MyTasks = () => {
         />
       )}
 
-      {/* TODO: 업무 수정 모달 구현 */}
+      {/* 업무 수정 모달 */}
+      {editingTask && (
+        <EditTaskModal 
+          task={editingTask}
+          isOpen={!!editingTask} 
+          onClose={() => setEditingTask(null)}
+          onSave={(updates: Partial<Task>) => {
+            updateTask(editingTask.id, updates);
+            setEditingTask(null);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// Simple edit modal component to avoid import issues
+const EditTaskModal = ({ task, isOpen, onClose, onSave }: {
+  task: Task;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (updates: Partial<Task>) => void;
+}) => {
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description || '');
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      title,
+      description,
+      updatedAt: new Date().toISOString()
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+        <h2 className="text-lg font-bold mb-4">업무 수정</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">제목</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">설명</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md"
+              rows={3}
+            />
+          </div>
+          <div className="flex justify-end space-x-2 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              저장
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

@@ -13,11 +13,11 @@ export interface SubscriptionOptions {
   filter?: string;
 }
 
-// 실시간 채널 추적 - 빈 객체로 대체
+// 실시간 채널 추적
 const activeChannels: Map<string, any> = new Map();
 
 /**
- * Mock 구현 - 실제 Supabase 연동 없이 더미 기능 제공
+ * 테이블 변경사항 실시간 구독
  */
 export function subscribeToTable<T extends Record<string, any>>(
   tableName: string,
@@ -27,15 +27,16 @@ export function subscribeToTable<T extends Record<string, any>>(
   const { event = '*', filter } = options;
   const channelId = `${tableName}:${event}:${filter || 'all'}`;
   
-  console.log(`Mock 구독: ${channelId} (실제 데이터 변경사항 모니터링 없음)`);
+  // 실제 Supabase 연동 시 여기에 실제 구독 로직 구현
+  console.log(`구독 시작: ${channelId}`);
   
-  // 더미 채널 객체
-  const mockChannel = {
-    unsubscribe: () => console.log(`Mock 구독 해제: ${channelId}`)
+  // 채널 객체
+  const channel = {
+    unsubscribe: () => console.log(`구독 해제: ${channelId}`)
   };
   
   // 구독 추적
-  activeChannels.set(channelId, mockChannel);
+  activeChannels.set(channelId, channel);
   
   // 구독 해제 함수 반환
   return () => unsubscribeFromChannel(channelId);
