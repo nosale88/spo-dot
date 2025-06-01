@@ -191,16 +191,16 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
       <motion.div 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
+        className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center">
+        <div className="flex items-center justify-between p-4 border-b border-slate-200">
+          <h2 className="text-xl font-bold text-slate-900 flex items-center">
             <User className="w-5 h-5 mr-2" />
             새 직원 추가
           </h2>
           <button 
-            className="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300"
+            className="text-slate-400 hover:text-slate-500"
             onClick={onClose}
           >
             <X className="w-5 h-5" />
@@ -211,12 +211,12 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* 기본 정보 섹션 */}
-              <div className="md:col-span-2 bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
-                <h3 className="font-medium text-slate-900 dark:text-white mb-3">기본 정보</h3>
+              <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
+                <h3 className="font-medium text-slate-900 mb-3">기본 정보</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* 이름 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       이름
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -226,8 +226,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       value={formData.name}
                       onChange={handleChange}
                       className={clsx(
-                        'form-input w-full',
-                        errors.name ? 'border-red-500 dark:border-red-500' : ''
+                        'w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                        errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                       )}
                       placeholder="직원 이름"
                       required
@@ -239,7 +239,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                   
                   {/* 상태 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       상태
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -247,7 +247,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       name="status"
                       value={formData.status}
                       onChange={handleChange}
-                      className="form-input w-full"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       required
                     >
                       <option value="active">활성</option>
@@ -258,7 +258,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                   
                   {/* 이메일 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       이메일
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -268,8 +268,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       value={formData.email}
                       onChange={handleChange}
                       className={clsx(
-                        'form-input w-full',
-                        errors.email ? 'border-red-500 dark:border-red-500' : ''
+                        'w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                        errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                       )}
                       placeholder="example@mail.com"
                       required
@@ -281,7 +281,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                   
                   {/* 전화번호 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       전화번호
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -291,8 +291,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       value={formData.phone}
                       onChange={handleChange}
                       className={clsx(
-                        'form-input w-full',
-                        errors.phone ? 'border-red-500 dark:border-red-500' : ''
+                        'w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                        errors.phone ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                       )}
                       placeholder="010-1234-5678"
                       required
@@ -304,7 +304,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
 
                   {/* 비밀번호 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       비밀번호
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -314,8 +314,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       value={formData.password}
                       onChange={handleChange}
                       className={clsx(
-                        'form-input w-full',
-                        errors.password ? 'border-red-500 dark:border-red-500' : ''
+                        'w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                        errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                       )}
                       placeholder="********"
                       required
@@ -327,7 +327,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                   
                   {/* 비밀번호 확인 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       비밀번호 확인
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -337,8 +337,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       className={clsx(
-                        'form-input w-full',
-                        errors.confirmPassword ? 'border-red-500 dark:border-red-500' : ''
+                        'w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                        errors.confirmPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                       )}
                       placeholder="********"
                       required
@@ -351,12 +351,12 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
               </div>
               
               {/* 직원 정보 섹션 */}
-              <div className="md:col-span-2 bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
-                <h3 className="font-medium text-slate-900 dark:text-white mb-3">직원 정보</h3>
+              <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
+                <h3 className="font-medium text-slate-900 mb-3">직원 정보</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* 부서 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       부서
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -365,8 +365,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       value={formData.department}
                       onChange={handleChange}
                       className={clsx(
-                        'form-input w-full',
-                        errors.department ? 'border-red-500 dark:border-red-500' : ''
+                        'w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                        errors.department ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                       )}
                       required
                     >
@@ -383,7 +383,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                   
                   {/* 직책 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       직책
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -392,8 +392,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       value={formData.position}
                       onChange={handleChange}
                       className={clsx(
-                        'form-input w-full',
-                        errors.position ? 'border-red-500 dark:border-red-500' : ''
+                        'w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                        errors.position ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                       )}
                       required
                     >
@@ -411,7 +411,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                   
                   {/* 입사일 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       입사일
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -420,14 +420,14 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       name="hireDate"
                       value={formData.hireDate}
                       onChange={handleChange}
-                      className="form-input w-full"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       required
                     />
                   </div>
                   
                   {/* 역할 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       역할
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -435,7 +435,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       name="role"
                       value={formData.role}
                       onChange={handleChange}
-                      className="form-input w-full"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       required
                     >
                       <option value="staff">일반 직원</option>
@@ -447,10 +447,10 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
               
               {/* 권한 섹션 */}
               {formData.role !== 'admin' && (
-                <div className="md:col-span-2 bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
+                <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
                   <div className="flex items-center mb-3">
-                    <h3 className="font-medium text-slate-900 dark:text-white">권한 설정</h3>
-                    <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
+                    <h3 className="font-medium text-slate-900">권한 설정</h3>
+                    <span className="ml-2 text-xs text-slate-500">
                       (직원이 접근할 수 있는 기능을 선택하세요)
                     </span>
                   </div>
@@ -468,7 +468,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                         />
                         <label
                           htmlFor={permission.id}
-                          className="ml-2 block text-sm text-slate-700 dark:text-slate-300"
+                          className="ml-2 block text-sm text-slate-700"
                         >
                           {permission.label}
                         </label>
@@ -480,12 +480,12 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
               
               {/* 관리자 경고 */}
               {formData.role === 'admin' && (
-                <div className="md:col-span-2 bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <div className="md:col-span-2 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
                   <div className="flex items-start">
-                    <Shield className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5" />
+                    <Shield className="w-5 h-5 text-yellow-600 mr-2 mt-0.5" />
                     <div>
-                      <h3 className="font-medium text-yellow-800 dark:text-yellow-300">관리자 권한 안내</h3>
-                      <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
+                      <h3 className="font-medium text-yellow-800">관리자 권한 안내</h3>
+                      <p className="text-sm text-yellow-700 mt-1">
                         관리자는 모든 기능에 대한 접근 권한을 가집니다. 시스템 전체 설정을 변경하고 모든 데이터에 접근할 수 있습니다. 
                         관리자 권한은 꼭 필요한 직원에게만 부여해야 합니다.
                       </p>
@@ -493,27 +493,33 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                   </div>
                 </div>
               )}
+              
+              {/* 에러 메시지 표시 */}
+              {errors.form && (
+                <div className="md:col-span-2 bg-red-50 p-4 rounded-lg border border-red-200">
+                  <p className="text-sm text-red-700">{errors.form}</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
+              <button 
+                type="button" 
+                className="px-4 py-2 text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                onClick={onClose}
+              >
+                취소
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
+                disabled={isSubmitting}
+              >
+                <Save size={16} className="mr-2" />
+                {isSubmitting ? '저장 중...' : '직원 저장'}
+              </button>
             </div>
           </form>
-        </div>
-        
-        <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-2">
-          <button 
-            type="button" 
-            className="btn btn-outline"
-            onClick={onClose}
-          >
-            취소
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary inline-flex items-center"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            <Save size={16} className="mr-2" />
-            {isSubmitting ? '저장 중...' : '직원 저장'}
-          </button>
         </div>
       </motion.div>
     </motion.div>

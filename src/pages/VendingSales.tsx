@@ -72,9 +72,9 @@ interface Transaction {
 }
 
 const VENDING_MACHINES: VendingMachine[] = [
-  { id: 1, name: '1층 로비 자판기', location: '1층 로비', status: 'active' },
-  { id: 2, name: '2층 휴게실 자판기', location: '2층 휴게실', status: 'active' },
-  { id: 3, name: '지하 주차장 자판기', location: '지하1층 주차장', status: 'maintenance' },
+  { id: 1, name: '헬스장 자판기', location: '헬스장 1층 로비', status: 'active' },
+  { id: 2, name: '무인테니스장 자판기', location: '무인테니스장 휴게실', status: 'active' },
+  { id: 3, name: '테니스아카데미 자판기', location: '테니스아카데미 라운지', status: 'active' },
 ];
 
 const INITIAL_PRODUCTS: Product[] = [
@@ -93,11 +93,25 @@ export default function VendingSales() {
   // 기본 데이터
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [inventory, setInventory] = useState<InventoryItem[]>([
-    { id: 1, vendingId: 1, productId: 1, currentStock: 15, maxCapacity: 20, minThreshold: 5, lastRestocked: '2025-01-01' },
-    { id: 2, vendingId: 1, productId: 2, currentStock: 12, maxCapacity: 20, minThreshold: 5, lastRestocked: '2025-01-01' },
-    { id: 3, vendingId: 1, productId: 3, currentStock: 3, maxCapacity: 30, minThreshold: 10, lastRestocked: '2024-12-28' },
-    { id: 4, vendingId: 2, productId: 1, currentStock: 8, maxCapacity: 15, minThreshold: 5, lastRestocked: '2024-12-30' },
-    { id: 5, vendingId: 2, productId: 4, currentStock: 18, maxCapacity: 20, minThreshold: 5, lastRestocked: '2025-01-01' },
+    // 헬스장 자판기 (ID: 1) - 운동 후 필요한 상품들
+    { id: 1, vendingId: 1, productId: 1, currentStock: 15, maxCapacity: 20, minThreshold: 5, lastRestocked: '2025-01-01' }, // 콜라
+    { id: 2, vendingId: 1, productId: 2, currentStock: 12, maxCapacity: 20, minThreshold: 5, lastRestocked: '2025-01-01' }, // 사이다
+    { id: 3, vendingId: 1, productId: 3, currentStock: 25, maxCapacity: 30, minThreshold: 10, lastRestocked: '2025-01-01' }, // 물
+    { id: 4, vendingId: 1, productId: 4, currentStock: 18, maxCapacity: 20, minThreshold: 5, lastRestocked: '2025-01-01' }, // 커피
+    { id: 5, vendingId: 1, productId: 6, currentStock: 10, maxCapacity: 15, minThreshold: 3, lastRestocked: '2024-12-30' }, // 과자
+    
+    // 무인테니스장 자판기 (ID: 2) - 간단한 음료와 간식
+    { id: 6, vendingId: 2, productId: 1, currentStock: 8, maxCapacity: 15, minThreshold: 5, lastRestocked: '2024-12-30' }, // 콜라
+    { id: 7, vendingId: 2, productId: 3, currentStock: 20, maxCapacity: 25, minThreshold: 8, lastRestocked: '2025-01-01' }, // 물
+    { id: 8, vendingId: 2, productId: 4, currentStock: 12, maxCapacity: 15, minThreshold: 5, lastRestocked: '2024-12-31' }, // 커피
+    { id: 9, vendingId: 2, productId: 5, currentStock: 5, maxCapacity: 10, minThreshold: 3, lastRestocked: '2024-12-28' }, // 초콜릿
+    
+    // 테니스아카데미 자판기 (ID: 3) - 다양한 상품 구성
+    { id: 10, vendingId: 3, productId: 2, currentStock: 14, maxCapacity: 18, minThreshold: 5, lastRestocked: '2025-01-01' }, // 사이다
+    { id: 11, vendingId: 3, productId: 3, currentStock: 22, maxCapacity: 25, minThreshold: 8, lastRestocked: '2025-01-01' }, // 물
+    { id: 12, vendingId: 3, productId: 4, currentStock: 16, maxCapacity: 20, minThreshold: 5, lastRestocked: '2024-12-31' }, // 커피
+    { id: 13, vendingId: 3, productId: 5, currentStock: 8, maxCapacity: 12, minThreshold: 3, lastRestocked: '2024-12-29' }, // 초콜릿
+    { id: 14, vendingId: 3, productId: 6, currentStock: 12, maxCapacity: 15, minThreshold: 4, lastRestocked: '2024-12-30' }, // 과자
   ]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);

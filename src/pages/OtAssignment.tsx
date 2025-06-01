@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useOT, OTMember } from '../contexts/OTContext';
 import { useUser } from '../contexts/UserContext';
-import { Eye, UserCheck, Clock, Phone, Calendar, Edit, Save, X, Plus, CheckCircle, AlertCircle, UserPlus } from 'lucide-react';
+import { Eye, UserCheck, Clock, Phone, Calendar, Edit, Save, X, Plus, CheckCircle, AlertCircle, UserPlus, UserX } from 'lucide-react';
 
 const DAYS_OF_WEEK = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일', '평일', '주말'];
 const TIME_SLOTS = [
@@ -268,6 +268,7 @@ export default function OtAssignment() {
   const [newSessionData, setNewSessionData] = useState({ date: '', time: '', notes: '' });
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'assigned' | 'completed'>('all');
+  const [showStaffDetailModal, setShowStaffDetailModal] = useState<string | null>(null);
 
   // 권한에 따른 기본 회원 목록 (상태 필터 적용 전)
   const baseMembers = (() => {
@@ -729,21 +730,43 @@ export default function OtAssignment() {
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">담당자</label>
                   {isAdmin ? (
-                                        <select
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      value={member.assignedStaffId || ''}
-                      onChange={e => handleAssign(member.id, e.target.value)}
-                    >
-                      <option value="">담당자 선택</option>
-                      {staffList?.map(staff => (
-                        <option key={staff.id} value={staff.id}>
-                          {staff.name} ({staff.department || '부서 미지정'})
-                        </option>
-                      ))}
-              </select>
+                    <div className="space-y-2">
+                      <select
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={member.assignedStaffId || ''}
+                        onChange={e => handleAssign(member.id, e.target.value)}
+                      >
+                        <option value="">담당자 선택</option>
+                        {staffList?.map(staff => (
+                          <option key={staff.id} value={staff.id}>
+                            {staff.name} ({staff.department || '부서 미지정'})
+                          </option>
+                        ))}
+                      </select>
+                      {assignedStaff && (
+                        <div className="flex items-center justify-between p-2 bg-blue-50 rounded border">
+                          <span className="text-sm text-gray-700">현재 배정:</span>
+                          <button
+                            onClick={() => setShowStaffDetailModal(assignedStaff.id)}
+                            className="text-blue-600 hover:text-blue-800 underline font-medium text-sm"
+                          >
+                            {assignedStaff.name} ({assignedStaff.department}) 상세보기
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50">
-                      {assignedStaff ? `${assignedStaff.name} (${assignedStaff.department})` : '미배정'}
+                      {assignedStaff ? (
+                        <button
+                          onClick={() => setShowStaffDetailModal(assignedStaff.id)}
+                          className="text-blue-600 hover:text-blue-800 underline font-medium"
+                        >
+                          {assignedStaff.name} ({assignedStaff.department})
+                        </button>
+                      ) : (
+                        '미배정'
+                      )}
                     </div>
                   )}
                 </div>
@@ -1065,6 +1088,185 @@ export default function OtAssignment() {
         </div>
       )}
 
+      {/* 담당자 세부 정보 모달 */}
+      {showStaffDetailModal && (() => {
+        const selectedStaff = staffList?.find(s => s.id === showStaffDetailModal);
+        const staffAssignedMembers = otMembers.filter(member => 
+          member.assignedStaffId === showStaffDetailModal
+        );
+        
+        if (!selectedStaff) return null;
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+            <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 className="text-xl font-bold text-gray-900">담당자 상세 정보</h3>
+                <button
+                  onClick={() => setShowStaffDetailModal(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-6">
+                {/* 기본 정보 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-800 mb-3">기본 정보</h4>
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                          {selectedStaff.name.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-medium text-lg">{selectedStaff.name}</div>
+                          <div className="text-sm text-gray-600">{selectedStaff.department || '부서 미지정'}</div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 pt-2">
+                        <div>
+                          <span className="text-sm font-medium text-gray-700">직책:</span>
+                          <div className="text-sm text-gray-900">{selectedStaff.position || '직책 미지정'}</div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-700">입사일:</span>
+                          <div className="text-sm text-gray-900">{selectedStaff.hireDate || '정보 없음'}</div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-700">연락처:</span>
+                          <div className="text-sm text-gray-900">{selectedStaff.phone || '정보 없음'}</div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-gray-700">이메일:</span>
+                          <div className="text-sm text-gray-900">{selectedStaff.email}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-800 mb-3">OT 현황</h4>
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-600">{staffAssignedMembers.length}</div>
+                          <div className="text-xs text-gray-600">총 배정</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-yellow-600">
+                            {staffAssignedMembers.filter(m => m.status === 'assigned').length}
+                          </div>
+                          <div className="text-xs text-gray-600">진행중</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-600">
+                            {staffAssignedMembers.filter(m => m.status === 'completed').length}
+                          </div>
+                          <div className="text-xs text-gray-600">완료</div>
+                        </div>
+                      </div>
+                      
+                      {staffAssignedMembers.length > 0 && (
+                        <div className="pt-3 border-t border-gray-200">
+                          <div className="text-sm font-medium text-gray-700 mb-2">완료율</div>
+                          <div className="w-full bg-gray-200 rounded-full h-3">
+                            <div 
+                              className="bg-green-500 h-3 rounded-full transition-all"
+                              style={{ 
+                                width: `${(staffAssignedMembers.filter(m => m.status === 'completed').length / staffAssignedMembers.length) * 100}%` 
+                              }}
+                            />
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {Math.round((staffAssignedMembers.filter(m => m.status === 'completed').length / staffAssignedMembers.length) * 100)}% 완료
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 배정된 회원 목록 */}
+                {staffAssignedMembers.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-800 mb-3">
+                      배정된 회원 목록 ({staffAssignedMembers.length}명)
+                    </h4>
+                    <div className="bg-gray-50 rounded-lg overflow-hidden">
+                      <div className="max-h-60 overflow-y-auto">
+                        <table className="w-full">
+                          <thead className="bg-gray-100 sticky top-0">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">회원명</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">연락처</th>
+                              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">상태</th>
+                              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">진행도</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            {staffAssignedMembers.map(member => {
+                              const progressKey = `${member.id}-${selectedStaff.id}`;
+                              const progress = otProgress[progressKey];
+                              
+                              return (
+                                <tr key={member.id} className="hover:bg-gray-100">
+                                  <td className="px-4 py-3">
+                                    <div className="text-sm font-medium text-gray-900">{member.name}</div>
+                                    <div className="text-xs text-gray-500">
+                                      {member.otCount === 1 ? '1회 OT' : '2회 OT'}
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <div className="text-sm text-gray-900">{member.phone}</div>
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(member.status)}`}>
+                                      {getStatusText(member.status)}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    {progress ? (
+                                      <div className="flex flex-col items-center gap-1">
+                                        <div className="text-xs text-gray-600">
+                                          {progress.completedSessions}/{progress.totalSessions}
+                                        </div>
+                                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                                          <div 
+                                            className="bg-blue-500 h-2 rounded-full"
+                                            style={{ width: `${(progress.completedSessions / progress.totalSessions) * 100}%` }}
+                                          />
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <span className="text-xs text-gray-400">-</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 배정된 회원이 없는 경우 */}
+                {staffAssignedMembers.length === 0 && (
+                  <div className="text-center py-8">
+                    <UserX size={48} className="mx-auto text-gray-300 mb-3" />
+                    <p className="text-gray-500 font-medium">배정된 OT 회원이 없습니다</p>
+                    <p className="text-sm text-gray-400 mt-1">회원 배정 시 이곳에 정보가 표시됩니다</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* 담당자 목록 (관리자만) */}
       {isAdmin && (
         <div className="mt-8">
@@ -1108,7 +1310,12 @@ export default function OtAssignment() {
                     return (
                       <tr key={staff.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{staff.name}</div>
+                          <button
+                            onClick={() => setShowStaffDetailModal(staff.id)}
+                            className="text-blue-600 hover:text-blue-800 underline font-medium"
+                          >
+                            {staff.name}
+                          </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-500">{staff.department || '부서 미지정'}</div>

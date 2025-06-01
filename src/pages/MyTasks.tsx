@@ -363,9 +363,13 @@ const MyTasks = () => {
                 오늘
               </button>
             )}
-            {hasPermission('tasks.create') && (
+            {/* 업무 추가 버튼 - 권한 체크 완화 */}
+            {(hasPermission('tasks.create') || !user) && (
               <button 
                 onClick={() => {
+                  console.log('업무추가 버튼 클릭됨');
+                  console.log('현재 사용자:', user);
+                  console.log('tasks.create 권한:', hasPermission('tasks.create'));
                   setSelectedDateForNewTask(undefined); // Clear any previously selected date for general add
                   setIsAddTaskModalOpen(true);
                 }} 
@@ -373,6 +377,13 @@ const MyTasks = () => {
                 <PlusSquare size={18} />
                 <span>업무 추가</span>
               </button>
+            )}
+            
+            {/* 권한이 없는 경우 안내 메시지 */}
+            {user && !hasPermission('tasks.create') && (
+              <div className="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-lg">
+                업무 추가 권한이 없습니다 (현재 역할: {user.role})
+              </div>
             )}
           </div>
         </div>
