@@ -213,11 +213,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setLoadingStaff(true);
     setStaffError(null);
     try {
-      // Supabase에서 users 테이블 조회
+      // Supabase에서 users 테이블 조회 - 활성 상태만
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .in('role', ['admin', 'staff']);  // admin과 staff 역할을 가진 사용자만 조회
+        .in('role', ['admin', 'staff'])  // admin과 staff 역할을 가진 사용자만 조회
+        .eq('status', 'active');  // 활성 상태인 사용자만 조회
 
       if (error) {
         console.error('Error fetching staff:', error);
@@ -371,28 +372,60 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       console.log('직원 삭제 시도:', id);
       
-      // Supabase에서 삭제
-      const { error } = await supabase
+      // 1. 먼저 해당 직원에게 할당된 모든 tasks의 assigned_to를 null로 설정
+      const { error: tasksError } = await supabase
+        .from('tasks')
+        .update({ assigned_to: null })
+        .eq('assigned_to', id);
+
+      if (tasksError) {
+        console.error('업무 재할당 오류:', tasksError);
+        const errorMessage = tasksError.message || '업무 재할당 중 오류가 발생했습니다.';
+        alert('직원 삭제 오류 (업무 재할당): ' + errorMessage);
+        return false;
+      }
+
+      console.log('해당 직원의 업무 재할당 완료');
+
+      // 2. 직원의 상태를 먼저 inactive로 변경 (soft delete 방식)
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ 
+          status: 'inactive',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (updateError) {
+        console.error('직원 상태 업데이트 오류:', updateError);
+        const errorMessage = updateError.message || '직원 상태 업데이트 중 오류가 발생했습니다.';
+        alert('직원 삭제 오류 (상태 업데이트): ' + errorMessage);
+        return false;
+      }
+
+      console.log('직원 상태 비활성화 완료');
+
+      // 3. 실제 데이터베이스에서 삭제 시도
+      const { error: deleteError } = await supabase
         .from('users')
         .delete()
         .eq('id', id);
 
-      if (error) {
-        console.error('직원 삭제 오류:', error);
-        const errorMessage = error.message || '알 수 없는 오류가 발생했습니다.';
-        alert('직원 삭제 오류: ' + errorMessage);
-        return false;
+      if (deleteError) {
+        console.error('직원 삭제 오류:', deleteError);
+        // 삭제에 실패하면 상태만 비활성화된 상태로 유지
+        console.log('데이터베이스 삭제 실패, 상태만 비활성화로 유지');
+        alert('직원이 비활성화되었습니다. (데이터베이스 제약조건으로 인해 완전 삭제는 불가)');
+      } else {
+        console.log('직원 삭제 성공:', id);
+        alert('직원이 성공적으로 삭제되었습니다.');
       }
 
-      console.log('직원 삭제 성공:', id);
-
-      // 로컬 상태 업데이트
+      // 4. 로컬 상태에서 제거
       setStaffList(prevStaff => prevStaff.filter(staff => staff.id !== id));
       
-      // 직원 목록 새로고침
+      // 5. 직원 목록 새로고침
       await fetchStaff();
-      
-      alert('직원이 성공적으로 삭제되었습니다.');
       
       return true;
     } catch (err) {
