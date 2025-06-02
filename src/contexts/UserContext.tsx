@@ -164,39 +164,19 @@ interface UserContextProps {
 const UserContext = createContext<UserContextProps | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  // 초기 일반 사용자 목록 (기존 유지 또는 필요시 동적 관리)
+  // 초기 일반 사용자 목록 - 관리자 계정만
   const initialUsers: User[] = [
     {
-      id: 'user-admin-01', // ID 고유성 확보
-      name: '관리자 (컨텍스트)',
-      email: 'admin@example.com',
+      id: 'admin-spodot-01',
+      name: '관리자',
+      email: 'spodot@naver.com',
       role: 'admin',
       phone: '010-0000-0000',
       status: 'active',
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 'user-trainer-01',
-      name: '트레이너 (컨텍스트)',
-      email: 'trainer@example.com',
-      role: 'trainer',
-      phone: '010-1111-1111',
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    // StaffManagement의 initialStaff와 유사한 초기 직원 데이터 추가
-    {
-      id: 'user-staff-01',
-      name: '홍길동 (컨텍스트)',
-      email: 'hong-context@example.com',
-      role: 'staff',
-      phone: '010-1234-5678',
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
+      updatedAt: new Date().toISOString(),
+      password: '123456'
+    }
   ];
   const [users, setUsers] = useState<User[]>(initialUsers);
 
