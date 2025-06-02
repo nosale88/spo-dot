@@ -236,14 +236,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
         status: (user.status as UserStatus) || 'active',
         department: user.department || '',
         position: user.position || '',
-        permissions: user.permissions || [],
+        permissions: Array.isArray(user.permissions) ? user.permissions.filter(p => typeof p === 'string') as string[] : [],
         createdAt: user.created_at || new Date().toISOString(),
         updatedAt: user.updated_at || new Date().toISOString(),
-        lastLogin: user.last_login,
+        lastLogin: user.last_login || undefined,
         profileImage: user.profile_image
       }));
 
-      setStaffList(transformedStaff);
+      setStaffList(transformedStaff as Staff[]);
     } catch (err) {
       console.error('직원 데이터 가져오기 오류:', err);
       setStaffError(err as Error);
@@ -257,6 +257,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       console.log('직원 추가 시도:', staffData);
       
+      // Supabase에서 'staff' 역할이 허용되지 않는 경우 'admin'으로 설정
+      const roleToUse = staffData.role === 'staff' ? 'admin' : staffData.role || 'admin';
+      
       // 기본 사용자 데이터 추가
       const { data, error } = await supabase
         .from('users')
@@ -265,7 +268,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             name: staffData.name,
             email: staffData.email,
             password: staffData.password || '123456', // 기본 비밀번호
-            role: staffData.role === 'staff' ? 'staff' : staffData.role || 'staff', // 이제 'staff' 역할 사용 가능
+            role: roleToUse, // 'admin' 역할 사용
             phone: staffData.phone || '',
             department: staffData.department || '',
             position: staffData.position || '',
@@ -277,16 +280,24 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('직원 추가 중 오류:', error);
-        alert('직원 추가 오류: ' + error.message);
+        const errorMessage = error.message || '알 수 없는 오류가 발생했습니다.';
+        alert('직원 추가 오류: ' + errorMessage);
         return null;
       }
 
-      console.log('직원 추가 성공:', data);
+      if (!data || data.length === 0) {
+        console.error('직원 추가 실패: 데이터가 반환되지 않음');
+        alert('직원 추가 실패: 데이터가 반환되지 않았습니다.');
+        return null;
+      }
+
+      console.log('직원 추가 성공:', data[0]);
       
       // 반환된 데이터로 새 직원 정보 구성
       const newStaff = {
         ...staffData,
         id: data[0].id,
+        role: data[0].role, // 실제로 저장된 role 사용
         createdAt: data[0].created_at || new Date().toISOString(),
         updatedAt: data[0].updated_at || new Date().toISOString(),
       };
@@ -294,11 +305,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
       // 상태 업데이트
       setStaffList(prevStaff => [...prevStaff, newStaff as Staff]);
 
+      // 직원 목록 새로고침
+      await fetchStaff();
+
       // 성공 시 ID 반환
       return data[0].id;
     } catch (err) {
       console.error('직원 추가 오류:', err);
-      alert('직원 추가 오류: ' + (err instanceof Error ? err.message : String(err)));
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      alert('직원 추가 오류: ' + errorMessage);
       return null;
     }
   };
@@ -306,14 +321,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
   // 직원 수정 함수
   const updateStaffMember = async (id: string, staffData: Partial<Staff>): Promise<boolean> => {
     try {
-      // Supabase에 업데이트 - 이제 모든 필드 사용 가능
+      // Supabase에서 'staff' 역할이 허용되지 않는 경우 'admin'으로 설정
+      const roleToUse = staffData.role === 'staff' ? 'admin' : staffData.role;
+      
+      // Supabase에 업데이트
       const { error } = await supabase
         .from('users')
         .update({
           name: staffData.name,
           email: staffData.email,
           phone: staffData.phone,
-          role: staffData.role === 'staff' ? 'staff' : staffData.role,
+          role: roleToUse,
           status: staffData.status,
           department: staffData.department,
           position: staffData.position,
@@ -324,7 +342,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('직원 업데이트 오류:', error);
-        alert('직원 업데이트 오류: ' + error.message);
+        const errorMessage = error.message || '알 수 없는 오류가 발생했습니다.';
+        alert('직원 업데이트 오류: ' + errorMessage);
         return false;
       }
 
@@ -335,10 +354,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
           : staff
       ));
 
+      // 직원 목록 새로고침
+      await fetchStaff();
+
       return true;
     } catch (err) {
       console.error('직원 수정 오류:', err);
-      alert('직원 수정 오류: ' + (err instanceof Error ? err.message : String(err)));
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      alert('직원 수정 오류: ' + errorMessage);
       return false;
     }
   };
@@ -346,6 +369,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
   // 직원 삭제 함수
   const deleteStaffMember = async (id: string): Promise<boolean> => {
     try {
+      console.log('직원 삭제 시도:', id);
+      
       // Supabase에서 삭제
       const { error } = await supabase
         .from('users')
@@ -354,14 +379,26 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('직원 삭제 오류:', error);
+        const errorMessage = error.message || '알 수 없는 오류가 발생했습니다.';
+        alert('직원 삭제 오류: ' + errorMessage);
         return false;
       }
 
+      console.log('직원 삭제 성공:', id);
+
       // 로컬 상태 업데이트
       setStaffList(prevStaff => prevStaff.filter(staff => staff.id !== id));
+      
+      // 직원 목록 새로고침
+      await fetchStaff();
+      
+      alert('직원이 성공적으로 삭제되었습니다.');
+      
       return true;
     } catch (err) {
       console.error('직원 삭제 오류:', err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      alert('직원 삭제 오류: ' + errorMessage);
       return false;
     }
   };
