@@ -28,7 +28,7 @@ const AVAILABLE_PERMISSIONS = [
 ];
 
 const EditStaffForm: React.FC<EditStaffFormProps> = ({ staff, onClose }) => {
-  const { updateUser } = useUser();
+  const { updateStaff } = useUser();
   const [formData, setFormData] = useState({
     name: staff.name,
     email: staff.email,
@@ -38,6 +38,7 @@ const EditStaffForm: React.FC<EditStaffFormProps> = ({ staff, onClose }) => {
     status: staff.status,
     permissions: staff.permissions || []
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -56,7 +57,7 @@ const EditStaffForm: React.FC<EditStaffFormProps> = ({ staff, onClose }) => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.email) {
@@ -64,14 +65,26 @@ const EditStaffForm: React.FC<EditStaffFormProps> = ({ staff, onClose }) => {
       return;
     }
 
-    const updatedStaff: Staff = {
-      ...staff,
-      ...formData
-    };
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
-    if (updateUser) {
-      updateUser(staff.id, updatedStaff);
-      onClose();
+    try {
+      if (updateStaff) {
+        const success = await updateStaff(staff.id, formData);
+        if (success) {
+          alert('직원 정보가 성공적으로 수정되었습니다.');
+          onClose();
+        } else {
+          alert('직원 정보 수정에 실패했습니다.');
+        }
+      } else {
+        alert('수정 기능을 사용할 수 없습니다.');
+      }
+    } catch (error) {
+      console.error('직원 수정 오류:', error);
+      alert('직원 정보 수정 중 오류가 발생했습니다.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -106,7 +119,7 @@ const EditStaffForm: React.FC<EditStaffFormProps> = ({ staff, onClose }) => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="form-input pl-10 w-full"
+                  className="w-full pl-10 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="직원 이름"
                   required
                 />
@@ -125,7 +138,7 @@ const EditStaffForm: React.FC<EditStaffFormProps> = ({ staff, onClose }) => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="form-input pl-10 w-full"
+                  className="w-full pl-10 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="이메일 주소"
                   required
                 />
@@ -144,7 +157,7 @@ const EditStaffForm: React.FC<EditStaffFormProps> = ({ staff, onClose }) => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="form-input pl-10 w-full"
+                  className="w-full pl-10 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="010-0000-0000"
                 />
               </div>
@@ -162,7 +175,7 @@ const EditStaffForm: React.FC<EditStaffFormProps> = ({ staff, onClose }) => {
                   name="department"
                   value={formData.department}
                   onChange={handleInputChange}
-                  className="form-input pl-10 w-full"
+                  className="w-full pl-10 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="부서명"
                 />
               </div>
@@ -179,7 +192,7 @@ const EditStaffForm: React.FC<EditStaffFormProps> = ({ staff, onClose }) => {
                   name="position"
                   value={formData.position}
                   onChange={handleInputChange}
-                  className="form-input w-full"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">직책 선택</option>
                   {Object.entries(positionInfo).map(([id, info]) => (
@@ -198,7 +211,7 @@ const EditStaffForm: React.FC<EditStaffFormProps> = ({ staff, onClose }) => {
                 name="status"
                 value={formData.status}
                 onChange={handleInputChange}
-                className="form-input w-full"
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="active">활성</option>
                 <option value="inactive">비활성</option>
@@ -237,10 +250,15 @@ const EditStaffForm: React.FC<EditStaffFormProps> = ({ staff, onClose }) => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+              disabled={isSubmitting}
+              className={`px-4 py-2 text-white rounded-lg transition-colors flex items-center ${
+                isSubmitting 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
             >
               <Save size={16} className="mr-2" />
-              저장
+              {isSubmitting ? '저장 중...' : '저장'}
             </button>
           </div>
         </form>
