@@ -69,6 +69,8 @@ export interface Database {
           assigned_to?: string;
           created_by?: string;
           due_date?: string;
+          start_time?: string;
+          end_time?: string;
           tags?: any;
           created_at?: string;
           updated_at?: string;
@@ -83,6 +85,8 @@ export interface Database {
           assigned_to?: string;
           created_by?: string;
           due_date?: string;
+          start_time?: string;
+          end_time?: string;
           tags?: any;
         };
         Update: {
@@ -95,6 +99,8 @@ export interface Database {
           assigned_to?: string;
           created_by?: string;
           due_date?: string;
+          start_time?: string;
+          end_time?: string;
           tags?: any;
         };
       };

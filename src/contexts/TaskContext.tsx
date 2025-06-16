@@ -23,6 +23,8 @@ export interface Task {
   priority: TaskPriority;
   category: TaskCategory;
   dueDate: string; // ISO 문자열
+  startTime?: string; // 시작 시간 (HH:MM 형식)
+  endTime?: string; // 종료 시간 (HH:MM 형식)
   createdAt: string; // ISO 문자열
   updatedAt: string; // ISO 문자열
   assignedTo: string[]; // 유저 ID 배열
@@ -145,6 +147,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
               priority: localTask.priority,
               category: localTask.category,
               due_date: localTask.dueDate,
+              start_time: localTask.startTime,
+              end_time: localTask.endTime,
               assigned_to: assignedToId,
               created_by: user.id,
               tags: localTask.assignedToName
@@ -247,6 +251,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       priority: supabaseTask.priority,
       category: supabaseTask.category || 'general',
       dueDate: supabaseTask.due_date,
+      startTime: supabaseTask.start_time,
+      endTime: supabaseTask.end_time,
       createdAt: supabaseTask.created_at,
       updatedAt: supabaseTask.updated_at,
       assignedTo: assignedToArray,
@@ -362,6 +368,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
           priority: newTaskData.priority,
           category: newTaskData.category,
           due_date: newTaskData.dueDate,
+          start_time: newTaskData.startTime,
+          end_time: newTaskData.endTime,
           assigned_to: assignedToId,
           created_by: user.id,
           tags: newTaskData.assignedToName // 임시로 태그에 담당자 이름 저장
@@ -373,8 +381,18 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
       if (newSupabaseTask) {
         const convertedTask = await convertSupabaseTaskToTask(newSupabaseTask);
-        setTasks(prevTasks => [convertedTask, ...prevTasks]);
-        setFilteredTasks(prevTasks => [convertedTask, ...prevTasks]);
+        
+        // 상태 업데이트를 즉시 반영
+        setTasks(prevTasks => {
+          const newTasks = [convertedTask, ...prevTasks];
+          console.log('✅ 업무 추가 완료:', convertedTask.title, '총 업무 수:', newTasks.length);
+          return newTasks;
+        });
+        
+        setFilteredTasks(prevTasks => {
+          const newFilteredTasks = [convertedTask, ...prevTasks];
+          return newFilteredTasks;
+        });
 
         // 🚀 자동 알림: 업무 배정 알림 발송
         if (newTaskData.assignedTo.length > 0) {
@@ -395,6 +413,22 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
           } catch (error) {
             console.error('업무 배정 알림 실패:', error);
           }
+        }
+
+        // 추가 완료 후 전체 목록 새로고침 (확실한 동기화를 위해)
+        setTimeout(() => {
+          fetchTasks();
+        }, 100);
+
+        // 성공 알림 표시
+        if (typeof window !== 'undefined') {
+          const event = new CustomEvent('taskAdded', { 
+            detail: { 
+              taskTitle: convertedTask.title,
+              taskId: convertedTask.id 
+            } 
+          });
+          window.dispatchEvent(event);
         }
 
         return convertedTask.id;
@@ -428,6 +462,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       if (updatedData.priority !== undefined) updatePayload.priority = updatedData.priority;
       if (updatedData.category !== undefined) updatePayload.category = updatedData.category;
       if (updatedData.dueDate !== undefined) updatePayload.due_date = updatedData.dueDate;
+      if (updatedData.startTime !== undefined) updatePayload.start_time = updatedData.startTime;
+      if (updatedData.endTime !== undefined) updatePayload.end_time = updatedData.endTime;
       if (updatedData.assignedTo !== undefined && updatedData.assignedTo.length > 0) {
         updatePayload.assigned_to = updatedData.assignedTo[0];
       }

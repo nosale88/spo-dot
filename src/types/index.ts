@@ -174,17 +174,27 @@ export interface Announcement {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   tags: string[];
   expiryDate?: string;
+  endDate?: string; // 만료일 (expiryDate와 동일한 의미)
+  category?: string; // 카테고리
   isPinned: boolean;
   isActive: boolean;
   targetRoles: string[];
   readBy: string[];
   createdAt: string;
   updatedAt: string;
+  showInBanner?: boolean;
   attachments?: {
     id: string;
     name: string;
     url: string;
     size: number;
+  }[];
+  images?: {
+    id: string;
+    name: string;
+    url: string;
+    size: number;
+    uploadedAt: string;
   }[];
 }
 

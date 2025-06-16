@@ -14,7 +14,8 @@ import {
   CheckCircle,
   Info,
   X,
-  Filter
+  Filter,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useAnnouncement } from '../contexts/AnnouncementContext';
 import { Announcement } from '../types/index';
@@ -133,6 +134,37 @@ const AnnouncementDetailModal = ({ announcement, onClose }: AnnouncementDetailMo
                 {announcement.content}
               </p>
             </div>
+
+            {/* 첨부 이미지 표시 */}
+            {announcement.images && announcement.images.length > 0 && (
+              <div className="mt-6">
+                <h4 className="text-md font-semibold text-slate-900 mb-3 flex items-center">
+                  <ImageIcon className="w-5 h-5 mr-2" />
+                  첨부 이미지 ({announcement.images.length}개)
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {announcement.images.map((image, index) => (
+                    <div key={image.id} className="relative group">
+                      <img
+                        src={image.url}
+                        alt={image.name}
+                        className="w-full h-48 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => window.open(image.url, '_blank')}
+                      />
+                      <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                        {image.name}
+                      </div>
+                      <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                        {(image.size / 1024 / 1024).toFixed(1)}MB
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  💡 이미지를 클릭하면 새 창에서 원본 크기로 볼 수 있습니다.
+                </p>
+              </div>
+            )}
           </div>
 
           {announcement.tags && announcement.tags.length > 0 && (

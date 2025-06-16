@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, Calendar, Clock, User, CheckSquare, MoreHorizontal, X, Edit, Trash, Dumbbell, Users as GroupIcon, UserCheck, MessageCircle, Shield } from 'lucide-react';
+import { Plus, Search, Filter, Calendar, Clock, User, CheckSquare, MoreHorizontal, X, Edit, Trash, Dumbbell, Users as GroupIcon, UserCheck, MessageCircle, Shield, FileText } from 'lucide-react';
 import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addMonths, subMonths, addWeeks, subWeeks, parseISO, isSameDay, isSameMonth, getDate, getDaysInMonth, getDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import AddScheduleForm from '../components/forms/AddScheduleForm';
@@ -38,6 +38,8 @@ const Schedule = () => {
   // 날짜 확장 보기를 위한 상태 추가
   const [expandedDay, setExpandedDay] = useState<Date | null>(null);
   const [daySchedules, setDaySchedules] = useState<ScheduleType[]>([]);
+  const [scheduleToDelete, setScheduleToDelete] = useState<ScheduleType | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // 날짜에 맞는 일정 필터링
   useEffect(() => {
@@ -163,18 +165,32 @@ const Schedule = () => {
   const handleDeleteSchedule = (id: string) => {
     const scheduleToDelete = schedules.find(s => s.id === id);
     
+    if (!scheduleToDelete) return;
+    
     // OT 세션 삭제는 관리자만 가능
-    if (scheduleToDelete?.type === 'OT' && !isAdmin) {
+    if (scheduleToDelete.type === 'OT' && !isAdmin) {
       alert('OT 세션은 관리자만 삭제할 수 있습니다.');
       return;
     }
     
-    if (window.confirm('이 일정을 삭제하시겠습니까?')) {
-      deleteSchedule(id);
-      if (selectedSchedule?.id === id) {
+    // 커스텀 확인 모달 표시
+    setScheduleToDelete(scheduleToDelete);
+    setShowDeleteConfirm(true);
+  };
+
+  // 삭제 확인 처리
+  const confirmDelete = () => {
+    if (scheduleToDelete) {
+      deleteSchedule(scheduleToDelete.id);
+      if (selectedSchedule?.id === scheduleToDelete.id) {
         setSelectedSchedule(null);
         setShowDetails(false);
       }
+      setScheduleToDelete(null);
+      setShowDeleteConfirm(false);
+      
+      // 성공 메시지 표시
+      alert(`${scheduleToDelete.clientName}님의 ${getSessionTypeText(scheduleToDelete.type)} 일정이 삭제되었습니다.`);
     }
   };
 
@@ -194,6 +210,50 @@ const Schedule = () => {
       default: return null;
     }
   };
+
+  // ESC 키로 모달 닫기
+  useEscClose(() => {
+    if (showDetails) setShowDetails(false);
+    if (showEditForm) setShowEditForm(false);
+    if (showAddForm) setShowAddForm(false);
+    if (showDeleteConfirm) setShowDeleteConfirm(false);
+    if (expandedDay) setExpandedDay(null);
+  }, showDetails || showEditForm || showAddForm || showDeleteConfirm || !!expandedDay);
+
+  // 키보드 단축키 처리
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 모달이 열려있을 때만 단축키 작동
+      if (!selectedSchedule || !showDetails) return;
+      
+      // 입력 필드에 포커스가 있을 때는 단축키 비활성화
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      
+      switch (e.key.toLowerCase()) {
+        case 'e':
+          if (selectedSchedule.type !== 'OT' || isAdmin) {
+            e.preventDefault();
+            setShowEditForm(true);
+            setShowDetails(false);
+          }
+          break;
+        case 'd':
+          if (selectedSchedule.type !== 'OT' || isAdmin) {
+            e.preventDefault();
+            handleDeleteSchedule(selectedSchedule.id);
+          }
+          break;
+        case ' ':
+        case 'c':
+          e.preventDefault();
+          handleCompleteToggle(selectedSchedule.id, selectedSchedule.isCompleted);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedSchedule, showDetails, isAdmin]);
 
   return (
     <motion.div
@@ -360,50 +420,95 @@ const Schedule = () => {
                     }}
                   >
                     <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-3">
-                        <div className="mt-0.5">
-                          <span className={clsx(
-                            "px-2 py-1 rounded-full text-xs font-medium",
-                            getSessionTypeColor(schedule.type)
-                          )}>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getSessionTypeColor(schedule.type)}`}>
                             {getSessionTypeText(schedule.type)}
                           </span>
+                          {schedule.isCompleted && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <CheckSquare size={12} className="mr-1" />
+                              완료
+                            </span>
+                          )}
                         </div>
                         
-                        <div>
-                          <h4 className="font-medium text-slate-900">{schedule.clientName}</h4>
-                          <div className="flex items-center space-x-3 mt-1 text-sm">
-                            <span className="flex items-center text-slate-600">
-                              <Clock size={14} className="mr-1.5" />
-                              {schedule.startTime} - {schedule.endTime}
-                            </span>
-                            <span className="flex items-center text-slate-600">
-                              <User size={14} className="mr-1.5" />
-                              {schedule.trainerName}
-                            </span>
+                        <h4 className="text-lg font-semibold text-slate-900 mb-1">
+                          {schedule.clientName}
+                        </h4>
+                        
+                        <div className="space-y-1 text-sm text-slate-600">
+                          <div className="flex items-center">
+                            <Clock size={14} className="mr-2" />
+                            <span>{schedule.startTime} - {schedule.endTime}</span>
                           </div>
-                          
+                          <div className="flex items-center">
+                            <User size={14} className="mr-2" />
+                            <span>{schedule.trainerName}</span>
+                          </div>
                           {schedule.notes && (
-                            <p className="mt-2 text-sm text-slate-500">{schedule.notes}</p>
+                            <div className="flex items-start">
+                              <FileText size={14} className="mr-2 mt-0.5" />
+                              <span className="line-clamp-2">{schedule.notes}</span>
+                            </div>
                           )}
                         </div>
                       </div>
                       
-                      <div className="flex items-center space-x-2">
-                        <button 
+                      {/* 빠른 액션 버튼 */}
+                      <div className="flex items-center space-x-1 ml-4">
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleCompleteToggle(schedule.id, schedule.isCompleted);
                           }}
                           className={clsx(
-                            "p-2 rounded-lg border-2 transition-all hover:scale-105",
-                            schedule.isCompleted 
-                              ? "text-green-700 bg-green-100 border-green-300 hover:bg-green-200 shadow-sm" 
-                              : "text-slate-600 bg-white border-slate-300 hover:text-green-600 hover:border-green-300 hover:bg-green-50 shadow-sm"
+                            "p-2 rounded-lg transition-colors",
+                            schedule.isCompleted
+                              ? "text-green-600 hover:bg-green-100"
+                              : "text-slate-400 hover:bg-slate-100 hover:text-green-600"
                           )}
-                          title={schedule.isCompleted ? "완료됨" : "완료로 표시"}
+                          title={schedule.isCompleted ? "완료 취소" : "완료 표시"}
                         >
                           <CheckSquare size={18} />
+                        </button>
+                        
+                        {(schedule.type !== 'OT' || isAdmin) && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedSchedule(schedule);
+                                setShowEditForm(true);
+                              }}
+                              className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                              title="수정"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteSchedule(schedule.id);
+                              }}
+                              className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                              title="삭제"
+                            >
+                              <Trash size={18} />
+                            </button>
+                          </>
+                        )}
+                        
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedSchedule(schedule);
+                            setShowDetails(true);
+                          }}
+                          className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-lg transition-colors"
+                          title="상세 보기"
+                        >
+                          <MoreHorizontal size={18} />
                         </button>
                       </div>
                     </div>
@@ -474,7 +579,7 @@ const Schedule = () => {
                       <div 
                         key={schedule.id}
                         className={clsx(
-                          "p-3 rounded-lg border transition-colors cursor-pointer hover:shadow-sm",
+                          "p-3 mb-2 rounded-lg border cursor-pointer transition-all hover:shadow-sm group",
                           schedule.isCompleted 
                             ? "border-green-200 bg-green-50" 
                             : "border-slate-200 bg-white hover:border-slate-300"
@@ -484,39 +589,77 @@ const Schedule = () => {
                           setShowDetails(true);
                         }}
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className={clsx(
-                            "px-2 py-1 rounded-full text-xs font-medium",
-                            getSessionTypeColor(schedule.type)
-                          )}>
-                            {getSessionTypeText(schedule.type)}
-                          </span>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-1 mb-1">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${getSessionTypeColor(schedule.type)}`}>
+                                {schedule.type}
+                              </span>
+                              {schedule.isCompleted && (
+                                <CheckSquare size={12} className="text-green-600" />
+                              )}
+                            </div>
+                            
+                            <h5 className="font-medium text-slate-900 text-sm truncate mb-1">
+                              {schedule.clientName}
+                            </h5>
+                            
+                            <div className="text-xs text-slate-600 space-y-0.5">
+                              <div className="flex items-center">
+                                <Clock size={10} className="mr-1" />
+                                <span>{schedule.startTime}-{schedule.endTime}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <User size={10} className="mr-1" />
+                                <span className="truncate">{schedule.trainerName}</span>
+                              </div>
+                            </div>
+                          </div>
                           
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCompleteToggle(schedule.id, schedule.isCompleted);
-                            }}
-                            className={clsx(
-                              "p-2 rounded-lg border-2 transition-all hover:scale-105",
-                              schedule.isCompleted 
-                                ? "text-green-700 bg-green-100 border-green-300 hover:bg-green-200 shadow-sm" 
-                                : "text-slate-600 bg-white border-slate-300 hover:text-green-600 hover:border-green-300 hover:bg-green-50 shadow-sm"
+                          {/* 빠른 액션 버튼 - 호버 시에만 표시 */}
+                          <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCompleteToggle(schedule.id, schedule.isCompleted);
+                              }}
+                              className={clsx(
+                                "p-1 rounded transition-colors",
+                                schedule.isCompleted
+                                  ? "text-green-600 hover:bg-green-100"
+                                  : "text-slate-400 hover:bg-slate-100 hover:text-green-600"
+                              )}
+                              title={schedule.isCompleted ? "완료 취소" : "완료 표시"}
+                            >
+                              <CheckSquare size={14} />
+                            </button>
+                            
+                            {(schedule.type !== 'OT' || isAdmin) && (
+                              <>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedSchedule(schedule);
+                                    setShowEditForm(true);
+                                  }}
+                                  className="p-1 text-blue-600 hover:bg-blue-100 rounded transition-colors"
+                                  title="수정"
+                                >
+                                  <Edit size={14} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteSchedule(schedule.id);
+                                  }}
+                                  className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
+                                  title="삭제"
+                                >
+                                  <Trash size={14} />
+                                </button>
+                              </>
                             )}
-                            title={schedule.isCompleted ? "완료됨" : "완료로 표시"}
-                          >
-                            <CheckSquare size={18} />
-                          </button>
-                        </div>
-                        
-                        <h4 className="font-medium text-sm text-slate-900 truncate mb-1">{schedule.clientName}</h4>
-                        
-                        <div className="text-xs text-slate-600">
-                          {schedule.startTime} - {schedule.endTime}
-                        </div>
-                        
-                        <div className="text-xs text-slate-500 mt-1">
-                          {schedule.trainerName}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -649,11 +792,16 @@ const Schedule = () => {
         {/* 일정 수정 폼 */}
         {showEditForm && selectedSchedule && (
           <EditScheduleForm 
-            schedule={selectedSchedule} 
+            schedule={selectedSchedule}
             onClose={() => {
               setShowEditForm(false);
               setSelectedSchedule(null);
-            }} 
+            }}
+            onSuccess={(updatedSchedule) => {
+              setShowEditForm(false);
+              setSelectedSchedule(null);
+              alert(`${updatedSchedule.clientName}님의 ${getSessionTypeText(updatedSchedule.type)} 일정이 수정되었습니다.`);
+            }}
           />
         )}
         
@@ -676,6 +824,20 @@ const Schedule = () => {
                   일정 상세 정보
                 </h2>
                 <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleCompleteToggle(selectedSchedule.id, selectedSchedule.isCompleted)}
+                    className={clsx(
+                      "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center",
+                      selectedSchedule.isCompleted
+                        ? "bg-green-100 text-green-800 hover:bg-green-200"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    )}
+                    title={selectedSchedule.isCompleted ? "완료 취소" : "완료 표시"}
+                  >
+                    <CheckSquare size={16} className="mr-1.5" />
+                    {selectedSchedule.isCompleted ? "완료됨" : "완료 표시"}
+                  </button>
+                  
                   {(selectedSchedule.type !== 'OT' || isAdmin) && (
                     <>
                       <button
@@ -717,28 +879,7 @@ const Schedule = () => {
                     </span>
                     <h3 className="mt-3 text-xl font-bold text-slate-900">{selectedSchedule.clientName}</h3>
                   </div>
-                  
-                  <button 
-                    onClick={() => handleCompleteToggle(selectedSchedule.id, selectedSchedule.isCompleted)}
-                    className={clsx(
-                      "px-4 py-2 rounded-lg font-medium transition-colors",
-                      selectedSchedule.isCompleted 
-                        ? "bg-green-100 text-green-700 hover:bg-green-200" 
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    )}
-                  >
-                    {selectedSchedule.isCompleted ? '완료됨' : '완료로 표시'}
-                  </button>
                 </div>
-                
-                {selectedSchedule.type === 'OT' && !isAdmin && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                    <div className="flex items-center text-amber-700">
-                      <Shield size={16} className="mr-2" />
-                      <span className="text-sm">OT 세션은 관리자만 수정 및 삭제할 수 있습니다.</span>
-                    </div>
-                  </div>
-                )}
                 
                 <div className="space-y-3">
                   <div className="flex items-center text-slate-700">
@@ -763,6 +904,33 @@ const Schedule = () => {
                     <p className="text-slate-700">{selectedSchedule.notes}</p>
                   </div>
                 )}
+                
+                {/* 키보드 단축키 안내 */}
+                <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="text-sm font-medium text-blue-900 mb-2">키보드 단축키</h4>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
+                    <div className="flex items-center">
+                      <kbd className="px-1.5 py-0.5 bg-white rounded border border-blue-300 text-blue-800 font-mono mr-2">ESC</kbd>
+                      <span>닫기</span>
+                    </div>
+                    <div className="flex items-center">
+                      <kbd className="px-1.5 py-0.5 bg-white rounded border border-blue-300 text-blue-800 font-mono mr-2">C</kbd>
+                      <span>완료 토글</span>
+                    </div>
+                    {(selectedSchedule.type !== 'OT' || isAdmin) && (
+                      <>
+                        <div className="flex items-center">
+                          <kbd className="px-1.5 py-0.5 bg-white rounded border border-blue-300 text-blue-800 font-mono mr-2">E</kbd>
+                          <span>수정</span>
+                        </div>
+                        <div className="flex items-center">
+                          <kbd className="px-1.5 py-0.5 bg-white rounded border border-blue-300 text-blue-800 font-mono mr-2">D</kbd>
+                          <span>삭제</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -907,6 +1075,73 @@ const Schedule = () => {
                 >
                   일간 보기로 전환
                 </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* 삭제 확인 모달 */}
+        {showDeleteConfirm && scheduleToDelete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+            onClick={() => setShowDeleteConfirm(false)}
+          >
+            <div 
+              className="bg-white rounded-xl shadow-2xl max-w-md w-full border border-slate-200"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-6">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                    <Trash size={24} className="text-red-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">일정 삭제</h3>
+                    <p className="text-slate-600 text-sm">이 작업은 되돌릴 수 없습니다.</p>
+                  </div>
+                </div>
+                
+                <div className="bg-slate-50 rounded-lg p-4 mb-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getSessionTypeColor(scheduleToDelete.type)}`}>
+                        {getSessionTypeText(scheduleToDelete.type)}
+                      </span>
+                      <span className="ml-2 font-medium text-slate-900">{scheduleToDelete.clientName}</span>
+                    </div>
+                    <div className="text-sm text-slate-600">
+                      📅 {format(parseISO(scheduleToDelete.date), 'yyyy년 M월 d일 (EEEE)', { locale: ko })}
+                    </div>
+                    <div className="text-sm text-slate-600">
+                      🕐 {scheduleToDelete.startTime} - {scheduleToDelete.endTime}
+                    </div>
+                    <div className="text-sm text-slate-600">
+                      👨‍💼 {scheduleToDelete.trainerName}
+                    </div>
+                  </div>
+                </div>
+                
+                <p className="text-slate-700 mb-6">
+                  정말로 이 일정을 삭제하시겠습니까?
+                </p>
+                
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="px-4 py-2 text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
+                  >
+                    <Trash size={16} className="mr-2" />
+                    삭제
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>

@@ -14,6 +14,8 @@ type TaskFormData = {
   title: string;
   description?: string;
   dueDate: string;
+  startTime?: string;
+  endTime?: string;
   priority: TaskPriority;
   category: TaskCategory;
   assignedToName: string; // For simplicity, we'll use name directly. In a real app, this would be a user ID.
@@ -59,6 +61,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
         title: data.title,
         description: data.description,
         dueDate: new Date(data.dueDate).toISOString(),
+        startTime: data.startTime,
+        endTime: data.endTime,
         priority: data.priority,
         category: data.category,
         status: 'pending', 
@@ -168,7 +172,45 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
             />
             {errors.dueDate && <p className="text-xs text-red-500 mt-1">{errors.dueDate.message}</p>}
           </div>
-          
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="startTime" className="block text-sm font-medium text-slate-700 mb-1">
+                시작 시간
+              </label>
+              <Controller
+                name="startTime"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    id="startTime"
+                    type="time"
+                    className="w-full p-2 border border-slate-300 rounded-md"
+                  />
+                )}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="endTime" className="block text-sm font-medium text-slate-700 mb-1">
+                종료 시간
+              </label>
+              <Controller
+                name="endTime"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    id="endTime"
+                    type="time"
+                    className="w-full p-2 border border-slate-300 rounded-md"
+                  />
+                )}
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="priority" className="block text-sm font-medium text-slate-700 mb-1">

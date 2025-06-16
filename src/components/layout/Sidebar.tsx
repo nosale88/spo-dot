@@ -315,10 +315,10 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
             />
           </PermissionGate>
 
-          {/* 자판기 매출 - 매출 생성 권한이 있는 사용자 */}
+          {/* 자판기 관리 - 매출 생성 권한이 있는 사용자 */}
           <PermissionGate permission="sales.create">
             <SidebarLink 
-              name="자판기 매출" 
+              name="자판기 관리" 
               path="/dashboard/vending-sales" 
               icon={<Coffee size={22} />} 
               badge={0}
@@ -444,6 +444,17 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
                 setOpen={setOpen}
               />
             </CanManageAnnouncements>
+
+            {/* 보고서 관리 */}
+            <SidebarLink 
+              name="보고서 관리" 
+              path="/dashboard/admin/reports" 
+              icon={<FileText size={22} />} 
+              badge={0}
+              open={open}
+              isMobile={isMobile}
+              setOpen={setOpen}
+            />
 
             {/* 매출보고 관리 */}
             <PermissionGate permission="sales.view_all">

@@ -9,7 +9,7 @@ import {
   FileImage,
   Trash2
 } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import AddReportForm from '../components/forms/AddReportForm';
 
 interface UploadedImage {
@@ -37,6 +37,46 @@ const DailyReport = () => {
   const defaultDateValue = today.toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState(defaultDateValue);
   const [isAddReportModalOpen, setIsAddReportModalOpen] = useState(false);
+  const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
+
+  // 임시저장 데이터 복원
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(`dailyReport_draft_${defaultDateValue}`);
+    if (savedDraft) {
+      try {
+        const draftData = JSON.parse(savedDraft);
+        setReportTitle(draftData.title || '');
+        setCompletedTasks(draftData.completed || '');
+        setInProgressTasks(draftData.inProgress || '');
+        setPlannedTasks(draftData.planned || '');
+        setIssuesSuggestions(draftData.issues || '');
+        setLastSavedTime(draftData.lastSaved || null);
+        // 이미지는 보안상 복원하지 않음
+      } catch (error) {
+        console.error('임시저장 데이터 복원 실패:', error);
+      }
+    }
+  }, [defaultDateValue]);
+
+  // 자동 저장 (5초마다)
+  useEffect(() => {
+    const autoSaveInterval = setInterval(() => {
+      if (reportTitle || completedTasks || inProgressTasks || plannedTasks || issuesSuggestions) {
+        const draftData = {
+          title: reportTitle,
+          completed: completedTasks,
+          inProgress: inProgressTasks,
+          planned: plannedTasks,
+          issues: issuesSuggestions,
+          lastSaved: new Date().toISOString()
+        };
+        localStorage.setItem(`dailyReport_draft_${defaultDateValue}`, JSON.stringify(draftData));
+        setLastSavedTime(draftData.lastSaved);
+      }
+    }, 5000); // 5초마다 자동 저장
+
+    return () => clearInterval(autoSaveInterval);
+  }, [reportTitle, completedTasks, inProgressTasks, plannedTasks, issuesSuggestions, defaultDateValue]);
 
   // 이미지 업로드 처리
   const handleImageUpload = (files: FileList | null) => {
@@ -130,21 +170,38 @@ const DailyReport = () => {
         file: img.file
       }))
     });
+    
+    // 제출 완료 후 임시저장 데이터 삭제
+    localStorage.removeItem(`dailyReport_draft_${defaultDateValue}`);
+    
     alert('보고서가 제출되었습니다.');
+    
+    // 폼 초기화
+    setReportTitle('');
+    setCompletedTasks('');
+    setInProgressTasks('');
+    setPlannedTasks('');
+    setIssuesSuggestions('');
+    setUploadedImages([]);
+    setLastSavedTime(null);
   };
 
   const handleSaveDraft = () => {
     // 임시 저장 로직
-    console.log('임시 저장:', {
+    const draftData = {
       title: reportTitle,
       completed: completedTasks,
       inProgress: inProgressTasks,
       planned: plannedTasks,
       issues: issuesSuggestions,
-      reportDate: defaultDateValue,
-      images: uploadedImages.length
-    });
-    alert('보고서가 임시 저장되었습니다.');
+      lastSaved: new Date().toISOString()
+    };
+    
+    localStorage.setItem(`dailyReport_draft_${defaultDateValue}`, JSON.stringify(draftData));
+    setLastSavedTime(draftData.lastSaved);
+    
+    console.log('임시 저장:', draftData);
+    alert(`보고서가 임시 저장되었습니다.\n저장 시간: ${new Date().toLocaleTimeString('ko-KR')}`);
   };
 
   return (
@@ -206,6 +263,12 @@ const DailyReport = () => {
               placeholder="업무 보고 제목을 입력하세요"
               required
             />
+            {lastSavedTime && (
+              <div className="mt-2 flex items-center text-xs text-slate-500">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                마지막 자동 저장: {new Date(lastSavedTime).toLocaleString('ko-KR')}
+              </div>
+            )}
           </div>
 
           <div className="mb-6">

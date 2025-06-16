@@ -96,7 +96,7 @@ export type Permission =
   | 'pass.delete'
   | 'pass.view_all'
   
-  // 자판기 매출
+  // 자판기 관리
   | 'vending.create'
   | 'vending.read'
   | 'vending.update'

@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, subWeeks, subMonths, isWithinInterval, parseISO } from 'date-fns';
 import { useReactToPrint } from 'react-to-print';
@@ -19,7 +19,9 @@ import {
   X,
   Check,
   MinusCircle,
-  PlusCircle
+  PlusCircle,
+  Save,
+  DollarSign
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -86,13 +88,26 @@ const INITIAL_PRODUCTS: Product[] = [
   { id: 6, name: '과자', price: 2000, cost: 1000, category: '과자', barcode: '8801062636120' },
 ];
 
+// localStorage 키들
+const STORAGE_KEYS = {
+  products: 'vending_products',
+  inventory: 'vending_inventory', 
+  sales: 'vending_sales',
+  transactions: 'vending_transactions'
+};
+
 export default function VendingSales() {
   // 탭 상태
   const [activeTab, setActiveTab] = useState<'dashboard' | 'sales' | 'inventory' | 'products'>('dashboard');
   
   // 기본 데이터
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
-  const [inventory, setInventory] = useState<InventoryItem[]>([
+  const [products, setProducts] = useState<Product[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  
+  // 초기 재고 데이터
+  const INITIAL_INVENTORY: InventoryItem[] = [
     // 헬스장 자판기 (ID: 1) - 운동 후 필요한 상품들
     { id: 1, vendingId: 1, productId: 1, currentStock: 15, maxCapacity: 20, minThreshold: 5, lastRestocked: '2025-01-01' }, // 콜라
     { id: 2, vendingId: 1, productId: 2, currentStock: 12, maxCapacity: 20, minThreshold: 5, lastRestocked: '2025-01-01' }, // 사이다
@@ -112,15 +127,84 @@ export default function VendingSales() {
     { id: 12, vendingId: 3, productId: 4, currentStock: 16, maxCapacity: 20, minThreshold: 5, lastRestocked: '2024-12-31' }, // 커피
     { id: 13, vendingId: 3, productId: 5, currentStock: 8, maxCapacity: 12, minThreshold: 3, lastRestocked: '2024-12-29' }, // 초콜릿
     { id: 14, vendingId: 3, productId: 6, currentStock: 12, maxCapacity: 15, minThreshold: 4, lastRestocked: '2024-12-30' }, // 과자
-  ]);
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  ];
+
+  // localStorage에서 데이터 로드
+  useEffect(() => {
+    const savedProducts = localStorage.getItem(STORAGE_KEYS.products);
+    const savedInventory = localStorage.getItem(STORAGE_KEYS.inventory);
+    const savedSales = localStorage.getItem(STORAGE_KEYS.sales);
+    const savedTransactions = localStorage.getItem(STORAGE_KEYS.transactions);
+
+    if (savedProducts) {
+      try {
+        setProducts(JSON.parse(savedProducts));
+      } catch (error) {
+        console.error('Failed to load products:', error);
+        setProducts(INITIAL_PRODUCTS);
+      }
+    } else {
+      setProducts(INITIAL_PRODUCTS);
+    }
+
+    if (savedInventory) {
+      try {
+        setInventory(JSON.parse(savedInventory));
+      } catch (error) {
+        console.error('Failed to load inventory:', error);
+        setInventory(INITIAL_INVENTORY);
+      }
+    } else {
+      setInventory(INITIAL_INVENTORY);
+    }
+
+    if (savedSales) {
+      try {
+        setSales(JSON.parse(savedSales));
+      } catch (error) {
+        console.error('Failed to load sales:', error);
+        setSales([]);
+      }
+    }
+
+    if (savedTransactions) {
+      try {
+        setTransactions(JSON.parse(savedTransactions));
+      } catch (error) {
+        console.error('Failed to load transactions:', error);
+        setTransactions([]);
+      }
+    }
+  }, []);
+
+  // 데이터 변경 시 localStorage에 저장
+  useEffect(() => {
+    if (products.length > 0) {
+      localStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
+    }
+  }, [products]);
+
+  useEffect(() => {
+    if (inventory.length > 0) {
+      localStorage.setItem(STORAGE_KEYS.inventory, JSON.stringify(inventory));
+    }
+  }, [inventory]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.sales, JSON.stringify(sales));
+  }, [sales]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.transactions, JSON.stringify(transactions));
+  }, [transactions]);
   
   // 폼 상태들
   const [saleForm, setSaleForm] = useState({
     vendingId: '',
     productId: '',
     quantity: 1,
+    customAmount: '',
+    useCustomAmount: false,
     paymentMethod: 'cash' as 'cash' | 'card'
   });
   
@@ -167,12 +251,20 @@ export default function VendingSales() {
     const product = products.find(p => p.id === Number(saleForm.productId));
     if (!product) return;
     
+    // 커스텀 금액 사용 여부에 따라 총 금액 계산
+    let totalAmount: number;
+    if (saleForm.useCustomAmount && saleForm.customAmount) {
+      totalAmount = Number(saleForm.customAmount);
+    } else {
+      totalAmount = product.price * saleForm.quantity;
+    }
+    
     const newSale: Sale = {
       id: Date.now(),
       vendingId: Number(saleForm.vendingId),
       productId: Number(saleForm.productId),
       quantity: saleForm.quantity,
-      totalAmount: product.price * saleForm.quantity,
+      totalAmount: totalAmount,
       timestamp: new Date().toISOString(),
       paymentMethod: saleForm.paymentMethod
     };
@@ -201,8 +293,9 @@ export default function VendingSales() {
     };
     
     setTransactions(prev => [newTransaction, ...prev]);
-    setSaleForm({ vendingId: '', productId: '', quantity: 1, paymentMethod: 'cash' });
+    setSaleForm({ vendingId: '', productId: '', quantity: 1, customAmount: '', useCustomAmount: false, paymentMethod: 'cash' });
     setShowSaleModal(false);
+    alert('매출이 등록되었습니다.');
   };
 
   // 거래 등록 (입금/출금)
@@ -222,6 +315,7 @@ export default function VendingSales() {
     setTransactions(prev => [newTransaction, ...prev]);
     setTransactionForm(prev => ({ ...prev, amount: '', note: '' }));
     setShowTransactionModal(false);
+    alert(`${transactionForm.type}이 등록되었습니다.`);
   };
 
   // 상품 등록/수정
@@ -349,7 +443,7 @@ export default function VendingSales() {
             <div>
               <h1 className="text-3xl font-bold text-slate-900 flex items-center">
                 <Coffee className="mr-3 text-blue-600" size={32} />
-                자판기 관리 시스템
+                자판기 관리
               </h1>
               <p className="text-slate-600 mt-2">자판기 매출, 재고, 상품을 통합 관리하세요</p>
             </div>
@@ -912,6 +1006,42 @@ export default function VendingSales() {
                       />
                     </div>
 
+                    {/* 커스텀 금액 설정 */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-slate-700">금액 설정</label>
+                        <label className="flex items-center text-sm">
+                          <input
+                            type="checkbox"
+                            checked={saleForm.useCustomAmount}
+                            onChange={e => setSaleForm(prev => ({ 
+                              ...prev, 
+                              useCustomAmount: e.target.checked,
+                              customAmount: e.target.checked ? prev.customAmount : ''
+                            }))}
+                            className="mr-2"
+                          />
+                          직접 입력
+                        </label>
+                      </div>
+                      
+                      {saleForm.useCustomAmount && (
+                        <div className="relative">
+                          <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+                          <input
+                            type="number"
+                            min="0"
+                            step="100"
+                            placeholder="금액을 입력하세요"
+                            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            value={saleForm.customAmount}
+                            onChange={e => setSaleForm(prev => ({ ...prev, customAmount: e.target.value }))}
+                            required={saleForm.useCustomAmount}
+                          />
+                        </div>
+                      )}
+                    </div>
+
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">결제 방법</label>
                       <div className="flex space-x-4">
@@ -945,9 +1075,17 @@ export default function VendingSales() {
                         <div className="flex justify-between items-center">
                           <span className="text-slate-700">총 금액:</span>
                           <span className="text-lg font-bold text-blue-600">
-                            {(products.find(p => p.id === Number(saleForm.productId))?.price || 0) * saleForm.quantity}원
+                            {saleForm.useCustomAmount && saleForm.customAmount 
+                              ? Number(saleForm.customAmount).toLocaleString()
+                              : ((products.find(p => p.id === Number(saleForm.productId))?.price || 0) * saleForm.quantity).toLocaleString()
+                            }원
                           </span>
                         </div>
+                        {saleForm.useCustomAmount && saleForm.customAmount && (
+                          <div className="text-xs text-slate-500 mt-1">
+                            기본 가격: {((products.find(p => p.id === Number(saleForm.productId))?.price || 0) * saleForm.quantity).toLocaleString()}원
+                          </div>
+                        )}
                       </div>
                     )}
 

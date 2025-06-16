@@ -8,6 +8,7 @@ import { SuggestionProvider } from "./contexts/SuggestionContext";
 import { CustomerProvider } from "./contexts/CustomerContext";
 import { OTProvider } from "./contexts/OTContext";
 import { ScheduleProvider } from "./contexts/ScheduleContext";
+import { ReportProvider } from "./contexts/ReportContext";
 import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
 import Login from "./pages/auth/Login";
@@ -40,6 +41,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { NotificationProvider } from './contexts/NotificationContext';
 import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import SalesReportCreate from "./pages/SalesReportCreate";
+import ReportManagement from "./pages/admin/ReportManagement";
 
 function App() {
   // 🚀 자동 알림 스케줄러 활성화
@@ -56,6 +58,7 @@ function App() {
                   <CustomerProvider>
                     <OTProvider>
                       <ScheduleProvider>
+                        <ReportProvider>
                         <Routes>
                         {/* 루트 페이지 리디렉션 */}
                         <Route path="/" element={<Navigate to="/auth/login" replace />} />
@@ -185,6 +188,17 @@ function App() {
                               </ProtectedRoute>
                             } 
                           />
+                          <Route 
+                            path="admin/reports" 
+                            element={
+                              <ProtectedRoute 
+                                requiredRole="admin"
+                                requiredPermission="admin.dashboard"
+                              >
+                                <ReportManagement />
+                              </ProtectedRoute>
+                            } 
+                          />
                           
                           {/* 운영팀 전용 경로 */}
                           <Route 
@@ -263,6 +277,7 @@ function App() {
                         {/* 알 수 없는 경로 */}
                         <Route path="*" element={<Navigate to="/auth/login" replace />} />
                       </Routes>
+                        </ReportProvider>
                       </ScheduleProvider>
                     </OTProvider>
                   </CustomerProvider>

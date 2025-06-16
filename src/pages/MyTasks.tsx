@@ -11,6 +11,8 @@ import {
   Check,
   X,
   Edit,
+  Clock,
+  User,
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { useTask, Task, TaskStatus, TaskPriority } from '../contexts/TaskContext';
@@ -297,6 +299,35 @@ const MyTasks = () => {
     return undefined; // Or an empty object {}, undefined should be fine for RBC components prop
   }, [currentView, calendarEvents]); // CustomMonthDateCell implicitly depends on calendarEvents
 
+  // 일간 보기용 타임테이블 데이터 생성
+  const getDailyTimetable = () => {
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+    const selectedDate = format(calendarDate, 'yyyy-MM-dd');
+    
+    // 선택된 날짜의 업무만 필터링
+    const dayTasks = myTasks.filter(task => {
+      const taskDate = format(parseISO(task.dueDate), 'yyyy-MM-dd');
+      return taskDate === selectedDate;
+    });
+
+    return hours.map(hour => {
+      const hourString = hour.toString().padStart(2, '0');
+      const hourTasks = dayTasks.filter(task => {
+        if (!task.startTime) return false;
+        const taskHour = parseInt(task.startTime.split(':')[0]);
+        return taskHour === hour;
+      });
+
+      return {
+        hour,
+        hourString: `${hourString}:00`,
+        tasks: hourTasks
+      };
+    });
+  };
+
+  const timetableData = getDailyTimetable();
+
   return (
     <div className="p-6 bg-slate-100 min-h-screen">
       <header className="flex justify-between items-center mb-6">
@@ -481,6 +512,83 @@ const MyTasks = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        ) : currentView === 'day' ? (
+          // 일간 타임테이블 보기
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="p-4 border-b border-slate-200 bg-slate-50">
+              <h3 className="text-lg font-semibold text-slate-800">
+                {format(calendarDate, 'yyyy년 M월 d일 (EEEE)', { locale: ko })} 업무 일정
+              </h3>
+            </div>
+            <div className="max-h-[600px] overflow-y-auto">
+              {timetableData.map(({ hour, hourString, tasks }) => (
+                <div key={hour} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  <div className="flex">
+                    {/* 시간 표시 */}
+                    <div className="w-20 p-4 bg-slate-50 border-r border-slate-200 text-center">
+                      <span className="text-sm font-medium text-slate-600">{hourString}</span>
+                    </div>
+                    
+                    {/* 업무 표시 */}
+                    <div className="flex-1 p-4">
+                      {tasks.length === 0 ? (
+                        <div className="text-slate-400 text-sm italic">업무 없음</div>
+                      ) : (
+                        <div className="space-y-2">
+                          {tasks.map(task => (
+                            <div 
+                              key={task.id} 
+                              className={`p-3 rounded-lg border-l-4 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer ${
+                                task.priority === 'urgent' ? 'border-red-500 bg-red-50' :
+                                task.priority === 'high' ? 'border-orange-500 bg-orange-50' :
+                                task.priority === 'medium' ? 'border-blue-500 bg-blue-50' :
+                                'border-green-500 bg-green-50'
+                              }`}
+                              onClick={() => setEditingTask(task)}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-slate-800 mb-1">{task.title}</h4>
+                                  {task.description && (
+                                    <p className="text-sm text-slate-600 mb-2">{task.description}</p>
+                                  )}
+                                  <div className="flex items-center space-x-4 text-xs text-slate-500">
+                                    {task.startTime && task.endTime && (
+                                      <span className="flex items-center">
+                                        <Clock size={12} className="mr-1" />
+                                        {task.startTime} - {task.endTime}
+                                      </span>
+                                    )}
+                                    <span className="flex items-center">
+                                      <User size={12} className="mr-1" />
+                                      {Array.isArray(task.assignedToName) ? task.assignedToName.join(', ') : task.assignedToName}
+                                    </span>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                      task.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                      task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                                      task.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-gray-100 text-gray-800'
+                                    }`}>
+                                      {getStatusDisplayName(task.status)}
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                {/* 우선순위 표시 */}
+                                <div className="ml-3">
+                                  <span className={`inline-block h-3 w-3 rounded-full ${getPriorityClass(task.priority)}`} title={task.priority}></span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-lg" style={{ height: 'calc(100vh - 280px)' }}>
@@ -727,6 +835,8 @@ const EditTaskModal = ({ task, isOpen, onClose, onSave }: {
 }) => {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || '');
+  const [startTime, setStartTime] = useState(task.startTime || '');
+  const [endTime, setEndTime] = useState(task.endTime || '');
 
   if (!isOpen) return null;
 
@@ -735,6 +845,8 @@ const EditTaskModal = ({ task, isOpen, onClose, onSave }: {
     onSave({
       title,
       description,
+      startTime: startTime || undefined,
+      endTime: endTime || undefined,
       updatedAt: new Date().toISOString()
     });
   };
@@ -762,6 +874,26 @@ const EditTaskModal = ({ task, isOpen, onClose, onSave }: {
               className="w-full px-3 py-2 border rounded-md"
               rows={3}
             />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">시작 시간</label>
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">종료 시간</label>
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
           </div>
           <div className="flex justify-end space-x-2 pt-4">
             <button
