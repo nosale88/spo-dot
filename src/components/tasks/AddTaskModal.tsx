@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useTask, Task, TaskPriority, TaskCategory } from '../../contexts/TaskContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUser } from '../../contexts/UserContext';
 import { X, Save, Loader2 } from 'lucide-react';
 
 interface AddTaskModalProps {
@@ -18,12 +19,13 @@ type TaskFormData = {
   endTime?: string;
   priority: TaskPriority;
   category: TaskCategory;
-  assignedToName: string; // For simplicity, we'll use name directly. In a real app, this would be a user ID.
+  assignedTo: string;
 };
 
 const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDueDate }) => {
   const { addTask, loading } = useTask();
   const { user: currentUser } = useAuth();
+  const { staff: staffList, loadingStaff } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     control,
@@ -57,6 +59,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
     setIsSubmitting(true);
 
     try {
+      const selectedStaff = staffList?.find(staff => staff.id === data.assignedTo);
+      
       const newTaskPayload: Omit<Task, 'id' | 'createdAt' | 'updatedAt'> = {
         title: data.title,
         description: data.description,
@@ -66,8 +70,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
         priority: data.priority,
         category: data.category,
         status: 'pending', 
-        assignedTo: [`user-${data.assignedToName.replace(/\s+/g, '').toLowerCase()}`], // Array now
-        assignedToName: [data.assignedToName], // Array now
+        assignedTo: data.assignedTo ? [data.assignedTo] : [],
+        assignedToName: selectedStaff ? [selectedStaff.name] : [],
         assignedBy: currentUser.id,
         assignedByName: currentUser.name || 'Unknown User',
       };
@@ -104,6 +108,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
     { value: 'client', label: '고객 관련' },
     { value: 'training', label: '교육/훈련' },
   ];
+
+  const activeStaff = staffList?.filter(staff => staff.status === 'active') || [];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -258,24 +264,40 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
           </div>
 
           <div>
-            <label htmlFor="assignedToName" className="block text-sm font-medium text-slate-700 mb-1">
-              담당자 이름 <span className="text-red-500">*</span>
+            <label htmlFor="assignedTo" className="block text-sm font-medium text-slate-700 mb-1">
+              담당자 <span className="text-red-500">*</span>
             </label>
-            <Controller
-              name="assignedToName"
-              control={control}
-              rules={{ required: '담당자 이름은 필수입니다.' }}
-              render={({ field }) => (
-                <input
-                  {...field}
-                  id="assignedToName"
-                  type="text"
-                  className={`w-full p-2 border rounded-md ${errors.assignedToName ? 'border-red-500' : 'border-slate-300'}`}
-                  placeholder="예: 홍길동"
-                />
-              )}
-            />
-            {errors.assignedToName && <p className="text-xs text-red-500 mt-1">{errors.assignedToName.message}</p>}
+            {loadingStaff ? (
+              <div className="w-full p-2 border border-slate-300 rounded-md text-slate-500">
+                직원 목록을 불러오는 중...
+              </div>
+            ) : (
+              <Controller
+                name="assignedTo"
+                control={control}
+                rules={{ required: '담당자는 필수입니다.' }}
+                render={({ field }) => (
+                  <select
+                    {...field}
+                    id="assignedTo"
+                    className={`w-full p-2 border rounded-md ${errors.assignedTo ? 'border-red-500' : 'border-slate-300'}`}
+                  >
+                    <option value="">담당자를 선택하세요</option>
+                    {activeStaff.map(staff => (
+                      <option key={staff.id} value={staff.id}>
+                        {staff.name} {staff.department && `(${staff.department})`}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+            )}
+            {errors.assignedTo && <p className="text-xs text-red-500 mt-1">{errors.assignedTo.message}</p>}
+            {!loadingStaff && activeStaff.length === 0 && (
+              <p className="text-xs text-amber-600 mt-1">
+                등록된 직원이 없습니다. 먼저 직원을 등록해주세요.
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
@@ -290,7 +312,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
             <button
               type="submit"
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isSubmitting || loading}
+              disabled={isSubmitting || loading || loadingStaff || activeStaff.length === 0}
             >
               {isSubmitting ? (
                 <>

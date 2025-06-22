@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Save, User, Shield, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { useUser, UserStatus, Staff } from '../../contexts/UserContext';
+import { useUser, UserStatus, Staff, UserRole } from '../../contexts/UserContext';
 import { UserPosition, positionInfo } from '../../types/permissions';
 import clsx from 'clsx';
 
@@ -11,22 +11,35 @@ export interface AddStaffFormProps {
 }
 
 const AVAILABLE_PERMISSIONS = [
-  { id: 'view_clients', label: '고객 조회' },
-  { id: 'edit_clients', label: '고객 편집' },
-  { id: 'view_trainers', label: '트레이너 조회' },
-  { id: 'edit_trainers', label: '트레이너 편집' },
-  { id: 'view_schedules', label: '일정 조회' },
-  { id: 'edit_schedules', label: '일정 편집' },
-  { id: 'view_tasks', label: '업무 조회' },
-  { id: 'edit_tasks', label: '업무 편집' },
-  { id: 'view_reports', label: '보고서 조회' },
-  { id: 'edit_reports', label: '보고서 편집' },
-  { id: 'view_equipment', label: '장비 조회' },
-  { id: 'edit_equipment', label: '장비 편집' },
-  { id: 'view_inventory', label: '재고 조회' },
-  { id: 'edit_inventory', label: '재고 편집' },
-  { id: 'view_payments', label: '결제 조회' },
-  { id: 'process_payments', label: '결제 처리' },
+  // 업무 관리
+  { id: 'view_tasks', label: '내 업무 조회', category: '업무 관리' },
+  { id: 'view_all_tasks', label: '팀 업무 조회', category: '업무 관리' },
+  { id: 'edit_tasks', label: '업무 생성/편집', category: '업무 관리' },
+  
+  // 일정 관리
+  { id: 'view_schedules', label: '일정 조회', category: '일정 관리' },
+  { id: 'edit_schedules', label: '일정 생성/편집', category: '일정 관리' },
+  
+  // 회원/고객 관리
+  { id: 'view_members', label: '회원 조회', category: '회원 관리' },
+  { id: 'edit_members', label: '회원 생성/편집', category: '회원 관리' },
+  { id: 'view_clients', label: '고객 조회', category: '고객 관리' },
+  { id: 'edit_clients', label: '고객 생성/편집', category: '고객 관리' },
+  
+  // 트레이너 관리
+  { id: 'view_trainers', label: '트레이너 조회', category: '트레이너 관리' },
+  { id: 'edit_trainers', label: '트레이너 생성/편집', category: '트레이너 관리' },
+  
+  // 매출 관리
+  { id: 'create_sales', label: '매출 등록', category: '매출 관리' },
+  { id: 'view_sales_reports', label: '매출 보고서 조회', category: '매출 관리' },
+  { id: 'create_sales_reports', label: '매출보고 작성', category: '매출 관리' },
+  { id: 'manage_vending', label: '자판기 관리', category: '매출 관리' },
+  
+  // 보고서 관리
+  { id: 'view_reports', label: '일일 업무 보고 조회', category: '보고서 관리' },
+  { id: 'create_reports', label: '일일 업무 보고 작성', category: '보고서 관리' },
+  { id: 'edit_reports', label: '보고서 생성/편집', category: '보고서 관리' },
 ];
 
 const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
@@ -42,7 +55,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
     department: '',
     position: '' as UserPosition,
     hireDate: format(new Date(), 'yyyy-MM-dd'),
-    role: 'staff' as 'staff' | 'admin',
+    role: 'staff' as UserRole,
     permissions: [] as string[]
   });
   
@@ -58,18 +71,89 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
       setErrors({ ...errors, [name]: '' });
     }
     
-    // 관리자 역할이 선택되면 모든 권한 추가
-    if (name === 'role' && value === 'admin') {
+    // 부서에 따른 기본 권한 설정
+    if (name === 'department') {
+      let defaultPermissions: string[] = [];
+      switch (value) {
+        case '임원':
+          defaultPermissions = ['all']; // 모든 권한
+          break;
+        case '리셉션':
+          defaultPermissions = [
+            'view_tasks', 'view_all_tasks', 'edit_tasks',
+            'view_schedules', 'edit_schedules',
+            'view_members', 'edit_members',
+            'view_clients', 'edit_clients',
+            'create_sales', 'view_sales_reports', 'create_sales_reports',
+            'view_reports', 'create_reports'
+          ];
+          break;
+        case '헬스':
+          defaultPermissions = [
+            'view_tasks', 'edit_tasks',
+            'view_schedules', 'edit_schedules',
+            'view_members', 'edit_members',
+            'view_clients', 'edit_clients',
+            'view_trainers'
+          ];
+          break;
+        case '테니스':
+          defaultPermissions = [
+            'view_tasks',
+            'view_schedules', 'edit_schedules',
+            'view_members', 'edit_members',
+            'view_clients', 'edit_clients',
+            'view_trainers'
+          ];
+          break;
+        case '골프':
+          defaultPermissions = [
+            'view_tasks',
+            'view_schedules', 'edit_schedules', 
+            'view_members', 'edit_members',
+            'view_clients', 'edit_clients',
+            'view_trainers'
+          ];
+          break;
+        default:
+          defaultPermissions = ['view_tasks'];
+      }
+      
       setFormData(prev => ({
         ...prev,
-        role: 'admin',
-        permissions: ['all']
+        department: value,
+        permissions: defaultPermissions
       }));
-    } else if (name === 'role' && value === 'staff') {
+    }
+    
+    // 역할에 따른 권한 설정
+    if (name === 'role') {
+      let rolePermissions: string[] = [];
+      switch (value) {
+        case 'admin':
+          rolePermissions = ['all'];
+          break;
+        case 'trainer':
+          rolePermissions = [
+            'view_tasks', 'edit_tasks',
+            'view_schedules', 'edit_schedules',
+            'view_members', 'edit_members',
+            'view_clients', 'edit_clients',
+            'view_trainers', 'edit_trainers'
+          ];
+          break;
+        case 'staff':
+          // 부서별 권한 유지 (이미 설정된 권한 유지)
+          rolePermissions = formData.permissions;
+          break;
+        default:
+          rolePermissions = ['view_tasks'];
+      }
+      
       setFormData(prev => ({
         ...prev,
-        role: 'staff',
-        permissions: []
+        role: value as UserRole,
+        permissions: value === 'staff' ? prev.permissions : rolePermissions
       }));
     }
   };
@@ -372,6 +456,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                     >
                       <option value="">부서 선택</option>
                       <option value="임원">임원</option>
+                      <option value="리셉션">리셉션</option>
                       <option value="헬스">헬스</option>
                       <option value="테니스">테니스</option>
                       <option value="골프">골프</option>
@@ -428,7 +513,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                   {/* 역할 */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      역할
+                      시스템 역할
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <select
@@ -439,46 +524,68 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       required
                     >
                       <option value="staff">일반 직원</option>
+                      <option value="trainer">트레이너</option>
                       <option value="admin">관리자</option>
                     </select>
+                    <p className="mt-1 text-xs text-slate-500">
+                      • 일반 직원: 부서별 기본 권한<br/>
+                      • 트레이너: 회원 관리 및 수업 권한<br/>
+                      • 관리자: 모든 기능 접근 가능
+                    </p>
                   </div>
                 </div>
               </div>
               
               {/* 권한 섹션 */}
-              {formData.role !== 'admin' && (
+              {formData.role === 'staff' && (
                 <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
-                  <div className="flex items-center mb-3">
-                    <h3 className="font-medium text-slate-900">권한 설정</h3>
-                    <span className="ml-2 text-xs text-slate-500">
-                      (직원이 접근할 수 있는 기능을 선택하세요)
-                    </span>
+                  <div className="mb-3">
+                    <h3 className="font-medium text-slate-900 mb-1">접근 권한 설정</h3>
+                    <p className="text-sm text-slate-600">
+                      메인 메뉴의 기능별로 접근 권한을 설정합니다. 
+                      <span className="text-blue-600 font-medium">조회</span>는 보기만, 
+                      <span className="text-blue-600 font-medium">생성/편집</span>은 추가·수정이 가능합니다.
+                    </p>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {AVAILABLE_PERMISSIONS.map(permission => (
-                      <div key={permission.id} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id={permission.id}
-                          value={permission.id}
-                          checked={formData.permissions.includes(permission.id)}
-                          onChange={handlePermissionChange}
-                          className="rounded text-primary focus:ring-primary"
-                        />
-                        <label
-                          htmlFor={permission.id}
-                          className="ml-2 block text-sm text-slate-700"
-                        >
-                          {permission.label}
-                        </label>
+                  <div className="space-y-4">
+                    {Object.entries(
+                      AVAILABLE_PERMISSIONS.reduce((acc, permission) => {
+                        const category = permission.category;
+                        if (!acc[category]) acc[category] = [];
+                        acc[category].push(permission);
+                        return acc;
+                      }, {} as Record<string, typeof AVAILABLE_PERMISSIONS>)
+                    ).map(([category, permissions]) => (
+                      <div key={category} className="border border-slate-200 rounded-lg p-3">
+                        <h4 className="font-medium text-slate-800 mb-2 text-sm">{category}</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {permissions.map(permission => (
+                            <div key={permission.id} className="flex items-center">
+                              <input
+                                type="checkbox"
+                                id={permission.id}
+                                value={permission.id}
+                                checked={formData.permissions.includes(permission.id)}
+                                onChange={handlePermissionChange}
+                                className="rounded text-blue-600 focus:ring-blue-500"
+                              />
+                              <label
+                                htmlFor={permission.id}
+                                className="ml-2 block text-sm text-slate-700"
+                              >
+                                {permission.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
               
-              {/* 관리자 경고 */}
+              {/* 역할별 권한 안내 */}
               {formData.role === 'admin' && (
                 <div className="md:col-span-2 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
                   <div className="flex items-start">
@@ -488,6 +595,40 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       <p className="text-sm text-yellow-700 mt-1">
                         관리자는 모든 기능에 대한 접근 권한을 가집니다. 시스템 전체 설정을 변경하고 모든 데이터에 접근할 수 있습니다. 
                         관리자 권한은 꼭 필요한 직원에게만 부여해야 합니다.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {formData.role === 'trainer' && (
+                <div className="md:col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-start">
+                    <User className="w-5 h-5 text-blue-600 mr-2 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium text-blue-800">트레이너 권한 안내</h3>
+                      <p className="text-sm text-blue-700 mt-1">
+                        트레이너는 회원 관리, 일정 관리, 업무 관리 등의 권한을 가집니다. 
+                        담당 회원의 운동 프로그램과 일정을 관리할 수 있습니다.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {formData.role === 'staff' && formData.department && (
+                <div className="md:col-span-2 bg-green-50 p-4 rounded-lg border border-green-200">
+                  <div className="flex items-start">
+                    <Settings className="w-5 h-5 text-green-600 mr-2 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium text-green-800">{formData.department} 부서 기본 권한</h3>
+                      <p className="text-sm text-green-700 mt-1">
+                        {formData.department === '임원' && '임원은 모든 권한을 가집니다.'}
+                        {formData.department === '리셉션' && '리셉션은 회원관리, 일정관리, 매출관리 등 프론트 업무 권한을 가집니다.'}
+                        {formData.department === '헬스' && '헬스 부서는 회원관리, 일정관리, 트레이너 조회 권한을 가집니다.'}
+                        {formData.department === '테니스' && '테니스 부서는 회원관리, 일정관리, 트레이너 조회 권한을 가집니다.'}
+                        {formData.department === '골프' && '골프 부서는 회원관리, 일정관리, 트레이너 조회 권한을 가집니다.'}
+                        <br />필요에 따라 추가 권한을 선택하거나 제거할 수 있습니다.
                       </p>
                     </div>
                   </div>

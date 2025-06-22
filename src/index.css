@@ -48,6 +48,49 @@ body {
   @apply bg-slate-500;
 }
 
+/* 일정 목록 스크롤바 스타일링 */
+.schedule-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.schedule-scrollbar::-webkit-scrollbar-track {
+  @apply bg-slate-100 rounded-full;
+}
+
+.schedule-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full;
+}
+
+.schedule-scrollbar:hover::-webkit-scrollbar-thumb {
+  @apply bg-slate-400;
+}
+
+.schedule-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-500;
+}
+
+/* 스크롤 영역 그라데이션 효과 */
+.schedule-scrollbar {
+  position: relative;
+}
+
+.schedule-scrollbar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.8), transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.schedule-scrollbar:hover::after {
+  opacity: 1;
+}
+
 /* 애니메이션 클래스 */
 .fade-in {
   animation: fadeIn 0.3s ease-in-out;

@@ -73,22 +73,7 @@ const ManualEditor = ({ manual, onSave, onClose }: ManualEditorProps) => {
 
   const categories = ['일반', '운영 가이드', '시설 관리', '고객 서비스', '안전 수칙', '기타'];
 
-  // 마크다운 렌더링 함수
-  const renderMarkdown = (text: string) => {
-    return text
-      .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mb-4 text-slate-900">$1</h1>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-xl font-semibold mb-3 text-slate-800">$1</h2>')
-      .replace(/^### (.*$)/gim, '<h3 class="text-lg font-medium mb-2 text-slate-700">$1</h3>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
-      .replace(/^- (.*$)/gim, '<li class="ml-4 mb-1">• $1</li>')
-      .replace(/^- \[ \] (.*$)/gim, '<li class="ml-4 mb-1 flex items-center"><input type="checkbox" disabled class="mr-2"> $1</li>')
-      .replace(/^- \[x\] (.*$)/gim, '<li class="ml-4 mb-1 flex items-center"><input type="checkbox" checked disabled class="mr-2"> $1</li>')
-      .replace(/^> (.*$)/gim, '<blockquote class="border-l-4 border-blue-300 pl-4 italic text-slate-600 my-2 bg-blue-50 py-2">$1</blockquote>')
-      .replace(/```([\s\S]*?)```/g, '<pre class="bg-slate-100 border border-slate-200 p-3 rounded-lg my-2 overflow-x-auto"><code class="text-sm">$1</code></pre>')
-      .replace(/`(.*?)`/g, '<code class="bg-slate-100 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
-      .replace(/\n/g, '<br>');
-  };
+
 
   const handleSave = () => {
     if (!title.trim() || !content.trim()) {
@@ -346,10 +331,57 @@ const ManualEditor = ({ manual, onSave, onClose }: ManualEditorProps) => {
                   <div className="w-1/2 h-80 p-4 overflow-y-auto bg-white">
                     <div className="prose prose-slate max-w-none">
                       {content ? (
-                        <div 
-                          className="text-slate-700 leading-relaxed"
-                          dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
-                        />
+                        <div className="text-slate-700 leading-relaxed">
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              h1: ({ children }: any) => <h1 className="text-xl font-bold mb-3 text-slate-900">{children}</h1>,
+                              h2: ({ children }: any) => <h2 className="text-lg font-semibold mb-2 text-slate-800">{children}</h2>,
+                              h3: ({ children }: any) => <h3 className="text-base font-medium mb-2 text-slate-700">{children}</h3>,
+                              p: ({ children }: any) => <p className="mb-3 text-slate-600 text-sm">{children}</p>,
+                              ul: ({ children }: any) => <ul className="mb-3 pl-4 space-y-1">{children}</ul>,
+                              ol: ({ children }: any) => <ol className="mb-3 pl-4 space-y-1 list-decimal">{children}</ol>,
+                              li: ({ children }: any) => <li className="text-slate-600 text-sm">{children}</li>,
+                              blockquote: ({ children }: any) => (
+                                <blockquote className="border-l-3 border-blue-300 pl-3 py-1 my-2 bg-blue-50 italic text-slate-600 text-sm">
+                                  {children}
+                                </blockquote>
+                              ),
+                              code: ({ children, className }: any) => {
+                                const isInline = !className;
+                                return isInline ? (
+                                  <code className="bg-slate-100 px-1 py-0.5 rounded text-xs font-mono text-slate-800">
+                                    {children}
+                                  </code>
+                                ) : (
+                                  <code className={className}>{children}</code>
+                                );
+                              },
+                              pre: ({ children }: any) => (
+                                <pre className="bg-slate-100 border border-slate-200 p-2 rounded my-2 overflow-x-auto text-xs">
+                                  {children}
+                                </pre>
+                              ),
+                              strong: ({ children }: any) => <strong className="font-semibold text-slate-800">{children}</strong>,
+                              em: ({ children }: any) => <em className="italic">{children}</em>,
+                              input: ({ checked, type }: any) => {
+                                if (type === 'checkbox') {
+                                  return (
+                                    <input 
+                                      type="checkbox" 
+                                      checked={checked} 
+                                      disabled 
+                                      className="mr-1 rounded border-slate-300" 
+                                    />
+                                  );
+                                }
+                                return <input type={type} />;
+                              }
+                            }}
+                          >
+                            {content}
+                          </ReactMarkdown>
+                        </div>
                       ) : (
                         <p className="text-slate-400 italic">미리보기가 여기에 표시됩니다...</p>
                       )}
@@ -408,21 +440,6 @@ const ManualViewer = ({ manual, onClose, onEdit, onDelete }: ManualViewerProps) 
   const handlePrint = useReactToPrint({ contentRef: printRef });
 
   const canEdit = user?.role === 'admin' || user?.id === manual.authorId;
-
-  // 마크다운 간단 렌더링 (실제 프로젝트에서는 react-markdown 등 사용 권장)
-  const renderMarkdown = (text: string) => {
-    return text
-      .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mb-4 text-slate-900">$1</h1>')
-      .replace(/^## (.*$)/gim, '<h2 class="text-xl font-semibold mb-3 text-slate-800">$1</h2>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
-      .replace(/^- (.*$)/gim, '<li class="ml-4">• $1</li>')
-      .replace(/^- \[ \] (.*$)/gim, '<li class="ml-4">☐ $1</li>')
-      .replace(/^- \[x\] (.*$)/gim, '<li class="ml-4">☑ $1</li>')
-      .replace(/^> (.*$)/gim, '<blockquote class="border-l-4 border-slate-300 pl-4 italic text-slate-600 my-2">$1</blockquote>')
-      .replace(/```([\s\S]*?)```/g, '<pre class="bg-slate-100 p-3 rounded-lg my-2 overflow-x-auto"><code>$1</code></pre>')
-      .replace(/\n/g, '<br>');
-  };
 
   return (
     <motion.div
@@ -510,12 +527,80 @@ const ManualViewer = ({ manual, onClose, onEdit, onDelete }: ManualViewerProps) 
 
         <div ref={printRef} className="p-6">
           <div className="prose prose-slate max-w-none">
-            <div 
-              className="text-slate-700 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(manual.content) }}
-            />
+            <div className="text-slate-700 leading-relaxed">
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]}
+              components={{
+                h1: ({ children }: any) => <h1 className="text-2xl font-bold mb-4 text-slate-900 border-b border-slate-200 pb-2">{children}</h1>,
+                h2: ({ children }: any) => <h2 className="text-xl font-semibold mb-3 text-slate-800 mt-6">{children}</h2>,
+                h3: ({ children }: any) => <h3 className="text-lg font-medium mb-2 text-slate-700 mt-4">{children}</h3>,
+                h4: ({ children }: any) => <h4 className="text-base font-medium mb-2 text-slate-700 mt-3">{children}</h4>,
+                p: ({ children }: any) => <p className="mb-4 text-slate-600 leading-relaxed">{children}</p>,
+                ul: ({ children }: any) => <ul className="mb-4 pl-6 space-y-1">{children}</ul>,
+                ol: ({ children }: any) => <ol className="mb-4 pl-6 space-y-1 list-decimal">{children}</ol>,
+                li: ({ children }: any) => <li className="text-slate-600">{children}</li>,
+                blockquote: ({ children }: any) => (
+                  <blockquote className="border-l-4 border-blue-300 pl-4 py-2 my-4 bg-blue-50 italic text-slate-600">
+                    {children}
+                  </blockquote>
+                ),
+                code: ({ children, className }: any) => {
+                  const isInline = !className;
+                  return isInline ? (
+                    <code className="bg-slate-100 px-1.5 py-0.5 rounded text-sm font-mono text-slate-800">
+                      {children}
+                    </code>
+                  ) : (
+                    <code className={className}>{children}</code>
+                  );
+                },
+                pre: ({ children }: any) => (
+                  <pre className="bg-slate-100 border border-slate-200 p-4 rounded-lg my-4 overflow-x-auto text-sm">
+                    {children}
+                  </pre>
+                ),
+                strong: ({ children }: any) => <strong className="font-semibold text-slate-800">{children}</strong>,
+                em: ({ children }: any) => <em className="italic">{children}</em>,
+                table: ({ children }: any) => (
+                  <div className="overflow-x-auto my-4">
+                    <table className="min-w-full border border-slate-200 rounded-lg">
+                      {children}
+                    </table>
+                  </div>
+                ),
+                thead: ({ children }: any) => <thead className="bg-slate-50">{children}</thead>,
+                tbody: ({ children }: any) => <tbody className="divide-y divide-slate-200">{children}</tbody>,
+                tr: ({ children }: any) => <tr>{children}</tr>,
+                th: ({ children }: any) => (
+                  <th className="px-4 py-2 text-left font-medium text-slate-700 border-b border-slate-200">
+                    {children}
+                  </th>
+                ),
+                td: ({ children }: any) => (
+                  <td className="px-4 py-2 text-slate-600 border-b border-slate-200">
+                    {children}
+                  </td>
+                ),
+                input: ({ checked, type }: any) => {
+                  if (type === 'checkbox') {
+                    return (
+                      <input 
+                        type="checkbox" 
+                        checked={checked} 
+                        disabled 
+                        className="mr-2 rounded border-slate-300" 
+                      />
+                    );
+                  }
+                  return <input type={type} />;
+                }
+              }}
+                          >
+                {manual.content}
+              </ReactMarkdown>
+            </div>
+            </div>
           </div>
-        </div>
       </motion.div>
     </motion.div>
   );

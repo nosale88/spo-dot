@@ -9,6 +9,8 @@ import { CustomerProvider } from "./contexts/CustomerContext";
 import { OTProvider } from "./contexts/OTContext";
 import { ScheduleProvider } from "./contexts/ScheduleContext";
 import { ReportProvider } from "./contexts/ReportContext";
+import { HandoverProvider } from "./contexts/HandoverContext";
+import { VendingProvider } from "./contexts/VendingContext";
 import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
 import Login from "./pages/auth/Login";
@@ -59,6 +61,8 @@ function App() {
                     <OTProvider>
                       <ScheduleProvider>
                         <ReportProvider>
+                          <HandoverProvider>
+                            <VendingProvider>
                         <Routes>
                         {/* 루트 페이지 리디렉션 */}
                         <Route path="/" element={<Navigate to="/auth/login" replace />} />
@@ -277,6 +281,8 @@ function App() {
                         {/* 알 수 없는 경로 */}
                         <Route path="*" element={<Navigate to="/auth/login" replace />} />
                       </Routes>
+                            </VendingProvider>
+                          </HandoverProvider>
                         </ReportProvider>
                       </ScheduleProvider>
                     </OTProvider>

@@ -244,12 +244,18 @@ const AdminSuggestionsManagement: React.FC = () => {
                 {filteredSuggestions.map((suggestion: Suggestion) => ( 
                   <tr key={suggestion.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                     <td className="py-4 pr-3">
-                      <p className="font-semibold text-slate-800 truncate" title={suggestion.title}>
-                        {suggestion.title}
-                      </p>
-                      <p className="text-xs text-slate-500 truncate max-w-xs" title={suggestion.content}>
-                        {suggestion.content}
-                      </p>
+                      <button 
+                        onClick={() => handleOpenReplyModal(suggestion)}
+                        className="text-left hover:bg-slate-100 p-1 rounded transition-colors w-full"
+                        title="상세보기"
+                      >
+                        <p className="font-semibold text-slate-800 hover:text-blue-600 transition-colors truncate">
+                          {suggestion.title}
+                        </p>
+                        <p className="text-xs text-slate-500 truncate max-w-xs">
+                          {suggestion.content}
+                        </p>
+                      </button>
                     </td>
                     <td className="py-4 pr-3">
                       <div className="flex items-center gap-1">

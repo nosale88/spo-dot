@@ -409,14 +409,18 @@ const Suggestions = () => {
                 {filteredSuggestions.map((suggestion) => (
                   <tr key={suggestion.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                     <td className="py-3 pr-3">
-                      <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => handleViewDetail(suggestion)}
+                        className="flex items-center gap-2 text-left hover:bg-slate-100 p-1 rounded transition-colors w-full"
+                        title="상세보기"
+                      >
                         {suggestion.type === 'staff' ? (
                           <UserCheck size={14} className="text-blue-500" />
                         ) : (
                           <User size={14} className="text-green-500" />
                         )}
-                        <span className="font-medium text-slate-800">{suggestion.title}</span>
-                      </div>
+                        <span className="font-medium text-slate-800 hover:text-blue-600 transition-colors">{suggestion.title}</span>
+                      </button>
                     </td>
                     <td className="py-3 pr-3 text-sm text-slate-700">{suggestion.createdByName}</td>
                     <td className="py-3 pr-3 text-sm text-slate-700">{suggestion.category}</td>

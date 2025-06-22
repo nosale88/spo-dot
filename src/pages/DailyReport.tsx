@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Bell,
   Megaphone,
@@ -7,10 +8,19 @@ import {
   X,
   Image as ImageIcon,
   FileImage,
-  Trash2
+  Trash2,
+  History,
+  FileText,
+  Eye,
+  Edit3,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle
 } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { useReport } from '../contexts/ReportContext';
 import AddReportForm from '../components/forms/AddReportForm';
+import { useAuth } from '../contexts/AuthContext';
 
 interface UploadedImage {
   id: string;
@@ -21,6 +31,9 @@ interface UploadedImage {
 }
 
 const DailyReport = () => {
+  const { user } = useAuth();
+  const { reports, createReport } = useReport();
+  
   const [reportTitle, setReportTitle] = useState('');
   const [completedTasks, setCompletedTasks] = useState('');
   const [inProgressTasks, setInProgressTasks] = useState('');
@@ -28,16 +41,82 @@ const DailyReport = () => {
   const [issuesSuggestions, setIssuesSuggestions] = useState('');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [activeTab, setActiveTab] = useState<'create' | 'history'>('create');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const today = new Date();
-  const formattedDate = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 ${
-    ['일', '월', '화', '수', '목', '금', '토'][today.getDay()]
-  }요일`;
+  const formattedDate = today.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long'
+  });
   const defaultDateValue = today.toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState(defaultDateValue);
   const [isAddReportModalOpen, setIsAddReportModalOpen] = useState(false);
   const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
+
+  // 내가 작성한 일일 보고서 필터링
+  const myDailyReports = reports
+    .filter(report => 
+      report.type === 'daily' && 
+      report.createdBy === user?.id
+    )
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  // 상태별 아이콘 반환
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return <Edit3 className="h-4 w-4 text-gray-500" />;
+      case 'submitted':
+        return <Clock className="h-4 w-4 text-blue-500" />;
+      case 'approved':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'rejected':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'reviewed':
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      default:
+        return <FileText className="h-4 w-4 text-gray-400" />;
+    }
+  };
+
+  // 상태별 텍스트 반환
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return '임시저장';
+      case 'submitted':
+        return '제출완료';
+      case 'approved':
+        return '승인완료';
+      case 'rejected':
+        return '반려';
+      case 'reviewed':
+        return '검토중';
+      default:
+        return '알 수 없음';
+    }
+  };
+
+  // 상태별 배경색 반환
+  const getStatusBgColor = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return 'bg-gray-100 text-gray-700';
+      case 'submitted':
+        return 'bg-blue-100 text-blue-700';
+      case 'approved':
+        return 'bg-green-100 text-green-700';
+      case 'rejected':
+        return 'bg-red-100 text-red-700';
+      case 'reviewed':
+        return 'bg-yellow-100 text-yellow-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
 
   // 임시저장 데이터 복원
   useEffect(() => {
@@ -155,35 +234,58 @@ const DailyReport = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleSubmit = () => {
-    // 실제 제출 로직 (API 호출 등)
-    console.log({
-      title: reportTitle,
-      completed: completedTasks,
-      inProgress: inProgressTasks,
-      planned: plannedTasks,
-      issues: issuesSuggestions,
-      reportDate: defaultDateValue,
-      images: uploadedImages.map(img => ({
+  const handleSubmit = async () => {
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    const reportContent = {
+      완료한업무: completedTasks,
+      진행중인업무: inProgressTasks,
+      예정된업무: plannedTasks,
+      특이사항및건의사항: issuesSuggestions,
+      첨부이미지: uploadedImages.map(img => ({
         name: img.name,
-        size: img.size,
-        file: img.file
+        size: img.size
       }))
-    });
-    
-    // 제출 완료 후 임시저장 데이터 삭제
-    localStorage.removeItem(`dailyReport_draft_${defaultDateValue}`);
-    
-    alert('보고서가 제출되었습니다.');
-    
-    // 폼 초기화
-    setReportTitle('');
-    setCompletedTasks('');
-    setInProgressTasks('');
-    setPlannedTasks('');
-    setIssuesSuggestions('');
-    setUploadedImages([]);
-    setLastSavedTime(null);
+    };
+
+    try {
+      const reportId = await createReport({
+        title: reportTitle || `${formattedDate} 일일 업무 보고`,
+        content: JSON.stringify(reportContent),
+        type: 'daily',
+        category: 'operational',
+        status: 'submitted',
+        createdBy: user.id,
+        createdByName: user.name || user.email,
+      });
+
+      if (reportId) {
+        // 제출 완료 후 임시저장 데이터 삭제
+        localStorage.removeItem(`dailyReport_draft_${defaultDateValue}`);
+        
+        alert('보고서가 제출되었습니다.');
+        
+        // 폼 초기화
+        setReportTitle('');
+        setCompletedTasks('');
+        setInProgressTasks('');
+        setPlannedTasks('');
+        setIssuesSuggestions('');
+        setUploadedImages([]);
+        setLastSavedTime(null);
+        
+        // 내역 탭으로 이동
+        setActiveTab('history');
+      } else {
+        alert('보고서 제출에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('보고서 제출 오류:', error);
+      alert('보고서 제출 중 오류가 발생했습니다.');
+    }
   };
 
   const handleSaveDraft = () => {
@@ -250,174 +352,349 @@ const DailyReport = () => {
           </div>
         </div>
 
-        {/* Report Form */}
-        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-          <div className="mb-6">
-            <label htmlFor="reportTitle" className="block mb-1.5 text-sm font-medium text-slate-700">제목</label>
-            <input 
-              type="text" 
-              id="reportTitle" 
-              value={reportTitle}
-              onChange={(e) => setReportTitle(e.target.value)}
-              className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
-              placeholder="업무 보고 제목을 입력하세요"
-              required
-            />
-            {lastSavedTime && (
-              <div className="mt-2 flex items-center text-xs text-slate-500">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                마지막 자동 저장: {new Date(lastSavedTime).toLocaleString('ko-KR')}
-              </div>
-            )}
-          </div>
+        {/* 탭 메뉴 */}
+        <div className="flex mb-6 border-b border-slate-200">
+          <button
+            onClick={() => setActiveTab('create')}
+            className={`px-4 py-2 font-medium text-sm rounded-t-lg ${
+              activeTab === 'create'
+                ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                : 'text-slate-600 hover:text-slate-800'
+            }`}
+          >
+            <div className="flex items-center space-x-2">
+              <PlusSquare size={16} />
+              <span>보고서 작성</span>
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`px-4 py-2 font-medium text-sm rounded-t-lg ${
+              activeTab === 'history'
+                ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                : 'text-slate-600 hover:text-slate-800'
+            }`}
+          >
+            <div className="flex items-center space-x-2">
+              <History size={16} />
+              <span>내 보고 내역 ({myDailyReports.length})</span>
+            </div>
+          </button>
+        </div>
 
-          <div className="mb-6">
-            <label htmlFor="completedTasks" className="block mb-1.5 text-sm font-medium text-slate-700">오늘 완료한 업무</label>
-            <textarea 
-              id="completedTasks" 
-              rows={5} 
-              value={completedTasks}
-              onChange={(e) => setCompletedTasks(e.target.value)}
-              className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
-              placeholder="오늘 완료한 업무를 상세히 작성하세요..."
-            />
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="inProgressTasks" className="block mb-1.5 text-sm font-medium text-slate-700">진행 중인 업무</label>
-            <textarea 
-              id="inProgressTasks" 
-              rows={5} 
-              value={inProgressTasks}
-              onChange={(e) => setInProgressTasks(e.target.value)}
-              className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
-              placeholder="현재 진행 중인 업무와 진행 상황을 작성하세요..."
-            />
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="plannedTasks" className="block mb-1.5 text-sm font-medium text-slate-700">내일 예정된 업무</label>
-            <textarea 
-              id="plannedTasks" 
-              rows={5} 
-              value={plannedTasks}
-              onChange={(e) => setPlannedTasks(e.target.value)}
-              className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
-              placeholder="내일 예정된 업무 계획을 작성하세요..."
-            />
-          </div>
-
-          <div className="mb-8">
-            <label htmlFor="issuesSuggestions" className="block mb-1.5 text-sm font-medium text-slate-700">특이사항 및 건의사항</label>
-            <textarea 
-              id="issuesSuggestions" 
-              rows={5} 
-              value={issuesSuggestions}
-              onChange={(e) => setIssuesSuggestions(e.target.value)}
-              className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
-              placeholder="업무 중 특이사항이나 건의사항이 있으면 작성하세요..."
-            />
-          </div>
-
-          {/* 이미지 업로드 섹션 */}
-          <div className="mb-8">
-            <label className="block mb-2 text-sm font-medium text-slate-700">
-              첨부 이미지 (선택사항)
-            </label>
-            <div className="space-y-4">
-              {/* 파일 업로드 영역 */}
-              <div
-                className={`relative border-2 border-dashed rounded-lg p-6 transition-colors cursor-pointer ${
-                  isDragging 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : 'border-slate-300 hover:border-slate-400 bg-slate-50'
-                }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload(e.target.files)}
-                  className="hidden"
-                />
-                <div className="text-center">
-                  <Upload className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-                  <p className="text-sm text-slate-600 mb-2">
-                    <span className="font-medium text-blue-600 hover:text-blue-500 cursor-pointer">
-                      파일을 선택하거나
-                    </span>{' '}
-                    드래그해서 업로드하세요
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    JPG, PNG, GIF, WebP (최대 5MB)
-                  </p>
-                </div>
-              </div>
-
-              {/* 업로드된 이미지 미리보기 */}
-              {uploadedImages.length > 0 && (
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-slate-700 flex items-center">
-                    <FileImage className="h-4 w-4 mr-1" />
-                    업로드된 이미지 ({uploadedImages.length})
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {uploadedImages.map((image) => (
-                      <div key={image.id} className="relative group">
-                        <div className="aspect-video bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
-                          <img
-                            src={image.url}
-                            alt={image.name}
-                            className="w-full h-full object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeImage(image.id);
-                            }}
-                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                        <div className="mt-2 px-1">
-                          <p className="text-xs font-medium text-slate-700 truncate">
-                            {image.name}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {formatFileSize(image.size)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+        {/* 보고서 작성 탭 */}
+        {activeTab === 'create' && (
+          <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+            <div className="mb-6">
+              <label htmlFor="reportTitle" className="block mb-1.5 text-sm font-medium text-slate-700">제목</label>
+              <input 
+                type="text" 
+                id="reportTitle" 
+                value={reportTitle}
+                onChange={(e) => setReportTitle(e.target.value)}
+                className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+                placeholder="업무 보고 제목을 입력하세요"
+                required
+              />
+              {lastSavedTime && (
+                <div className="mt-2 flex items-center text-xs text-slate-500">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  마지막 자동 저장: {new Date(lastSavedTime).toLocaleString('ko-KR')}
                 </div>
               )}
             </div>
-          </div>
 
-          <div className="flex justify-end space-x-3">
-            <button 
-              type="button"
-              onClick={handleSaveDraft}
-              className="px-6 py-2.5 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-100 transition-colors"
-            >
-              임시저장
-            </button>
-            <button 
-              type="submit"
-              className="px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              제출하기
-            </button>
+            <div className="mb-6">
+              <label htmlFor="completedTasks" className="block mb-1.5 text-sm font-medium text-slate-700">오늘 완료한 업무</label>
+              <textarea 
+                id="completedTasks" 
+                rows={5} 
+                value={completedTasks}
+                onChange={(e) => setCompletedTasks(e.target.value)}
+                className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+                placeholder="오늘 완료한 업무를 상세히 작성하세요..."
+              />
+            </div>
+
+            <div className="mb-6">
+              <label htmlFor="inProgressTasks" className="block mb-1.5 text-sm font-medium text-slate-700">진행 중인 업무</label>
+              <textarea 
+                id="inProgressTasks" 
+                rows={5} 
+                value={inProgressTasks}
+                onChange={(e) => setInProgressTasks(e.target.value)}
+                className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+                placeholder="현재 진행 중인 업무와 진행 상황을 작성하세요..."
+              />
+            </div>
+
+            <div className="mb-6">
+              <label htmlFor="plannedTasks" className="block mb-1.5 text-sm font-medium text-slate-700">내일 예정된 업무</label>
+              <textarea 
+                id="plannedTasks" 
+                rows={5} 
+                value={plannedTasks}
+                onChange={(e) => setPlannedTasks(e.target.value)}
+                className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+                placeholder="내일 예정된 업무 계획을 작성하세요..."
+              />
+            </div>
+
+            <div className="mb-8">
+              <label htmlFor="issuesSuggestions" className="block mb-1.5 text-sm font-medium text-slate-700">특이사항 및 건의사항</label>
+              <textarea 
+                id="issuesSuggestions" 
+                rows={5} 
+                value={issuesSuggestions}
+                onChange={(e) => setIssuesSuggestions(e.target.value)}
+                className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+                placeholder="업무 중 특이사항이나 건의사항이 있으면 작성하세요..."
+              />
+            </div>
+
+            {/* 이미지 업로드 섹션 */}
+            <div className="mb-8">
+              <label className="block mb-2 text-sm font-medium text-slate-700">
+                첨부 이미지 (선택사항)
+              </label>
+              <div className="space-y-4">
+                {/* 파일 업로드 영역 */}
+                <div
+                  className={`relative border-2 border-dashed rounded-lg p-6 transition-colors cursor-pointer ${
+                    isDragging 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-slate-300 hover:border-slate-400 bg-slate-50'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e.target.files)}
+                    className="hidden"
+                  />
+                  <div className="text-center">
+                    <Upload className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+                    <p className="text-sm text-slate-600 mb-2">
+                      <span className="font-medium text-blue-600 hover:text-blue-500 cursor-pointer">
+                        파일을 선택하거나
+                      </span>{' '}
+                      드래그해서 업로드하세요
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      JPG, PNG, GIF, WebP (최대 5MB)
+                    </p>
+                  </div>
+                </div>
+
+                {/* 업로드된 이미지 미리보기 */}
+                {uploadedImages.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-slate-700 flex items-center">
+                      <FileImage className="h-4 w-4 mr-1" />
+                      업로드된 이미지 ({uploadedImages.length})
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {uploadedImages.map((image) => (
+                        <div key={image.id} className="relative group">
+                          <div className="aspect-video bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
+                            <img
+                              src={image.url}
+                              alt={image.name}
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeImage(image.id);
+                              }}
+                              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <div className="mt-2 px-1">
+                            <p className="text-xs font-medium text-slate-700 truncate">
+                              {image.name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {formatFileSize(image.size)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button 
+                type="button"
+                onClick={handleSaveDraft}
+                className="px-6 py-2.5 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                임시저장
+              </button>
+              <button 
+                type="submit"
+                className="px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                제출하기
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* 내 보고 내역 탭 */}
+        {activeTab === 'history' && (
+          <div className="space-y-4">
+            {myDailyReports.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+                <p className="text-slate-600 text-lg font-medium mb-2">아직 작성한 보고서가 없습니다</p>
+                <p className="text-slate-500 text-sm mb-4">첫 번째 일일 업무 보고서를 작성해보세요</p>
+                <button
+                  onClick={() => setActiveTab('create')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  보고서 작성하기
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <p className="text-sm text-slate-600">
+                    총 {myDailyReports.length}개의 보고서
+                  </p>
+                </div>
+                
+                <div className="grid gap-4">
+                  {myDailyReports.map((report) => {
+                    const reportContent = (() => {
+                      try {
+                        return JSON.parse(report.content);
+                      } catch {
+                        return { 완료한업무: report.content };
+                      }
+                    })();
+
+                    return (
+                      <div
+                        key={report.id}
+                        className="bg-slate-50 border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-slate-800 mb-1">
+                              {report.title}
+                            </h3>
+                            <p className="text-sm text-slate-600">
+                              {new Date(report.createdAt).toLocaleDateString('ko-KR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                weekday: 'short'
+                              })}
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBgColor(report.status)}`}>
+                              {getStatusIcon(report.status)}
+                              <span className="ml-1">{getStatusText(report.status)}</span>
+                            </span>
+                            <button
+                              onClick={() => {
+                                // 상세 보기 모달이나 페이지로 이동하는 로직 추가 가능
+                                console.log('보고서 상세 보기:', report);
+                              }}
+                              className="text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                              <Eye size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm">
+                          {reportContent.완료한업무 && (
+                            <div>
+                              <span className="font-medium text-slate-700">완료한 업무: </span>
+                              <span className="text-slate-600">
+                                {reportContent.완료한업무.length > 100 
+                                  ? `${reportContent.완료한업무.substring(0, 100)}...` 
+                                  : reportContent.완료한업무
+                                }
+                              </span>
+                            </div>
+                          )}
+                          
+                          {reportContent.진행중인업무 && (
+                            <div>
+                              <span className="font-medium text-slate-700">진행 중인 업무: </span>
+                              <span className="text-slate-600">
+                                {reportContent.진행중인업무.length > 100 
+                                  ? `${reportContent.진행중인업무.substring(0, 100)}...` 
+                                  : reportContent.진행중인업무
+                                }
+                              </span>
+                            </div>
+                          )}
+                          
+                          {reportContent.예정된업무 && (
+                            <div>
+                              <span className="font-medium text-slate-700">예정된 업무: </span>
+                              <span className="text-slate-600">
+                                {reportContent.예정된업무.length > 100 
+                                  ? `${reportContent.예정된업무.substring(0, 100)}...` 
+                                  : reportContent.예정된업무
+                                }
+                              </span>
+                            </div>
+                          )}
+                          
+                          {reportContent.특이사항및건의사항 && (
+                            <div>
+                              <span className="font-medium text-slate-700">특이사항: </span>
+                              <span className="text-slate-600">
+                                {reportContent.특이사항및건의사항.length > 100 
+                                  ? `${reportContent.특이사항및건의사항.substring(0, 100)}...` 
+                                  : reportContent.특이사항및건의사항
+                                }
+                              </span>
+                            </div>
+                          )}
+                          
+                          {reportContent.첨부이미지 && reportContent.첨부이미지.length > 0 && (
+                            <div className="flex items-center text-slate-500">
+                              <ImageIcon className="h-4 w-4 mr-1" />
+                              <span>첨부 이미지 {reportContent.첨부이미지.length}개</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="mt-3 pt-3 border-t border-slate-200 text-xs text-slate-500">
+                          작성일: {new Date(report.createdAt).toLocaleString('ko-KR')}
+                          {report.submittedAt && (
+                            <span className="ml-4">
+                              제출일: {new Date(report.submittedAt).toLocaleString('ko-KR')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
-        </form>
+        )}
       </section>
 
       {/* Add Report Modal */}
