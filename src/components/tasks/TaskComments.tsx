@@ -50,32 +50,32 @@ const TaskComments = ({ taskId, comments }: TaskCommentsProps) => {
   
   return (
     <div className="space-y-4">
-      <h3 className="text-md font-medium text-slate-900 dark:text-white">댓글</h3>
+      <h3 className="text-md font-medium text-slate-900">댓글</h3>
       
       <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
         {comments && comments.length > 0 ? (
           comments.map(comment => (
-            <div key={comment.id} className="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
+            <div key={comment.id} className="p-3 bg-slate-50 rounded-lg">
               <div className="flex justify-between items-start">
                 <div className="flex items-center">
                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
                     {comment.authorName.charAt(0)}
                   </div>
                   <div className="ml-2">
-                    <span className="font-medium text-slate-900 dark:text-white">{comment.authorName}</span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
+                    <span className="font-medium text-slate-900">{comment.authorName}</span>
+                    <span className="text-xs text-slate-500 ml-2">
                       {format(parseISO(comment.createdAt), 'yyyy.MM.dd HH:mm', { locale: ko })}
                     </span>
                   </div>
                 </div>
               </div>
-              <div className="mt-2 text-slate-700 dark:text-slate-300 text-sm whitespace-pre-wrap">
+              <div className="mt-2 text-slate-700 text-sm whitespace-pre-wrap">
                 {comment.content}
               </div>
             </div>
           ))
         ) : (
-          <div className="text-center py-6 text-slate-400 dark:text-slate-500">
+          <div className="text-center py-6 text-slate-400">
             <p>아직 댓글이 없습니다.</p>
           </div>
         )}

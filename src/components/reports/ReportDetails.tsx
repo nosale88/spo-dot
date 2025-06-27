@@ -88,13 +88,13 @@ const ReportDetails = ({ report, onClose, onEdit }: ReportDetailsProps) => {
   const getStatusBadgeStyle = (status: ReportStatus) => {
     switch (status) {
       case 'draft':
-        return 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300';
+        return 'bg-slate-100 text-slate-800';
       case 'submitted':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+        return 'bg-blue-100 text-blue-800';
       case 'approved':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+        return 'bg-green-100 text-green-800';
       case 'rejected':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        return 'bg-red-100 text-red-800';
     }
   };
   
@@ -106,17 +106,17 @@ const ReportDetails = ({ report, onClose, onEdit }: ReportDetailsProps) => {
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+        <div className="p-6 border-b border-slate-200 flex justify-between items-center">
           <div className="flex items-center">
             <span className={clsx(
               "h-10 w-10 rounded-full flex items-center justify-center mr-3",
-              report.status === 'approved' && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-              report.status === 'rejected' && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
-              report.status === 'submitted' && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-              report.status === 'draft' && "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+              report.status === 'approved' && "bg-green-100 text-green-700",
+              report.status === 'rejected' && "bg-red-100 text-red-700",
+              report.status === 'submitted' && "bg-blue-100 text-blue-700",
+              report.status === 'draft' && "bg-slate-100 text-slate-700"
             )}>
               {report.status === 'approved' && <CheckCircle size={24} />}
               {report.status === 'rejected' && <AlertCircle size={24} />}
@@ -130,7 +130,7 @@ const ReportDetails = ({ report, onClose, onEdit }: ReportDetailsProps) => {
               )}>
                 {getStatusText(report.status)}
               </span>
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mt-1">
+              <h2 className="text-xl font-semibold text-slate-900 mt-1">
                 {getReportTypeText(report.type)}
               </h2>
             </div>
@@ -144,7 +144,7 @@ const ReportDetails = ({ report, onClose, onEdit }: ReportDetailsProps) => {
                     e.stopPropagation();
                     if (onEdit) onEdit();
                   }}
-                  className="text-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
+                  className="text-blue-500 hover:text-blue-600"
                   title="편집"
                 >
                   <Edit size={20} />
@@ -155,7 +155,7 @@ const ReportDetails = ({ report, onClose, onEdit }: ReportDetailsProps) => {
                     e.stopPropagation();
                     handleDelete();
                   }}
-                  className="text-red-500 hover:text-red-600 dark:hover:text-red-400"
+                  className="text-red-500 hover:text-red-600"
                   title="삭제"
                 >
                   <Trash2 size={20} />
@@ -165,7 +165,7 @@ const ReportDetails = ({ report, onClose, onEdit }: ReportDetailsProps) => {
             
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              className="text-slate-400 hover:text-slate-600"
             >
               <X size={24} />
             </button>
@@ -173,29 +173,29 @@ const ReportDetails = ({ report, onClose, onEdit }: ReportDetailsProps) => {
         </div>
         
         <div className="p-6">
-          <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{report.title}</h3>
+          <h3 className="text-2xl font-bold text-slate-900">{report.title}</h3>
           
           <div className="flex flex-wrap gap-6 mt-4 mb-6">
-            <div className="flex items-center text-slate-700 dark:text-slate-300">
+            <div className="flex items-center text-slate-700">
               <User size={18} className="mr-2 text-primary flex-shrink-0" />
               <div>
-                <span className="block text-sm font-medium text-slate-500 dark:text-slate-400">작성자</span>
-                <span>{report.authorName}</span>
+                <span className="block text-sm font-medium text-slate-500">작성자</span>
+                <span>{report.authorName || '작성자'}</span>
               </div>
             </div>
             
-            <div className="flex items-center text-slate-700 dark:text-slate-300">
+            <div className="flex items-center text-slate-700">
               <Calendar size={18} className="mr-2 text-primary flex-shrink-0" />
               <div>
-                <span className="block text-sm font-medium text-slate-500 dark:text-slate-400">작성일</span>
+                <span className="block text-sm font-medium text-slate-500">작성일</span>
                 <span>{format(parseISO(report.createdAt), 'yyyy년 M월 d일', { locale: ko })}</span>
               </div>
             </div>
             
-            <div className="flex items-center text-slate-700 dark:text-slate-300">
+            <div className="flex items-center text-slate-700">
               <Clock size={18} className="mr-2 text-primary flex-shrink-0" />
               <div>
-                <span className="block text-sm font-medium text-slate-500 dark:text-slate-400">마지막 수정</span>
+                <span className="block text-sm font-medium text-slate-500">마지막 수정</span>
                 <span>{format(parseISO(report.updatedAt), 'yyyy년 M월 d일 HH:mm', { locale: ko })}</span>
               </div>
             </div>
@@ -204,31 +204,31 @@ const ReportDetails = ({ report, onClose, onEdit }: ReportDetailsProps) => {
           {(report.status === 'approved' || report.status === 'rejected') && report.reviewerName && (
             <div className={clsx(
               "mb-6 p-4 rounded-lg",
-              report.status === 'approved' ? "bg-green-50 dark:bg-green-900/10" : "bg-red-50 dark:bg-red-900/10"
+              report.status === 'approved' ? "bg-green-50" : "bg-red-50"
             )}>
               <div className="flex items-center mb-2">
                 <span className={clsx(
                   "p-2 rounded-full mr-2",
-                  report.status === 'approved' ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                  report.status === 'approved' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                 )}>
                   {report.status === 'approved' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
                 </span>
                 <div>
-                  <span className="font-medium text-slate-900 dark:text-white">{report.reviewerName}</span>
-                  <span className="text-sm text-slate-500 dark:text-slate-400 ml-2">
+                  <span className="font-medium text-slate-900">{report.reviewerName}</span>
+                  <span className="text-sm text-slate-500 ml-2">
                     {report.reviewedAt && format(parseISO(report.reviewedAt), 'yyyy년 M월 d일 HH:mm', { locale: ko })}
                   </span>
                 </div>
               </div>
               
               {report.reviewNote && (
-                <p className="text-slate-700 dark:text-slate-300 pl-8">{report.reviewNote}</p>
+                <p className="text-slate-700 pl-8">{report.reviewNote}</p>
               )}
             </div>
           )}
           
-          <div className="mb-6 p-6 bg-slate-50 dark:bg-slate-700 rounded-lg">
-            <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{report.content}</p>
+          <div className="mb-6 p-6 bg-slate-50 rounded-lg">
+            <p className="text-slate-700 whitespace-pre-wrap">{report.content}</p>
           </div>
           
           {/* 작성자이고 초안 상태일 때만 제출 버튼 표시 */}
@@ -257,8 +257,8 @@ const ReportDetails = ({ report, onClose, onEdit }: ReportDetailsProps) => {
                   </button>
                 </div>
               ) : (
-                <div className="bg-slate-100 dark:bg-slate-700 p-4 rounded-lg">
-                  <h4 className="font-medium text-slate-900 dark:text-white mb-2">검토 의견</h4>
+                <div className="bg-slate-100 p-4 rounded-lg">
+                  <h4 className="font-medium text-slate-900 mb-2">검토 의견</h4>
                   <textarea
                     value={reviewNote}
                     onChange={(e) => setReviewNote(e.target.value)}
@@ -293,7 +293,7 @@ const ReportDetails = ({ report, onClose, onEdit }: ReportDetailsProps) => {
           
           {/* 댓글 섹션 */}
           <div className="mt-8">
-            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4 flex items-center">
+            <h3 className="text-lg font-medium text-slate-900 mb-4 flex items-center">
               <MessageSquare size={18} className="mr-2" />
               댓글
             </h3>
@@ -301,27 +301,27 @@ const ReportDetails = ({ report, onClose, onEdit }: ReportDetailsProps) => {
             <div className="space-y-4 max-h-[300px] overflow-y-auto mb-4">
               {report.comments && report.comments.length > 0 ? (
                 report.comments.map(comment => (
-                  <div key={comment.id} className="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
+                  <div key={comment.id} className="p-3 bg-slate-50 rounded-lg">
                     <div className="flex justify-between items-start">
                       <div className="flex items-center">
                         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
                           {comment.authorName.charAt(0)}
                         </div>
                         <div className="ml-2">
-                          <span className="font-medium text-slate-900 dark:text-white">{comment.authorName}</span>
-                          <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
+                          <span className="font-medium text-slate-900">{comment.authorName}</span>
+                          <span className="text-xs text-slate-500 ml-2">
                             {format(parseISO(comment.createdAt), 'yyyy.MM.dd HH:mm', { locale: ko })}
                           </span>
                         </div>
                       </div>
                     </div>
-                    <div className="mt-2 text-slate-700 dark:text-slate-300 text-sm whitespace-pre-wrap">
+                    <div className="mt-2 text-slate-700 text-sm whitespace-pre-wrap">
                       {comment.content}
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-6 text-slate-400 dark:text-slate-500">
+                <div className="text-center py-6 text-slate-400">
                   <p>아직 댓글이 없습니다.</p>
                 </div>
               )}

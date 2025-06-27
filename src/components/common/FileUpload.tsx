@@ -193,8 +193,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
         className={`
           border-2 border-dashed rounded-lg p-6 text-center transition-all cursor-pointer
           ${dragOver 
-            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-            : 'border-gray-300 hover:border-gray-400 bg-gray-50 dark:bg-gray-800 dark:border-gray-600'
+            ? 'border-blue-500 bg-blue-50' 
+            : 'border-gray-300 hover:border-gray-400 bg-gray-50'
           }
           ${disabled || uploading ? 'opacity-50 cursor-not-allowed' : ''}
         `}
@@ -217,10 +217,10 @@ const FileUpload: React.FC<FileUploadProps> = ({
           <Upload className={`w-12 h-12 ${dragOver ? 'text-blue-500' : 'text-gray-400'}`} />
           
           <div>
-            <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+            <p className="text-lg font-medium text-gray-700">
               {uploading ? '업로드 중...' : '파일을 선택하거나 드래그하세요'}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 mt-1">
               {allowedTypes.join(', ')} 파일 지원 (최대 {maxFiles}개, 각 10MB 이하)
             </p>
           </div>
@@ -239,9 +239,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
       {/* 업로드 진행률 */}
       {Object.keys(uploadProgress).length > 0 && (
         <div className="mt-4 space-y-2">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">업로드 진행률</h4>
+          <h4 className="text-sm font-medium text-gray-700">업로드 진행률</h4>
           {Object.entries(uploadProgress).map(([key, progress]) => (
-            <div key={key} className="bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div key={key} className="bg-gray-200 rounded-full h-2">
               <div
                 className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
@@ -254,7 +254,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       {/* 업로드된 파일 목록 */}
       {existingFiles.length > 0 && (
         <div className="mt-6">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
+          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
             <FileIcon className="w-4 h-4 mr-1" />
             첨부된 파일 ({existingFiles.length})
           </h4>
@@ -263,15 +263,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
             {existingFiles.map((file) => (
               <div
                 key={file.id}
-                className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+                className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg"
               >
                 <div className="flex items-center space-x-3 flex-1 min-w-0">
                   <span className="text-2xl">{getFileIcon(file.type)}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                    <p className="text-sm font-medium text-gray-900 truncate">
                       {file.name}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-500">
                       {formatFileSize(file.size)} • {new Date(file.uploadedAt).toLocaleDateString()}
                     </p>
                   </div>
@@ -280,7 +280,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => handlePreviewFile(file)}
-                    className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                    className="p-1 text-blue-600 hover:bg-blue-50:bg-blue-900/20 rounded transition-colors"
                     title={file.type.startsWith('image/') ? '미리보기' : '다운로드'}
                   >
                     {file.type.startsWith('image/') ? <Eye className="w-4 h-4" /> : <Download className="w-4 h-4" />}
@@ -289,7 +289,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
                   {onFileRemoved && (
                     <button
                       onClick={() => handleRemoveFile(file)}
-                      className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                      className="p-1 text-red-600 hover:bg-red-50:bg-red-900/20 rounded transition-colors"
                       title="파일 삭제"
                     >
                       <X className="w-4 h-4" />
@@ -304,9 +304,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
       {/* 경고 메시지 */}
       {existingFiles.length >= maxFiles && (
-        <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-start space-x-2">
-          <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
-          <p className="text-sm text-yellow-800 dark:text-yellow-200">
+        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start space-x-2">
+          <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-yellow-800">
             최대 파일 수({maxFiles}개)에 도달했습니다. 추가 업로드를 위해서는 기존 파일을 삭제해주세요.
           </p>
         </div>

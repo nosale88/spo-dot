@@ -70,8 +70,8 @@ const NotificationsPanel = () => {
           transition={{ duration: 0.2, delay: index * 0.05 }}
           className={`p-3 rounded-lg border ${
             !notification.read 
-              ? 'border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-900/20' 
-              : 'border-slate-200 dark:border-slate-700'
+              ? 'border-blue-200 bg-blue-50' 
+              : 'border-slate-200'
           }`}
         >
           <div className="flex">
@@ -81,12 +81,12 @@ const NotificationsPanel = () => {
             <div className="ml-3 flex-1">
               <p className={`text-sm ${
                 !notification.read 
-                  ? 'font-medium text-slate-900 dark:text-white' 
-                  : 'text-slate-700 dark:text-slate-300'
+                  ? 'font-medium text-slate-900' 
+                  : 'text-slate-700'
               }`}>
                 {notification.message}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 {notification.time}
               </p>
             </div>

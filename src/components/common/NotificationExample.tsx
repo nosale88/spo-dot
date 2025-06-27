@@ -71,9 +71,9 @@ const NotificationExample = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
-      <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">알림 시스템 테스트</h2>
-      <p className="text-slate-600 dark:text-slate-400 mb-6">
+    <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+      <h2 className="text-xl font-bold text-slate-900 mb-4">알림 시스템 테스트</h2>
+      <p className="text-slate-600 mb-6">
         아래 버튼을 클릭하여 다양한 유형의 알림을 생성하고 테스트해보세요.
       </p>
       

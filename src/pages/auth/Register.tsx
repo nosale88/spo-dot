@@ -38,10 +38,10 @@ const Register = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <h2 className="text-2xl font-bold text-center text-slate-900 dark:text-white mb-6">회원가입</h2>
+      <h2 className="text-2xl font-bold text-center text-slate-900 mb-6">회원가입</h2>
       
       {error && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg flex items-center text-red-700 dark:text-red-300">
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700">
           <AlertCircle size={18} className="flex-shrink-0 mr-2" />
           <span className="text-sm">{error}</span>
         </div>
@@ -49,7 +49,7 @@ const Register = () => {
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
             이름
           </label>
           <div className="relative">
@@ -65,12 +65,12 @@ const Register = () => {
             />
           </div>
           {errors.name && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name.message}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
           )}
         </div>
         
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
             이메일
           </label>
           <div className="relative">
@@ -92,12 +92,12 @@ const Register = () => {
             />
           </div>
           {errors.email && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
           )}
         </div>
         
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
             비밀번호
           </label>
           <div className="relative">
@@ -119,12 +119,12 @@ const Register = () => {
             />
           </div>
           {errors.password && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
           )}
         </div>
         
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1">
             비밀번호 확인
           </label>
           <div className="relative">
@@ -143,7 +143,7 @@ const Register = () => {
             />
           </div>
           {errors.confirmPassword && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword.message}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
           )}
         </div>
         
@@ -159,7 +159,7 @@ const Register = () => {
       </form>
       
       <div className="mt-6 text-center">
-        <p className="text-sm text-slate-600 dark:text-slate-400">
+        <p className="text-sm text-slate-600">
           이미 계정이 있으신가요?{' '}
           <Link to="/login" className="font-medium text-primary hover:text-primary-dark">
             로그인

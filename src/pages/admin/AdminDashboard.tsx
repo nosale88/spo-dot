@@ -104,8 +104,8 @@ const AdminDashboard = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">관리자 대시보드</h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <h1 className="text-2xl font-bold text-slate-900">관리자 대시보드</h1>
+          <p className="text-slate-600">
             {greeting}, {user?.name}님! 관리자 메뉴에 오신 것을 환영합니다.
           </p>
         </div>
@@ -125,45 +125,45 @@ const AdminDashboard = () => {
       </div>
 
       <div className="card p-6">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">시스템 상태</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">시스템 상태</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg">
-            <p className="text-sm text-slate-600 dark:text-slate-400">활성 사용자</p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">24</p>
+          <div className="p-4 bg-slate-100 rounded-lg">
+            <p className="text-sm text-slate-600">활성 사용자</p>
+            <p className="text-2xl font-bold text-slate-900">24</p>
           </div>
-          <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg">
-            <p className="text-sm text-slate-600 dark:text-slate-400">오늘 예약</p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">12</p>
+          <div className="p-4 bg-slate-100 rounded-lg">
+            <p className="text-sm text-slate-600">오늘 예약</p>
+            <p className="text-2xl font-bold text-slate-900">12</p>
           </div>
-          <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg">
-            <p className="text-sm text-slate-600 dark:text-slate-400">서버 상태</p>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">정상</p>
+          <div className="p-4 bg-slate-100 rounded-lg">
+            <p className="text-sm text-slate-600">서버 상태</p>
+            <p className="text-2xl font-bold text-green-600">정상</p>
           </div>
         </div>
       </div>
 
       <div className="card p-6">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">최근 활동</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">최근 활동</h2>
         <div className="space-y-3">
-          <div className="flex items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+          <div className="flex items-center p-3 bg-slate-50 rounded-lg">
             <div className="w-2 h-2 rounded-full bg-blue-500 mr-3"></div>
             <div>
-              <p className="text-sm text-slate-900 dark:text-white">새 직원 계정이 생성되었습니다.</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">오늘 10:25</p>
+              <p className="text-sm text-slate-900">새 직원 계정이 생성되었습니다.</p>
+              <p className="text-xs text-slate-500">오늘 10:25</p>
             </div>
           </div>
-          <div className="flex items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+          <div className="flex items-center p-3 bg-slate-50 rounded-lg">
             <div className="w-2 h-2 rounded-full bg-green-500 mr-3"></div>
             <div>
-              <p className="text-sm text-slate-900 dark:text-white">시스템 백업이 완료되었습니다.</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">오늘 09:15</p>
+              <p className="text-sm text-slate-900">시스템 백업이 완료되었습니다.</p>
+              <p className="text-xs text-slate-500">오늘 09:15</p>
             </div>
           </div>
-          <div className="flex items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+          <div className="flex items-center p-3 bg-slate-50 rounded-lg">
             <div className="w-2 h-2 rounded-full bg-yellow-500 mr-3"></div>
             <div>
-              <p className="text-sm text-slate-900 dark:text-white">보안 설정이 업데이트되었습니다.</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">어제 18:30</p>
+              <p className="text-sm text-slate-900">보안 설정이 업데이트되었습니다.</p>
+              <p className="text-xs text-slate-500">어제 18:30</p>
             </div>
           </div>
         </div>

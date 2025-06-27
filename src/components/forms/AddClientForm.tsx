@@ -241,16 +241,16 @@ const AddClientForm = ({ onClose }: AddClientFormProps) => {
       <motion.div 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
+        className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center">
+        <div className="flex items-center justify-between p-4 border-b border-slate-200">
+          <h2 className="text-xl font-bold text-slate-900 flex items-center">
             <User className="w-5 h-5 mr-2" />
             새 고객 추가
           </h2>
           <button 
-            className="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300"
+            className="text-slate-400 hover:text-slate-500:text-slate-300"
             onClick={onClose}
           >
             <X className="w-5 h-5" />
@@ -267,7 +267,7 @@ const AddClientForm = ({ onClose }: AddClientFormProps) => {
                 )}>
                   <label 
                     htmlFor={field.name} 
-                    className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                    className="block text-sm font-medium text-slate-700"
                   >
                     {field.label}
                     {field.required && <span className="text-red-500 ml-1">*</span>}
@@ -281,7 +281,7 @@ const AddClientForm = ({ onClose }: AddClientFormProps) => {
                       onChange={handleChange}
                       className={clsx(
                         'form-input w-full',
-                        errors[field.name] ? 'border-red-500 dark:border-red-500' : ''
+                        errors[field.name] ? 'border-red-500' : ''
                       )}
                       required={field.required}
                     >
@@ -300,7 +300,7 @@ const AddClientForm = ({ onClose }: AddClientFormProps) => {
                       rows={3}
                       className={clsx(
                         'form-input w-full',
-                        errors[field.name] ? 'border-red-500 dark:border-red-500' : ''
+                        errors[field.name] ? 'border-red-500' : ''
                       )}
                       placeholder={field.placeholder}
                       required={field.required}
@@ -314,7 +314,7 @@ const AddClientForm = ({ onClose }: AddClientFormProps) => {
                       onChange={handleChange}
                       className={clsx(
                         'form-input w-full',
-                        errors[field.name] ? 'border-red-500 dark:border-red-500' : ''
+                        errors[field.name] ? 'border-red-500' : ''
                       )}
                       placeholder={field.placeholder}
                       required={field.required}
@@ -333,7 +333,7 @@ const AddClientForm = ({ onClose }: AddClientFormProps) => {
               <div className="md:col-span-2">
                 <label 
                   htmlFor="goals" 
-                  className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                  className="block text-sm font-medium text-slate-700"
                 >
                   고객 목표
                 </label>
@@ -351,7 +351,7 @@ const AddClientForm = ({ onClose }: AddClientFormProps) => {
               <div className="md:col-span-2">
                 <label 
                   htmlFor="healthNotes" 
-                  className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                  className="block text-sm font-medium text-slate-700"
                 >
                   건강 특이사항
                 </label>
@@ -369,7 +369,7 @@ const AddClientForm = ({ onClose }: AddClientFormProps) => {
           </form>
         </div>
         
-        <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-2">
+        <div className="p-4 border-t border-slate-200 flex justify-end gap-2">
           <button 
             type="button" 
             className="btn btn-outline"

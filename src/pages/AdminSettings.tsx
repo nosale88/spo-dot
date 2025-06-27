@@ -64,12 +64,12 @@ const AdminSettings = () => {
   const GeneralSettings = () => (
     <div className="space-y-6">
       <div className="card p-6">
-        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">시스템 설정</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-4">시스템 설정</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-slate-900 dark:text-white">유지보수 모드</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">시스템 유지보수 중에 사용자 접근 제한</p>
+              <p className="font-medium text-slate-900">유지보수 모드</p>
+              <p className="text-sm text-slate-500">시스템 유지보수 중에 사용자 접근 제한</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -78,12 +78,12 @@ const AdminSettings = () => {
                 checked={maintenanceMode}
                 onChange={() => setMaintenanceMode(!maintenanceMode)}
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
           </div>
           
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-slate-700">
               자동 로그아웃 시간 (분)
             </label>
             <select
@@ -96,13 +96,13 @@ const AdminSettings = () => {
               <option value={60}>1시간</option>
               <option value={120}>2시간</option>
             </select>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500">
               비활성화 상태가 지정된 시간을 초과하면 자동으로 로그아웃됩니다.
             </p>
           </div>
           
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-slate-700">
               언어 설정
             </label>
             <select className="form-input">
@@ -114,7 +114,7 @@ const AdminSettings = () => {
           </div>
           
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-slate-700">
               시간대 설정
             </label>
             <select className="form-input">
@@ -128,10 +128,10 @@ const AdminSettings = () => {
       </div>
       
       <div className="card p-6">
-        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">운영 정보</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-4">운영 정보</h3>
         <div className="space-y-4">
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-slate-700">
               센터명
             </label>
             <input
@@ -142,7 +142,7 @@ const AdminSettings = () => {
           </div>
           
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-slate-700">
               주소
             </label>
             <input
@@ -154,7 +154,7 @@ const AdminSettings = () => {
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label className="block text-sm font-medium text-slate-700">
                 연락처
               </label>
               <input
@@ -165,7 +165,7 @@ const AdminSettings = () => {
             </div>
             
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label className="block text-sm font-medium text-slate-700">
                 이메일
               </label>
               <input
@@ -177,7 +177,7 @@ const AdminSettings = () => {
           </div>
           
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-slate-700">
               운영 시간
             </label>
             <div className="grid grid-cols-2 gap-4">
@@ -209,12 +209,12 @@ const AdminSettings = () => {
   const NotificationSettings = () => (
     <div className="space-y-6">
       <div className="card p-6">
-        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">알림 설정</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-4">알림 설정</h3>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-slate-900 dark:text-white">이메일 알림</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">중요 알림을 이메일로 받기</p>
+              <p className="font-medium text-slate-900">이메일 알림</p>
+              <p className="text-sm text-slate-500">중요 알림을 이메일로 받기</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -223,14 +223,14 @@ const AdminSettings = () => {
                 checked={emailNotifications}
                 onChange={() => setEmailNotifications(!emailNotifications)}
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
           </div>
           
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-slate-900 dark:text-white">푸시 알림</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">브라우저와 모바일 앱 푸시 알림</p>
+              <p className="font-medium text-slate-900">푸시 알림</p>
+              <p className="text-sm text-slate-500">브라우저와 모바일 앱 푸시 알림</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -239,12 +239,12 @@ const AdminSettings = () => {
                 checked={pushNotifications}
                 onChange={() => setPushNotifications(!pushNotifications)}
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
           </div>
           
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-slate-700">
               알림 빈도
             </label>
             <select
@@ -258,7 +258,7 @@ const AdminSettings = () => {
               <option value="weekly">주별 요약</option>
               <option value="never">알림 끄기</option>
             </select>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500">
               알림을 얼마나 자주 받을지 설정하세요.
             </p>
           </div>
@@ -266,7 +266,7 @@ const AdminSettings = () => {
       </div>
       
       <div className="card p-6">
-        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">알림 유형 설정</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-4">알림 유형 설정</h3>
         <div className="space-y-4">
           {[
             { id: 'new_member', label: '신규 회원 등록', checked: true },
@@ -275,15 +275,15 @@ const AdminSettings = () => {
             { id: 'member_birthday', label: '회원 생일 알림', checked: false },
             { id: 'system_updates', label: '시스템 업데이트', checked: true },
           ].map((item) => (
-            <div key={item.id} className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-700 last:border-0">
-              <p className="font-medium text-slate-900 dark:text-white">{item.label}</p>
+            <div key={item.id} className="flex items-center justify-between p-3 border-b border-slate-200 last:border-0">
+              <p className="font-medium text-slate-900">{item.label}</p>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   className="sr-only peer"
                   defaultChecked={item.checked}
                 />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
             </div>
           ))}
@@ -291,17 +291,17 @@ const AdminSettings = () => {
       </div>
       
       <div className="card p-6">
-        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">이메일 템플릿</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-4">이메일 템플릿</h3>
         <div className="space-y-4">
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-slate-700">
               환영 이메일
             </label>
             <textarea
               className="form-input h-32"
               defaultValue={`안녕하세요 {name}님,\n\n피트니스 센터에 가입해주셔서 감사합니다!\n귀하의 회원 ID는 {memberId}입니다.\n\n즐거운 운동 되세요!`}
             />
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500">
               {'{name}'}, {'{memberId}'} 등의 변수를 사용할 수 있습니다.
             </p>
           </div>
@@ -324,12 +324,12 @@ const AdminSettings = () => {
   const DataManagementSettings = () => (
     <div className="space-y-6">
       <div className="card p-6">
-        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">데이터 백업</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-4">데이터 백업</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-slate-900 dark:text-white">자동 백업</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">매일 자동으로 데이터 백업</p>
+              <p className="font-medium text-slate-900">자동 백업</p>
+              <p className="text-sm text-slate-500">매일 자동으로 데이터 백업</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -337,12 +337,12 @@ const AdminSettings = () => {
                 className="sr-only peer"
                 defaultChecked={true}
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
           </div>
           
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-slate-700">
               백업 빈도
             </label>
             <select className="form-input">
@@ -353,7 +353,7 @@ const AdminSettings = () => {
           </div>
           
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-slate-700">
               백업 보관 기간
             </label>
             <select className="form-input">
@@ -365,10 +365,10 @@ const AdminSettings = () => {
             </select>
           </div>
           
-          <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+          <div className="flex justify-between items-center p-4 bg-slate-50 rounded-lg">
             <div>
-              <p className="font-medium text-slate-900 dark:text-white">수동 백업</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">지금 모든 데이터 백업하기</p>
+              <p className="font-medium text-slate-900">수동 백업</p>
+              <p className="text-sm text-slate-500">지금 모든 데이터 백업하기</p>
             </div>
             <button className="btn btn-primary inline-flex items-center">
               <CloudUpload size={16} className="mr-2" />
@@ -379,24 +379,24 @@ const AdminSettings = () => {
       </div>
       
       <div className="card p-6">
-        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">백업 내역</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-4">백업 내역</h3>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-            <thead className="bg-slate-50 dark:bg-slate-800">
+          <table className="min-w-full divide-y divide-slate-200">
+            <thead className="bg-slate-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   파일명
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   타입
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   날짜
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   크기
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   상태
                 </th>
                 <th scope="col" className="relative px-6 py-3">
@@ -404,7 +404,7 @@ const AdminSettings = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="bg-white divide-y divide-slate-200">
               {[
                 { filename: 'backup_20230801_auto', type: '자동', date: '2023-08-01 03:00', size: '45.2 MB', status: '완료' },
                 { filename: 'backup_20230731_auto', type: '자동', date: '2023-07-31 03:00', size: '44.8 MB', status: '완료' },
@@ -412,20 +412,20 @@ const AdminSettings = () => {
                 { filename: 'backup_20230730_auto', type: '자동', date: '2023-07-30 03:00', size: '44.1 MB', status: '완료' },
               ].map((backup, index) => (
                 <tr key={index}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                     {backup.filename}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
                     {backup.type}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
                     {backup.date}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
                     {backup.size}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                       {backup.status}
                     </span>
                   </td>
@@ -433,7 +433,7 @@ const AdminSettings = () => {
                     <button className="text-primary hover:text-primary-dark mr-3">
                       다운로드
                     </button>
-                    <button className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                    <button className="text-red-600 hover:text-red-800:text-red-300">
                       삭제
                     </button>
                   </td>
@@ -445,15 +445,15 @@ const AdminSettings = () => {
       </div>
       
       <div className="card p-6">
-        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">데이터 복원</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-4">데이터 복원</h3>
         <div className="space-y-4">
-          <div className="p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-center">
+          <div className="p-6 border-2 border-dashed border-slate-300 rounded-lg text-center">
             <div className="flex flex-col items-center">
-              <CloudUpload size={36} className="text-slate-400 dark:text-slate-500 mb-2" />
-              <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
+              <CloudUpload size={36} className="text-slate-400 mb-2" />
+              <p className="text-sm text-slate-700 mb-2">
                 백업 파일을 여기에 드래그하거나 클릭하여 업로드
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500">
                 ZIP 또는 SQL 파일만 허용됩니다
               </p>
               <button className="mt-4 btn btn-outline">
@@ -462,8 +462,8 @@ const AdminSettings = () => {
             </div>
           </div>
           
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-            <p className="text-sm text-yellow-800 dark:text-yellow-300">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p className="text-sm text-yellow-800">
               <strong>주의:</strong> 데이터 복원은 현재 데이터를 대체합니다. 이 작업은 되돌릴 수 없습니다.
             </p>
           </div>
@@ -476,12 +476,12 @@ const AdminSettings = () => {
   const SecuritySettings = () => (
     <div className="space-y-6">
       <div className="card p-6">
-        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">보안 정책</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-4">보안 정책</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-slate-900 dark:text-white">2단계 인증 요구</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">모든 관리자 계정에 2단계 인증 요구</p>
+              <p className="font-medium text-slate-900">2단계 인증 요구</p>
+              <p className="text-sm text-slate-500">모든 관리자 계정에 2단계 인증 요구</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -489,12 +489,12 @@ const AdminSettings = () => {
                 className="sr-only peer"
                 defaultChecked={true}
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
           </div>
           
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-slate-700">
               비밀번호 정책
             </label>
             <select className="form-input">
@@ -502,13 +502,13 @@ const AdminSettings = () => {
               <option value="strong">강력 (10자 이상, 영문/숫자/특수문자 조합)</option>
               <option value="very-strong">매우 강력 (12자 이상, 대소문자/숫자/특수문자 조합)</option>
             </select>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500">
               모든 사용자에게 적용되는 비밀번호 정책입니다.
             </p>
           </div>
           
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-slate-700">
               비밀번호 유효 기간
             </label>
             <select className="form-input">
@@ -518,7 +518,7 @@ const AdminSettings = () => {
               <option value="90">90일</option>
               <option value="180">180일</option>
             </select>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500">
               지정된 날짜 이후 비밀번호 변경을 요구합니다.
             </p>
           </div>
@@ -526,12 +526,12 @@ const AdminSettings = () => {
       </div>
       
       <div className="card p-6">
-        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">세션 관리</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-4">세션 관리</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-slate-900 dark:text-white">단일 세션 제한</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">사용자당 하나의 활성 세션만 허용</p>
+              <p className="font-medium text-slate-900">단일 세션 제한</p>
+              <p className="text-sm text-slate-500">사용자당 하나의 활성 세션만 허용</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -539,12 +539,12 @@ const AdminSettings = () => {
                 className="sr-only peer"
                 defaultChecked={false}
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
           </div>
           
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-slate-700">
               세션 타임아웃 (분)
             </label>
             <select className="form-input">
@@ -556,19 +556,19 @@ const AdminSettings = () => {
             </select>
           </div>
           
-          <button className="btn btn-outline text-red-500 border-red-300 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20">
+          <button className="btn btn-outline text-red-500 border-red-300 hover:bg-red-50:bg-red-900/20">
             모든 활성 세션 종료
           </button>
         </div>
       </div>
       
       <div className="card p-6">
-        <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">접근 로그</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-4">접근 로그</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-slate-900 dark:text-white">접근 로그 활성화</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">모든 사용자 활동 기록</p>
+              <p className="font-medium text-slate-900">접근 로그 활성화</p>
+              <p className="text-sm text-slate-500">모든 사용자 활동 기록</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -576,12 +576,12 @@ const AdminSettings = () => {
                 className="sr-only peer"
                 defaultChecked={true}
               />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
           </div>
           
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="block text-sm font-medium text-slate-700">
               로그 보존 기간
             </label>
             <select className="form-input">
@@ -631,7 +631,7 @@ const AdminSettings = () => {
         'flex items-center p-3 w-full text-left transition-colors rounded-lg',
         activeTab === item.id
           ? 'bg-primary text-white'
-          : 'hover:bg-slate-100 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300'
+          : 'hover:bg-slate-100:bg-slate-700/50 text-slate-700'
       )}
     >
       <div className="flex-shrink-0 mr-3">
@@ -641,7 +641,7 @@ const AdminSettings = () => {
         <p className="font-medium">{item.label}</p>
         <p className={clsx(
           'text-xs',
-          activeTab === item.id ? 'text-white/80' : 'text-slate-500 dark:text-slate-400'
+          activeTab === item.id ? 'text-white/80' : 'text-slate-500'
         )}>
           {item.description}
         </p>
@@ -676,7 +676,7 @@ const AdminSettings = () => {
       className="space-y-6"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">관리자 설정</h1>
+        <h1 className="text-2xl font-bold text-slate-900">관리자 설정</h1>
         
         <button
           onClick={saveSettings}
@@ -694,12 +694,12 @@ const AdminSettings = () => {
             {settingMenuItems.map(renderSettingMenuItem)}
           </div>
           
-          <div className="card p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-            <h3 className="font-medium text-blue-900 dark:text-blue-300 flex items-center">
+          <div className="card p-4 bg-blue-50 border border-blue-200">
+            <h3 className="font-medium text-blue-900 flex items-center">
               <Info size={18} className="mr-2" />
               시스템 정보
             </h3>
-            <div className="mt-2 space-y-1 text-sm text-blue-800 dark:text-blue-200">
+            <div className="mt-2 space-y-1 text-sm text-blue-800">
               <p>버전: v1.5.2</p>
               <p>마지막 업데이트: 2023-07-28</p>
               <p>데이터베이스: PostgreSQL 14.5</p>

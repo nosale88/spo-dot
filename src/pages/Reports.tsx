@@ -52,14 +52,14 @@ const Reports: React.FC = () => {
             to={category.link}
             className="card p-6 hover:shadow-md transition-shadow flex items-start"
           >
-            <div className="mr-4 p-3 rounded-full bg-slate-100 dark:bg-slate-800">
+            <div className="mr-4 p-3 rounded-full bg-slate-100">
               {category.icon}
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">
+              <h3 className="text-lg font-medium text-slate-900 mb-1">
                 {category.title}
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
+              <p className="text-sm text-slate-500 mb-2">
                 {category.description}
               </p>
               <div className="flex items-center text-primary text-sm font-medium">

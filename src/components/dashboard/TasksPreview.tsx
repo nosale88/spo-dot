@@ -56,30 +56,30 @@ const getPriorityStyles = (priority: TaskPriority) => {
   switch (priority) {
     case 'urgent':
       return {
-        bgColor: 'bg-red-100 dark:bg-red-900/30',
-        textColor: 'text-red-800 dark:text-red-300',
-        borderColor: 'border-red-200 dark:border-red-800',
+        bgColor: 'bg-red-100',
+        textColor: 'text-red-800',
+        borderColor: 'border-red-200',
         icon: <AlertTriangle size={16} className="text-red-500" />
       };
     case 'high':
       return {
-        bgColor: 'bg-orange-100 dark:bg-orange-900/30',
-        textColor: 'text-orange-800 dark:text-orange-300',
-        borderColor: 'border-orange-200 dark:border-orange-800',
+        bgColor: 'bg-orange-100',
+        textColor: 'text-orange-800',
+        borderColor: 'border-orange-200',
         icon: <Clock size={16} className="text-orange-500" />
       };
     case 'medium':
       return {
-        bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
-        textColor: 'text-yellow-800 dark:text-yellow-300',
-        borderColor: 'border-yellow-200 dark:border-yellow-800',
+        bgColor: 'bg-yellow-100',
+        textColor: 'text-yellow-800',
+        borderColor: 'border-yellow-200',
         icon: <Clock size={16} className="text-yellow-500" />
       };
     case 'low':
       return {
-        bgColor: 'bg-green-100 dark:bg-green-900/30',
-        textColor: 'text-green-800 dark:text-green-300',
-        borderColor: 'border-green-200 dark:border-green-800',
+        bgColor: 'bg-green-100',
+        textColor: 'text-green-800',
+        borderColor: 'border-green-200',
         icon: <CheckSquare size={16} className="text-green-500" />
       };
   }
@@ -91,20 +91,20 @@ const getStatusStyles = (status: TaskStatus) => {
     case 'pending':
       return {
         text: '대기 중',
-        bgColor: 'bg-slate-100 dark:bg-slate-700',
-        textColor: 'text-slate-700 dark:text-slate-300'
+        bgColor: 'bg-slate-100',
+        textColor: 'text-slate-700'
       };
     case 'in-progress':
       return {
         text: '진행 중',
-        bgColor: 'bg-blue-100 dark:bg-blue-900/30',
-        textColor: 'text-blue-800 dark:text-blue-300'
+        bgColor: 'bg-blue-100',
+        textColor: 'text-blue-800'
       };
     case 'completed':
       return {
         text: '완료됨',
-        bgColor: 'bg-green-100 dark:bg-green-900/30',
-        textColor: 'text-green-800 dark:text-green-300'
+        bgColor: 'bg-green-100',
+        textColor: 'text-green-800'
       };
   }
 };
@@ -127,7 +127,7 @@ const TasksPreview = () => {
             'px-3 py-1 text-xs font-medium rounded-lg transition-colors',
             selectedStatus === 'all'
               ? 'bg-primary text-white'
-              : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              : 'bg-slate-100 text-slate-700'
           )}
         >
           전체
@@ -138,7 +138,7 @@ const TasksPreview = () => {
             'px-3 py-1 text-xs font-medium rounded-lg transition-colors',
             selectedStatus === 'pending'
               ? 'bg-primary text-white'
-              : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              : 'bg-slate-100 text-slate-700'
           )}
         >
           대기 중
@@ -149,7 +149,7 @@ const TasksPreview = () => {
             'px-3 py-1 text-xs font-medium rounded-lg transition-colors',
             selectedStatus === 'in-progress'
               ? 'bg-primary text-white'
-              : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              : 'bg-slate-100 text-slate-700'
           )}
         >
           진행 중
@@ -160,7 +160,7 @@ const TasksPreview = () => {
             'px-3 py-1 text-xs font-medium rounded-lg transition-colors',
             selectedStatus === 'completed'
               ? 'bg-primary text-white'
-              : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              : 'bg-slate-100 text-slate-700'
           )}
         >
           완료
@@ -186,8 +186,8 @@ const TasksPreview = () => {
                   {priorityStyles.icon}
                   <span className={`font-medium ${
                     task.status === 'completed' 
-                      ? 'line-through text-slate-500 dark:text-slate-400' 
-                      : 'text-slate-900 dark:text-white'
+                      ? 'line-through text-slate-500' 
+                      : 'text-slate-900'
                   }`}>
                     {task.title}
                   </span>
@@ -199,13 +199,13 @@ const TasksPreview = () => {
                 </div>
               </div>
               <div className="mt-2 flex items-center justify-between text-xs">
-                <div className="text-slate-500 dark:text-slate-400">
+                <div className="text-slate-500">
                   담당: {task.assignedTo}
                 </div>
                 <div className={`${
                   task.dueDate === '오늘' ? 'text-orange-500' :
                   task.dueDate === '내일' ? 'text-red-500' :
-                  'text-slate-500 dark:text-slate-400'
+                  'text-slate-500'
                 }`}>
                   마감: {task.dueDate}
                 </div>
