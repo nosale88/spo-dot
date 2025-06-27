@@ -74,14 +74,14 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
       </div>
 
       <div className="flex items-center space-x-4">
-        {/* 개발 환경 권한 디버그 정보 */}
-        {showDebugInfo && user && (
-          <div className="text-xs bg-gray-100 px-2 py-1 rounded border">
-            <div className="font-semibold">{user.role}</div>
-            <div className="text-gray-600">
-              기본:{rolePermissions[user.role]?.length || 0} | 
-              개별:{user.permissions?.length || 0}
-            </div>
+        {/* 🐛 디버그 정보 */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded border">
+            <div>사용자: {user?.name}</div>
+            <div>역할: {user?.role}</div>
+            <div>ID: {user?.id}</div>
+            <div>권한수: {user?.permissions?.length || 0}</div>
+            <div>저장된ID: {localStorage.getItem('currentUserId')}</div>
           </div>
         )}
         

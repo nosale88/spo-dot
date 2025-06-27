@@ -175,20 +175,8 @@ interface UserContextProps {
 const UserContext = createContext<UserContextProps | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  // 초기 일반 사용자 목록 - 관리자 계정만
-  const initialUsers: User[] = [
-    {
-      id: 'admin-spodot-01',
-      name: '관리자',
-      email: 'spodot@naver.com',
-      role: 'admin',
-      phone: '010-0000-0000',
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      password: '123456'
-    }
-  ];
+  // 초기 사용자 목록 - 빈 배열로 시작
+  const initialUsers: User[] = [];
   const [users, setUsers] = useState<User[]>(initialUsers);
 
   // 직원(Staff) 목록 상태 관리
@@ -204,12 +192,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setLoadingStaff(true);
     setStaffError(null);
     try {
-      // Supabase에서 users 테이블 조회 - 활성 상태만
+      // Supabase에서 users 테이블 조회 - 모든 역할의 활성 사용자 조회
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .in('role', ['admin', 'staff'])  // admin과 staff 역할을 가진 사용자만 조회
-        .eq('status', 'active');  // 활성 상태인 사용자만 조회
+        .eq('status', 'active');  // 활성 상태인 사용자만 조회 (역할 필터링 제거)
 
       if (error) {
         console.error('Error fetching staff:', error);
@@ -217,6 +204,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setLoadingStaff(false);
         return;
       }
+
+      console.log('📋 데이터베이스에서 조회된 사용자들:', data);
 
       // 데이터 형식 변환 - 이제 모든 필드 사용 가능
       const transformedStaff = data.map(user => ({
@@ -235,6 +224,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         profileImage: user.profile_image
       }));
 
+      console.log('🔄 변환된 직원 데이터:', transformedStaff);
       setStaffList(transformedStaff as Staff[]);
     } catch (err) {
       console.error('직원 데이터 가져오기 오류:', err);
