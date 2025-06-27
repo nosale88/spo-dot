@@ -1,84 +1,67 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
 import { ReactNode } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Permission, UserRole } from '../../types/permissions';
-import { ShieldX, Loader2 } from 'lucide-react';
+import { showError } from '../../utils/notifications';
 
 interface ProtectedRouteProps {
   children: ReactNode;
   requiredRole?: UserRole | UserRole[];
   requiredPermission?: Permission | Permission[];
-  fallbackPath?: string;
-  showUnauthorized?: boolean;
+  redirectTo?: string;
+  showAccessDenied?: boolean;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+/**
+ * 🛡️ 보안 강화된 라우트 보호 컴포넌트
+ * 권한과 역할을 검사하여 라우트 접근을 제어합니다.
+ */
+const ProtectedRoute = ({ 
   children, 
-  requiredRole, 
-  requiredPermission, 
-  fallbackPath = '/dashboard',
-  showUnauthorized = false
-}) => {
-  const { user, hasPermission, hasPageAccess, isLoading } = useAuth();
-  const location = useLocation();
+  requiredPermission,
+  requiredRole,
+  redirectTo = '/dashboard',
+  showAccessDenied = true
+}: ProtectedRouteProps) => {
+  const { user, hasPermission, hasAnyPermission, checkPermissionWithDetails } = useAuth();
 
-  // 로딩 중일 때는 로딩 화면 표시
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-slate-600">인증 확인 중...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 로그인하지 않은 경우 로그인 페이지로 리디렉션
+  // 로그인하지 않은 사용자
   if (!user) {
-    console.log('❌ ProtectedRoute: 사용자 미인증, 로그인 페이지로 리디렉션');
-    return <Navigate to="/auth/login" state={{ from: location }} replace />;
+    return <Navigate to="/auth/login" replace />;
   }
 
-  // 페이지별 권한 검사 (자동)
-  if (!hasPageAccess(location.pathname)) {
-    console.log(`❌ ProtectedRoute: 페이지 접근 권한 없음 - ${location.pathname} (역할: ${user.role})`);
-    
-    if (showUnauthorized) {
-      return <UnauthorizedComponent />;
-    }
-    
-    return <Navigate to={fallbackPath} replace />;
-  }
-
-  // 역할 체크 (배열 지원)
+  // 역할 검사
   if (requiredRole) {
     const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    if (!roles.includes(user.role)) {
-      console.log(`❌ ProtectedRoute: 역할 권한 없음 - 필요: ${roles.join(', ')}, 현재: ${user.role}`);
-      
-      if (showUnauthorized) {
-        return <UnauthorizedComponent />;
+    const hasRequiredRole = roles.includes(user.role);
+    
+    if (!hasRequiredRole) {
+      if (showAccessDenied) {
+        showError(`이 페이지는 ${roles.join(', ')} 권한이 필요합니다.`);
       }
-      
-      return <Navigate to={fallbackPath} replace />;
+      return <Navigate to={redirectTo} replace />;
     }
   }
 
-  // 권한 체크 (배열 지원 - OR 조건)
+  // 권한 검사 (상세한 권한 검사 포함)
   if (requiredPermission) {
     const permissions = Array.isArray(requiredPermission) ? requiredPermission : [requiredPermission];
-    const hasAnyPermission = permissions.some(permission => hasPermission(permission));
     
-    if (!hasAnyPermission) {
-      console.log(`❌ ProtectedRoute: 세부 권한 없음 - 필요: ${permissions.join(', ')}`);
+    // 하나라도 권한이 있으면 통과
+    const hasRequiredPermission = hasAnyPermission(permissions);
+    
+    if (!hasRequiredPermission) {
+      // 상세한 권한 검사로 구체적인 이유 제공
+      const permissionCheck = checkPermissionWithDetails(permissions[0]);
       
-      if (showUnauthorized) {
-        return <UnauthorizedComponent />;
+      if (showAccessDenied) {
+        showError(permissionCheck.reason);
       }
       
-      return <Navigate to={fallbackPath} replace />;
+      // 보안 로그 기록
+      console.warn(`[SECURITY] Access denied for user ${user.id} (${user.role}) to permission ${permissions.join(', ')}`);
+      
+      return <Navigate to={redirectTo} replace />;
     }
   }
 
@@ -120,3 +103,43 @@ const UnauthorizedComponent = () => {
 };
 
 export default ProtectedRoute;
+
+// 🚨 특별 보호 컴포넌트들 (높은 보안 수준 필요)
+export const AdminOnlyRoute = ({ children }: { children: ReactNode }) => (
+  <ProtectedRoute requiredRole="admin">
+    {children}
+  </ProtectedRoute>
+);
+
+export const ManagerOnlyRoute = ({ children }: { children: ReactNode }) => (
+  <ProtectedRoute 
+    requiredRole={['admin']}
+    requiredPermission={['users.update', 'tasks.assign']}
+  >
+    {children}
+  </ProtectedRoute>
+);
+
+export const StaffManagementRoute = ({ children }: { children: ReactNode }) => (
+  <ProtectedRoute 
+    requiredPermission={['users.view_all', 'users.create', 'users.update']}
+  >
+    {children}
+  </ProtectedRoute>
+);
+
+export const TaskManagementRoute = ({ children }: { children: ReactNode }) => (
+  <ProtectedRoute 
+    requiredPermission={['tasks.view_all', 'tasks.assign']}
+  >
+    {children}
+  </ProtectedRoute>
+);
+
+export const ReportManagementRoute = ({ children }: { children: ReactNode }) => (
+  <ProtectedRoute 
+    requiredPermission={['reports.view_all', 'reports.approve']}
+  >
+    {children}
+  </ProtectedRoute>
+);

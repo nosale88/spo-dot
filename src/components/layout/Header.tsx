@@ -5,6 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationCenter from '@/components/common/NotificationCenter';
 import InitialsAvatar from '@/components/common/InitialsAvatar';
+import { RealtimeStatusBar, RealtimeDebugPanel } from '@/components/common/RealtimeStatus';
+import { rolePermissions } from '../../types/permissions';
+import Icon from '../common/Icon';
 
 type HeaderProps = {
   toggleSidebar: () => void;
@@ -16,6 +19,10 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const [notificationCount, setNotificationCount] = useState(3);
+
+  // 개발 환경에서 권한 디버그 정보 표시
+  const showDebugInfo = process.env.NODE_ENV === 'development';
 
   // 외부 클릭 시 메뉴 닫기
   useEffect(() => {
@@ -66,9 +73,33 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
         </h1>
       </div>
 
-      <div className="flex items-center space-x-3">
-        {/* 알림 센터 */}
-        <NotificationCenter />
+      <div className="flex items-center space-x-4">
+        {/* 개발 환경 권한 디버그 정보 */}
+        {showDebugInfo && user && (
+          <div className="text-xs bg-gray-100 px-2 py-1 rounded border">
+            <div className="font-semibold">{user.role}</div>
+            <div className="text-gray-600">
+              기본:{rolePermissions[user.role]?.length || 0} | 
+              개별:{user.permissions?.length || 0}
+            </div>
+          </div>
+        )}
+        
+        {/* 실시간 상태 표시 */}
+        <RealtimeStatusBar />
+        
+        {/* 알림 아이콘 */}
+        <button 
+          className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+          title="알림"
+        >
+                      <Icon name="Bell" size={20} />
+          {notificationCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              {notificationCount}
+            </span>
+          )}
+        </button>
 
         {/* 사용자 프로필 */}
         <div className="relative">
@@ -102,7 +133,13 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
                   <InitialsAvatar name={user?.name || '사용자'} size="sm" />
                   <div>
                     <p className="text-sm font-medium text-slate-900">{user?.name}</p>
-                    <p className="text-xs text-slate-500">{user?.role === 'admin' ? '관리자' : user?.role === 'trainer' ? '트레이너' : '직원'}</p>
+                    <p className="text-xs text-slate-500">
+                      {user?.role === 'admin' ? '관리자' : 
+                       user?.role === 'reception' ? '리셉션' :
+                       user?.role === 'fitness' ? '피트니스' :
+                       user?.role === 'tennis' ? '테니스' :
+                       user?.role === 'golf' ? '골프' : '직원'}
+                    </p>
                   </div>
                 </div>
                 <button 
@@ -129,6 +166,9 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
           </AnimatePresence>
         </div>
       </div>
+      
+      {/* 개발자용 실시간 디버그 패널 */}
+      <RealtimeDebugPanel />
     </header>
   );
 };

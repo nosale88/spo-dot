@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { X, Save, User, Shield, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { useUser, UserStatus, Staff, UserRole } from '../../contexts/UserContext';
-import { UserPosition, positionInfo } from '../../types/permissions';
+import { useUser, UserStatus, Staff } from '../../contexts/UserContext';
+import { UserPosition, positionInfo, departmentNames, UserRole } from '../../types/permissions';
 import clsx from 'clsx';
+import { logger, showSuccess, showError } from '../../utils/notifications';
 
 export interface AddStaffFormProps {
   onClose: () => void;
@@ -12,34 +13,70 @@ export interface AddStaffFormProps {
 
 const AVAILABLE_PERMISSIONS = [
   // 업무 관리
-  { id: 'view_tasks', label: '내 업무 조회', category: '업무 관리' },
-  { id: 'view_all_tasks', label: '팀 업무 조회', category: '업무 관리' },
-  { id: 'edit_tasks', label: '업무 생성/편집', category: '업무 관리' },
+  { id: 'tasks.view_assigned', label: '내 업무 조회', category: '업무 관리' },
+  { id: 'tasks.view_department', label: '팀 업무 조회', category: '업무 관리' },
+  { id: 'tasks.view_all', label: '전체 업무 조회', category: '업무 관리' },
+  { id: 'tasks.create', label: '업무 생성', category: '업무 관리' },
+  { id: 'tasks.update', label: '업무 편집', category: '업무 관리' },
+  { id: 'tasks.assign', label: '업무 할당', category: '업무 관리' },
+  { id: 'tasks.comment', label: '업무 댓글', category: '업무 관리' },
   
   // 일정 관리
-  { id: 'view_schedules', label: '일정 조회', category: '일정 관리' },
-  { id: 'edit_schedules', label: '일정 생성/편집', category: '일정 관리' },
+  { id: 'schedules.view_own', label: '내 일정 조회', category: '일정 관리' },
+  { id: 'schedules.view_department', label: '팀 일정 조회', category: '일정 관리' },
+  { id: 'schedules.view_all', label: '전체 일정 조회', category: '일정 관리' },
+  { id: 'schedules.create', label: '일정 생성', category: '일정 관리' },
+  { id: 'schedules.update', label: '일정 편집', category: '일정 관리' },
   
   // 회원/고객 관리
-  { id: 'view_members', label: '회원 조회', category: '회원 관리' },
-  { id: 'edit_members', label: '회원 생성/편집', category: '회원 관리' },
-  { id: 'view_clients', label: '고객 조회', category: '고객 관리' },
-  { id: 'edit_clients', label: '고객 생성/편집', category: '고객 관리' },
-  
-  // 트레이너 관리
-  { id: 'view_trainers', label: '트레이너 조회', category: '트레이너 관리' },
-  { id: 'edit_trainers', label: '트레이너 생성/편집', category: '트레이너 관리' },
+  { id: 'members.view_department', label: '팀 회원 조회', category: '회원 관리' },
+  { id: 'members.view_all', label: '전체 회원 조회', category: '회원 관리' },
+  { id: 'members.create', label: '회원 생성', category: '회원 관리' },
+  { id: 'members.update', label: '회원 편집', category: '회원 관리' },
   
   // 매출 관리
-  { id: 'create_sales', label: '매출 등록', category: '매출 관리' },
-  { id: 'view_sales_reports', label: '매출 보고서 조회', category: '매출 관리' },
-  { id: 'create_sales_reports', label: '매출보고 작성', category: '매출 관리' },
-  { id: 'manage_vending', label: '자판기 관리', category: '매출 관리' },
+  { id: 'sales.create', label: '매출 등록', category: '매출 관리' },
+  { id: 'sales.view_own', label: '내 매출 조회', category: '매출 관리' },
+  { id: 'sales.view_department', label: '팀 매출 조회', category: '매출 관리' },
+  { id: 'sales.view_all', label: '전체 매출 조회', category: '매출 관리' },
   
   // 보고서 관리
-  { id: 'view_reports', label: '일일 업무 보고 조회', category: '보고서 관리' },
-  { id: 'create_reports', label: '일일 업무 보고 작성', category: '보고서 관리' },
-  { id: 'edit_reports', label: '보고서 생성/편집', category: '보고서 관리' },
+  { id: 'reports.create', label: '일일 업무 보고 작성', category: '보고서 관리' },
+  { id: 'reports.view_own', label: '내 보고서 조회', category: '보고서 관리' },
+  { id: 'reports.view_department', label: '팀 보고서 조회', category: '보고서 관리' },
+  { id: 'reports.view_all', label: '전체 보고서 조회', category: '보고서 관리' },
+  
+  // OT 관리
+  { id: 'ot.view_assigned', label: 'OT 진행 조회', category: 'OT 관리' },
+  { id: 'ot.view_all', label: '전체 OT 조회', category: 'OT 관리' },
+  { id: 'ot.assign', label: 'OT 배정', category: 'OT 관리' },
+  { id: 'ot.progress_update', label: 'OT 진행 업데이트', category: 'OT 관리' },
+  
+  // 이용권 관리
+  { id: 'pass.view_all', label: '이용권 조회', category: '이용권 관리' },
+  { id: 'pass.create', label: '이용권 생성', category: '이용권 관리' },
+  
+  // 자판기 관리
+  { id: 'vending.view_own', label: '내 자판기 매출', category: '자판기 관리' },
+  { id: 'vending.view_all', label: '전체 자판기 매출', category: '자판기 관리' },
+  
+  // 건의사항
+  { id: 'suggestions.create', label: '건의사항 작성', category: '건의사항' },
+  { id: 'suggestions.view_own', label: '내 건의사항 조회', category: '건의사항' },
+  { id: 'suggestions.view_all', label: '전체 건의사항 조회', category: '건의사항' },
+  { id: 'suggestions.respond', label: '건의사항 응답', category: '건의사항' },
+  
+  // 공지사항
+  { id: 'announcements.read', label: '공지사항 조회', category: '공지사항' },
+  { id: 'announcements.create', label: '공지사항 작성', category: '공지사항' },
+  
+  // 매뉴얼
+  { id: 'manuals.read', label: '매뉴얼 조회', category: '매뉴얼' },
+  
+  // 시스템 관리
+  { id: 'users.view_all', label: '직원 조회', category: '시스템 관리' },
+  { id: 'users.create', label: '직원 생성', category: '시스템 관리' },
+  { id: 'users.update', label: '직원 편집', category: '시스템 관리' },
 ];
 
 const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
@@ -55,7 +92,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
     department: '',
     position: '' as UserPosition,
     hireDate: format(new Date(), 'yyyy-MM-dd'),
-    role: 'staff' as UserRole,
+    role: 'reception' as UserRole,
     permissions: [] as string[]
   });
   
@@ -75,48 +112,68 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
     if (name === 'department') {
       let defaultPermissions: string[] = [];
       switch (value) {
-        case '임원':
+        case 'admin':
           defaultPermissions = ['all']; // 모든 권한
           break;
-        case '리셉션':
+        case 'reception':
           defaultPermissions = [
-            'view_tasks', 'view_all_tasks', 'edit_tasks',
-            'view_schedules', 'edit_schedules',
-            'view_members', 'edit_members',
-            'view_clients', 'edit_clients',
-            'create_sales', 'view_sales_reports', 'create_sales_reports',
-            'view_reports', 'create_reports'
+            'tasks.view_assigned', 'tasks.view_department', 'tasks.create', 'tasks.update', 'tasks.comment',
+            'schedules.view_all', 'schedules.create', 'schedules.update',
+            'members.view_all', 'members.create', 'members.update',
+            'sales.create', 'sales.view_all',
+            'reports.create', 'reports.view_department',
+            'ot.view_all', 'ot.assign', 'ot.progress_update',
+            'pass.view_all', 'pass.create',
+            'vending.view_all',
+            'announcements.read',
+            'suggestions.create', 'suggestions.view_own',
+            'manuals.read'
           ];
           break;
-        case '헬스':
+        case 'fitness':
           defaultPermissions = [
-            'view_tasks', 'edit_tasks',
-            'view_schedules', 'edit_schedules',
-            'view_members', 'edit_members',
-            'view_clients', 'edit_clients',
-            'view_trainers'
+            'tasks.view_assigned', 'tasks.view_department', 'tasks.create', 'tasks.update', 'tasks.comment',
+            'schedules.view_department', 'schedules.create', 'schedules.update',
+            'members.view_department', 'members.update',
+            'sales.create', 'sales.view_department',
+            'reports.create', 'reports.view_department',
+            'ot.view_assigned', 'ot.progress_update',
+            'vending.view_own',
+            'announcements.read',
+            'suggestions.create', 'suggestions.view_own',
+            'manuals.read'
           ];
           break;
-        case '테니스':
+        case 'tennis':
           defaultPermissions = [
-            'view_tasks',
-            'view_schedules', 'edit_schedules',
-            'view_members', 'edit_members',
-            'view_clients', 'edit_clients',
-            'view_trainers'
+            'tasks.view_assigned', 'tasks.view_department', 'tasks.create', 'tasks.update', 'tasks.comment',
+            'schedules.view_department', 'schedules.create', 'schedules.update',
+            'members.view_department', 'members.update',
+            'sales.create', 'sales.view_department',
+            'reports.create', 'reports.view_department',
+            'ot.view_assigned', 'ot.progress_update',
+            'vending.view_own',
+            'announcements.read',
+            'suggestions.create', 'suggestions.view_own',
+            'manuals.read'
           ];
           break;
-        case '골프':
+        case 'golf':
           defaultPermissions = [
-            'view_tasks',
-            'view_schedules', 'edit_schedules', 
-            'view_members', 'edit_members',
-            'view_clients', 'edit_clients',
-            'view_trainers'
+            'tasks.view_assigned', 'tasks.view_department', 'tasks.create', 'tasks.update', 'tasks.comment',
+            'schedules.view_department', 'schedules.create', 'schedules.update',
+            'members.view_department', 'members.update',
+            'sales.create', 'sales.view_department',
+            'reports.create', 'reports.view_department',
+            'ot.view_assigned', 'ot.progress_update',
+            'vending.view_own',
+            'announcements.read',
+            'suggestions.create', 'suggestions.view_own',
+            'manuals.read'
           ];
           break;
         default:
-          defaultPermissions = ['view_tasks'];
+          defaultPermissions = ['tasks.view_assigned', 'announcements.read', 'manuals.read'];
       }
       
       setFormData(prev => ({
@@ -133,27 +190,46 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
         case 'admin':
           rolePermissions = ['all'];
           break;
-        case 'trainer':
+        case 'reception':
           rolePermissions = [
-            'view_tasks', 'edit_tasks',
-            'view_schedules', 'edit_schedules',
-            'view_members', 'edit_members',
-            'view_clients', 'edit_clients',
-            'view_trainers', 'edit_trainers'
+            'tasks.view_assigned', 'tasks.view_department', 'tasks.create', 'tasks.update', 'tasks.comment',
+            'schedules.view_all', 'schedules.create', 'schedules.update',
+            'members.view_all', 'members.create', 'members.update',
+            'sales.create', 'sales.view_all',
+            'reports.create', 'reports.view_department',
+            'ot.view_all', 'ot.assign', 'ot.progress_update',
+            'pass.view_all', 'pass.create',
+            'vending.view_all',
+            'announcements.read',
+            'suggestions.create', 'suggestions.view_own',
+            'manuals.read'
           ];
           break;
-        case 'staff':
-          // 부서별 권한 유지 (이미 설정된 권한 유지)
-          rolePermissions = formData.permissions;
+        case 'fitness':
+        case 'tennis':
+        case 'golf':
+          rolePermissions = [
+            'tasks.view_assigned', 'tasks.view_department', 'tasks.create', 'tasks.update', 'tasks.comment',
+            'schedules.view_department', 'schedules.create', 'schedules.update',
+            'members.view_department', 'members.update',
+            'sales.create', 'sales.view_department',
+            'reports.create', 'reports.view_department',
+            'ot.view_assigned', 'ot.progress_update',
+            'vending.view_own',
+            'announcements.read',
+            'suggestions.create', 'suggestions.view_own',
+            'manuals.read'
+          ];
           break;
         default:
-          rolePermissions = ['view_tasks'];
+          // 기존 부서별 권한 유지
+          rolePermissions = formData.permissions;
       }
       
       setFormData(prev => ({
         ...prev,
         role: value as UserRole,
-        permissions: value === 'staff' ? prev.permissions : rolePermissions
+        permissions: value === 'admin' ? ['all'] : rolePermissions
       }));
     }
   };
@@ -214,17 +290,13 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('직원 폼 제출 시작');
-    
     if (!validateForm()) {
-      console.log('폼 유효성 검사 실패');
       return;
     }
     
     setIsSubmitting(true);
     
     try {
-      // 직원 데이터 준비
       const staffData = {
         name: formData.name,
         email: formData.email,
@@ -238,28 +310,17 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
         permissions: formData.permissions
       };
       
-      console.log('직원 데이터:', staffData);
+      const newStaffId = await addStaff?.(staffData);
       
-      // 직원 추가
-      if (addStaff) {
-        console.log('addStaff 함수 호출');
-        const userId = await addStaff(staffData);
-        console.log('직원 추가 결과:', userId);
-        
-        if (userId) {
-          alert('직원이 성공적으로 추가되었습니다.\n이메일: ' + formData.email + '\n비밀번호: ' + formData.password);
-          // 폼 닫기
-          onClose();
-        } else {
-          console.error("직원 추가 실패: userId가 반환되지 않음");
-        }
+      if (newStaffId) {
+        showSuccess('직원이 성공적으로 추가되었습니다.');
+        onClose();
       } else {
-        console.error("addStaff function is not available in UserContext");
-        setErrors(prev => ({ ...prev, form: "직원 추가 기능을 사용할 수 없습니다." }));
+        showError('직원 추가에 실패했습니다.');
       }
     } catch (error) {
-      console.error('직원 추가 중 오류 발생:', error);
-      setErrors(prev => ({ ...prev, form: "직원 추가 중 오류가 발생했습니다." }));
+      logger.error("AddStaffForm handleSubmit error:", error);
+      showError('직원 추가 중 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
     }
@@ -455,11 +516,11 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       required
                     >
                       <option value="">부서 선택</option>
-                      <option value="임원">임원</option>
-                      <option value="리셉션">리셉션</option>
-                      <option value="헬스">헬스</option>
-                      <option value="테니스">테니스</option>
-                      <option value="골프">골프</option>
+                      <option value="admin">관리자</option>
+                      <option value="reception">리셉션</option>
+                      <option value="fitness">헬스</option>
+                      <option value="tennis">테니스</option>
+                      <option value="golf">골프</option>
                     </select>
                     {errors.department && (
                       <p className="mt-1 text-sm text-red-500">{errors.department}</p>
@@ -524,12 +585,18 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       required
                     >
                       <option value="staff">일반 직원</option>
-                      <option value="trainer">트레이너</option>
+                      <option value="reception">리셉션</option>
+                      <option value="fitness">헬스</option>
+                      <option value="tennis">테니스</option>
+                      <option value="golf">골프</option>
                       <option value="admin">관리자</option>
                     </select>
                     <p className="mt-1 text-xs text-slate-500">
                       • 일반 직원: 부서별 기본 권한<br/>
-                      • 트레이너: 회원 관리 및 수업 권한<br/>
+                      • 리셉션: 회원관리, 일정관리, 매출관리 등 프론트 업무 권한<br/>
+                      • 헬스: 회원관리, 일정관리, OT 진행 권한<br/>
+                      • 테니스: 회원관리, 일정관리, OT 진행 권한<br/>
+                      • 골프: 회원관리, 일정관리, OT 진행 권한<br/>
                       • 관리자: 모든 기능 접근 가능
                     </p>
                   </div>
@@ -537,12 +604,12 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
               </div>
               
               {/* 권한 섹션 */}
-              {formData.role === 'staff' && (
+              {formData.role !== 'admin' && (
                 <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
                   <div className="mb-3">
                     <h3 className="font-medium text-slate-900 mb-1">접근 권한 설정</h3>
                     <p className="text-sm text-slate-600">
-                      메인 메뉴의 기능별로 접근 권한을 설정합니다. 
+                      시스템 메뉴별로 접근 권한을 설정합니다. 
                       <span className="text-blue-600 font-medium">조회</span>는 보기만, 
                       <span className="text-blue-600 font-medium">생성/편집</span>은 추가·수정이 가능합니다.
                     </p>
@@ -586,59 +653,28 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
               )}
               
               {/* 역할별 권한 안내 */}
-              {formData.role === 'admin' && (
-                <div className="md:col-span-2 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                  <div className="flex items-start">
-                    <Shield className="w-5 h-5 text-yellow-600 mr-2 mt-0.5" />
-                    <div>
-                      <h3 className="font-medium text-yellow-800">관리자 권한 안내</h3>
-                      <p className="text-sm text-yellow-700 mt-1">
-                        관리자는 모든 기능에 대한 접근 권한을 가집니다. 시스템 전체 설정을 변경하고 모든 데이터에 접근할 수 있습니다. 
-                        관리자 권한은 꼭 필요한 직원에게만 부여해야 합니다.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {formData.role === 'trainer' && (
+              {formData.role && (
                 <div className="md:col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-200">
                   <div className="flex items-start">
-                    <User className="w-5 h-5 text-blue-600 mr-2 mt-0.5" />
+                    <Settings className="w-5 h-5 text-blue-600 mr-2 mt-0.5" />
                     <div>
-                      <h3 className="font-medium text-blue-800">트레이너 권한 안내</h3>
+                      <h3 className="font-medium text-blue-800">
+                        {formData.role === 'admin' ? '관리자' : 
+                         formData.role === 'reception' ? '리셉션' :
+                         formData.role === 'fitness' ? '피트니스' :
+                         formData.role === 'tennis' ? '테니스' :
+                         formData.role === 'golf' ? '골프' : '직원'} 권한
+                      </h3>
                       <p className="text-sm text-blue-700 mt-1">
-                        트레이너는 회원 관리, 일정 관리, 업무 관리 등의 권한을 가집니다. 
-                        담당 회원의 운동 프로그램과 일정을 관리할 수 있습니다.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {formData.role === 'staff' && formData.department && (
-                <div className="md:col-span-2 bg-green-50 p-4 rounded-lg border border-green-200">
-                  <div className="flex items-start">
-                    <Settings className="w-5 h-5 text-green-600 mr-2 mt-0.5" />
-                    <div>
-                      <h3 className="font-medium text-green-800">{formData.department} 부서 기본 권한</h3>
-                      <p className="text-sm text-green-700 mt-1">
-                        {formData.department === '임원' && '임원은 모든 권한을 가집니다.'}
-                        {formData.department === '리셉션' && '리셉션은 회원관리, 일정관리, 매출관리 등 프론트 업무 권한을 가집니다.'}
-                        {formData.department === '헬스' && '헬스 부서는 회원관리, 일정관리, 트레이너 조회 권한을 가집니다.'}
-                        {formData.department === '테니스' && '테니스 부서는 회원관리, 일정관리, 트레이너 조회 권한을 가집니다.'}
-                        {formData.department === '골프' && '골프 부서는 회원관리, 일정관리, 트레이너 조회 권한을 가집니다.'}
+                        {formData.role === 'admin' && '관리자는 모든 시스템 권한을 가집니다.'}
+                        {formData.role === 'reception' && '리셉션은 회원관리, 일정관리, 매출관리, OT배정 등 프론트 업무 권한을 가집니다.'}
+                        {formData.role === 'fitness' && '피트니스 부서는 회원관리, 일정관리, OT 진행 권한을 가집니다.'}
+                        {formData.role === 'tennis' && '테니스 부서는 회원관리, 일정관리, OT 진행 권한을 가집니다.'}
+                        {formData.role === 'golf' && '골프 부서는 회원관리, 일정관리, OT 진행 권한을 가집니다.'}
                         <br />필요에 따라 추가 권한을 선택하거나 제거할 수 있습니다.
                       </p>
                     </div>
                   </div>
-                </div>
-              )}
-              
-              {/* 에러 메시지 표시 */}
-              {errors.form && (
-                <div className="md:col-span-2 bg-red-50 p-4 rounded-lg border border-red-200">
-                  <p className="text-sm text-red-700">{errors.form}</p>
                 </div>
               )}
             </div>

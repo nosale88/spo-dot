@@ -104,7 +104,7 @@ const Suggestions = () => {
     if (viewMode === 'all') return true;
     return suggestion.type === viewMode;
   });
-
+  
   // 통계 계산
   const staffSuggestions = suggestions.filter(s => s.type === 'staff');
   const customerSuggestions = suggestions.filter(s => s.type === 'customer');
@@ -224,14 +224,14 @@ const Suggestions = () => {
 
       {/* 탭 네비게이션 */}
       <div className="bg-white p-1 rounded-lg shadow mb-6 inline-flex">
-        <button
+              <button
           onClick={() => setActiveTab('all')}
-          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
             activeTab === 'all'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
           <Users size={16} />
           전체 건의사항
         </button>
@@ -245,19 +245,19 @@ const Suggestions = () => {
         >
           <MessageSquare size={16} />
           내 건의사항
-        </button>
-        <button
+              </button>
+              <button
           onClick={() => setActiveTab('create')}
-          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
             activeTab === 'create'
-              ? 'bg-green-600 text-white shadow-sm'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
+                    ? 'bg-green-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
           <Send size={16} />
           새 건의사항 작성
-        </button>
-      </div>
+              </button>
+          </div>
 
       {/* 메인 컨텐츠 */}
       {activeTab === 'create' ? (
@@ -269,39 +269,39 @@ const Suggestions = () => {
               <div className="flex items-center gap-2 text-sm text-green-600">
                 <Save size={16} />
                 <span>마지막 저장: {format(parseISO(lastSaved), 'HH:mm:ss')}</span>
-              </div>
+                      </div>
             )}
           </div>
 
           <form onSubmit={handleNewSuggestionSubmit}>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block mb-2 text-sm font-medium text-slate-700">건의사항 유형</label>
-                <div className="flex space-x-4">
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input 
-                      type="radio" 
-                      name="suggestionType" 
-                      value="staff" 
-                      checked={newSuggestionType === 'staff'}
-                      onChange={(e) => setNewSuggestionType(e.target.value as 'staff' | 'customer')}
+              <label className="block mb-2 text-sm font-medium text-slate-700">건의사항 유형</label>
+              <div className="flex space-x-4">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="suggestionType" 
+                    value="staff" 
+                    checked={newSuggestionType === 'staff'}
+                    onChange={(e) => setNewSuggestionType(e.target.value as 'staff' | 'customer')}
                       className="form-radio h-4 w-4 text-blue-600"
-                    />
-                    <UserCheck size={16} className="text-blue-500" />
+                  />
+                  <UserCheck size={16} className="text-blue-500" />
                     <span className="text-sm text-slate-700">직원</span>
-                  </label>
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input 
-                      type="radio" 
-                      name="suggestionType" 
-                      value="customer" 
-                      checked={newSuggestionType === 'customer'}
-                      onChange={(e) => setNewSuggestionType(e.target.value as 'staff' | 'customer')}
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="suggestionType" 
+                    value="customer" 
+                    checked={newSuggestionType === 'customer'}
+                    onChange={(e) => setNewSuggestionType(e.target.value as 'staff' | 'customer')}
                       className="form-radio h-4 w-4 text-green-600"
-                    />
-                    <User size={16} className="text-green-500" />
+                  />
+                  <User size={16} className="text-green-500" />
                     <span className="text-sm text-slate-700">고객</span>
-                  </label>
+                </label>
                 </div>
               </div>
 
@@ -346,8 +346,8 @@ const Suggestions = () => {
             </div>
 
             <div className="flex gap-3">
-              <button 
-                type="submit"
+            <button 
+              type="submit"
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
               >
                 <Send size={16} />
@@ -475,9 +475,9 @@ const Suggestions = () => {
                 <div className="flex items-center gap-2 mb-2">
                   {selectedSuggestion.type === 'staff' ? (
                     <UserCheck size={16} className="text-blue-500" />
-                  ) : (
+              ) : (
                     <User size={16} className="text-green-500" />
-                  )}
+              )}
                   <span className="text-sm font-medium text-slate-600">
                     {selectedSuggestion.type === 'staff' ? '직원' : '고객'} 건의사항
                   </span>
@@ -520,7 +520,7 @@ const Suggestions = () => {
               )}
             </div>
           </div>
-        </div>
+      </div>
       )}
     </div>
   );

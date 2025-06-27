@@ -216,7 +216,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
               />
             </div>
           </div>
-
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="priority" className="block text-sm font-medium text-slate-700 mb-1">
@@ -272,13 +272,13 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
                 직원 목록을 불러오는 중...
               </div>
             ) : (
-              <Controller
+            <Controller
                 name="assignedTo"
-                control={control}
+              control={control}
                 rules={{ required: '담당자는 필수입니다.' }}
-                render={({ field }) => (
+              render={({ field }) => (
                   <select
-                    {...field}
+                  {...field}
                     id="assignedTo"
                     className={`w-full p-2 border rounded-md ${errors.assignedTo ? 'border-red-500' : 'border-slate-300'}`}
                   >

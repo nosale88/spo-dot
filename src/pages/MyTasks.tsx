@@ -28,6 +28,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import '../styles/calendar.css'; // Import custom calendar styles
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
+import { logger, showSuccess, showError, confirmDelete } from '../utils/notifications';
 
 const locales = {
   'ko': ko,
@@ -91,6 +92,11 @@ const MyTasks = () => {
 
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
+  // 디버깅을 위한 로그
+  useEffect(() => {
+    logger.debug('editingTask 상태 변경:', editingTask);
+  }, [editingTask]);
+
   // 현재 사용자에게 배정된 업무만 필터링
   const myTasks = useMemo(() => {
     if (!user) return [];
@@ -123,17 +129,17 @@ const MyTasks = () => {
       
       if (result) {
         // 성공 시 폼 초기화
-        setCurrentHandover('');
-        setSuccess('인계사항이 성공적으로 저장되었습니다.');
-        
-        // 성공 메시지 자동 제거
-        setTimeout(() => setSuccess(null), 3000);
+      setCurrentHandover('');
+      setSuccess('인계사항이 성공적으로 저장되었습니다.');
+      
+      // 성공 메시지 자동 제거
+      setTimeout(() => setSuccess(null), 3000);
       } else {
         setError('인계사항 저장에 실패했습니다.');
         setTimeout(() => setError(null), 5000);
       }
     } catch (err) {
-      console.error('인계사항 저장 오류:', err);
+      logger.error('인계사항 저장 오류', err);
       setError('인계사항 저장에 실패했습니다.');
       
       // 에러 메시지 자동 제거
@@ -178,11 +184,12 @@ const MyTasks = () => {
       return;
     }
     
-    if (window.confirm('정말로 이 업무를 삭제하시겠습니까?')) {
-      deleteTask(taskId);
-      setSuccess('업무가 삭제되었습니다.');
-      setTimeout(() => setSuccess(null), 3000);
-    }
+    confirmDelete('업무').then((confirmed) => {
+      if (confirmed) {
+        deleteTask(taskId);
+        showSuccess('업무가 삭제되었습니다.');
+      }
+    });
   };
 
   const handleSelectSlot = (slotInfo: SlotInfo) => {
@@ -345,9 +352,9 @@ const MyTasks = () => {
             {(hasPermission('tasks.create') || !user) && (
               <button 
                 onClick={() => {
-                  console.log('업무추가 버튼 클릭됨');
-                  console.log('현재 사용자:', user);
-                  console.log('tasks.create 권한:', hasPermission('tasks.create'));
+                  logger.debug('업무추가 버튼 클릭됨');
+                  logger.debug('현재 사용자:', user);
+                  logger.debug('tasks.create 권한:', hasPermission('tasks.create'));
                   setSelectedDateForNewTask(undefined); // Clear any previously selected date for general add
                   setIsAddTaskModalOpen(true);
                 }} 
@@ -392,7 +399,10 @@ const MyTasks = () => {
                           <div className="flex-1">
                             <p 
                               className="font-semibold text-slate-800 hover:text-blue-600 cursor-pointer transition-colors"
-                              onClick={() => setEditingTask(task)}
+                              onClick={() => {
+                                logger.debug('업무 클릭됨:', task.title, task);
+                                setEditingTask(task);
+                              }}
                               title="클릭하여 상세 보기"
                             >
                               {task.title}
@@ -441,9 +451,11 @@ const MyTasks = () => {
                             {hasPermission('tasks.delete') && (
                               <button 
                                 onClick={() => {
-                                  if (window.confirm('정말로 이 업무를 삭제하시겠습니까?')) {
-                                    handleTaskDelete(task.id);
-                                  }
+                                  confirmDelete('업무').then((confirmed) => {
+                                    if (confirmed) {
+                                      handleTaskDelete(task.id);
+                                    }
+                                  });
                                 }} 
                                 className="text-slate-500 hover:text-red-600 transition-colors" 
                                 title="삭제"
@@ -771,8 +783,12 @@ const MyTasks = () => {
         <EditTaskModal 
           task={editingTask}
           isOpen={!!editingTask} 
-          onClose={() => setEditingTask(null)}
+          onClose={() => {
+            logger.debug('모달 닫기 클릭됨');
+            setEditingTask(null);
+          }}
           onSave={(updates: Partial<Task>) => {
+            logger.debug('업무 저장:', updates);
             updateTask(editingTask.id, updates);
             setEditingTask(null);
           }}
@@ -796,7 +812,12 @@ const EditTaskModal = ({ task, isOpen, onClose, onSave }: {
   const [endTime, setEndTime] = useState(task.endTime || '');
   const { hasPermission } = useAuth();
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    logger.debug('EditTaskModal: isOpen이 false라서 렌더링하지 않음');
+    return null;
+  }
+  
+  logger.debug('EditTaskModal: 렌더링 중, task:', task.title);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -844,7 +865,8 @@ const EditTaskModal = ({ task, isOpen, onClose, onSave }: {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      style={{ zIndex: 9999 }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <motion.div 
@@ -871,27 +893,27 @@ const EditTaskModal = ({ task, isOpen, onClose, onSave }: {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
+          <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">제목</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  required
-                />
-              </div>
+              required
+            />
+          </div>
               
-              <div>
+          <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">설명</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
                   rows={4}
                   placeholder="업무에 대한 상세 설명을 입력하세요"
-                />
-              </div>
+            />
+          </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -915,23 +937,23 @@ const EditTaskModal = ({ task, isOpen, onClose, onSave }: {
               </div>
               
               <div className="flex justify-end space-x-3 pt-6 border-t border-slate-200">
-                <button
-                  type="button"
+            <button
+              type="button"
                   onClick={() => setIsEditMode(false)}
                   className="px-6 py-2.5 text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors font-medium"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
                   className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center space-x-2"
-                >
+            >
                   <Save size={18} />
                   <span>저장</span>
-                </button>
-              </div>
-            </form>
+            </button>
           </div>
+        </form>
+      </div>
         ) : (
           // 상세보기 모드
           <div className="p-6">
@@ -956,7 +978,7 @@ const EditTaskModal = ({ task, isOpen, onClose, onSave }: {
                 >
                   <X size={24} />
                 </button>
-              </div>
+    </div>
             </div>
 
             <div className="space-y-6">

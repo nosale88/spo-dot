@@ -347,39 +347,39 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       fetchSchedules();
     });
   }, [migrateLocalStorageData, fetchSchedules]);
-
+  
   // 일정 필터링
   const filterSchedules = (options: FilterOptions) => {
     let filtered = [...schedules];
-
+    
     if (options.date) {
       filtered = filtered.filter(schedule => schedule.date === options.date);
     }
-
+    
     if (options.trainerId) {
       filtered = filtered.filter(schedule => schedule.trainerId === options.trainerId);
     }
-
+    
     if (options.clientId) {
       filtered = filtered.filter(schedule => schedule.clientId === options.clientId);
     }
-
+    
     if (options.type) {
       filtered = filtered.filter(schedule => schedule.type === options.type);
     }
-
+    
     if (options.searchQuery) {
       const query = options.searchQuery.toLowerCase();
-      filtered = filtered.filter(schedule =>
+      filtered = filtered.filter(schedule => 
         schedule.clientName.toLowerCase().includes(query) ||
         schedule.trainerName.toLowerCase().includes(query) ||
         (schedule.notes && schedule.notes.toLowerCase().includes(query))
       );
     }
-
+    
     setFilteredSchedules(filtered);
   };
-
+  
   // 일정 추가
   const addSchedule = async (newSchedule: Omit<Schedule, 'id' | 'createdAt' | 'updatedAt' | 'isCompleted'>): Promise<string | null> => {
     try {
@@ -410,8 +410,8 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
 
       if (newSupabaseSchedule) {
         const convertedSchedule = convertSupabaseScheduleToSchedule(newSupabaseSchedule);
-        
-        // 반복 일정 처리
+    
+    // 반복 일정 처리
         const allSchedules = generateRecurrentSchedules(convertedSchedule);
         
         // 추가 반복 일정이 있으면 Supabase에 추가
@@ -448,19 +448,19 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
   };
-
+  
   // 반복 일정 생성
   const generateRecurrentSchedules = (schedule: Schedule): Schedule[] => {
     if (!schedule.recurrence || schedule.recurrence === 'none') {
       return [schedule];
     }
-
+    
     const schedules: Schedule[] = [schedule];
     const startDate = new Date(schedule.date);
     const endDate = schedule.recurrenceEndDate ? new Date(schedule.recurrenceEndDate) : addDays(startDate, 365);
 
     let currentDate = new Date(startDate);
-
+    
     while (currentDate <= endDate) {
       let nextDate: Date;
 
@@ -480,8 +480,8 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (nextDate <= endDate) {
-        schedules.push({
-          ...schedule,
+      schedules.push({
+        ...schedule,
           id: `${schedule.id}-${format(nextDate, 'yyyy-MM-dd')}`,
           date: format(nextDate, 'yyyy-MM-dd'),
           createdAt: new Date().toISOString(),
@@ -491,13 +491,15 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
 
       currentDate = nextDate;
     }
-
+    
     return schedules;
   };
-
+  
   // 일정 수정
   const updateSchedule = async (id: string, updatedData: Partial<Schedule>): Promise<boolean> => {
     try {
+      console.log('updateSchedule 호출:', { id, updatedData });
+      
       const updatePayload: any = {};
       
       if (updatedData.clientName !== undefined) updatePayload.client_name = updatedData.clientName;
@@ -513,6 +515,8 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       if (updatedData.recurrenceEndDate !== undefined) updatePayload.recurrence_end_date = updatedData.recurrenceEndDate;
       if (updatedData.isCompleted !== undefined) updatePayload.is_completed = updatedData.isCompleted;
 
+      console.log('Supabase 업데이트 payload:', updatePayload);
+
       const { error: updateError } = await supabase
         .from('schedules')
         .update(updatePayload)
@@ -524,6 +528,8 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
+      console.log('Supabase 업데이트 성공, 데이터 재조회 중...');
+      
       // 상태 업데이트
       await fetchSchedules();
       return true;
@@ -533,7 +539,7 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
-
+  
   // 일정 삭제
   const deleteSchedule = async (id: string): Promise<boolean> => {
     try {
@@ -557,21 +563,24 @@ export const ScheduleProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
-
+  
   // 일정 완료 상태 변경
   const markScheduleComplete = async (id: string, isCompleted: boolean): Promise<boolean> => {
-    return await updateSchedule(id, { isCompleted });
+    console.log('markScheduleComplete 호출:', { id, isCompleted });
+    const result = await updateSchedule(id, { isCompleted });
+    console.log('markScheduleComplete 결과:', result);
+    return result;
   };
-
+  
   const contextValue: ScheduleContextType = {
-    schedules,
-    filteredSchedules,
+        schedules, 
+        filteredSchedules, 
     loading,
     error,
-    filterSchedules,
-    addSchedule,
-    updateSchedule,
-    deleteSchedule,
+        filterSchedules, 
+        addSchedule, 
+        updateSchedule, 
+        deleteSchedule, 
     markScheduleComplete,
     fetchSchedules
   };

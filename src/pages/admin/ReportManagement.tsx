@@ -62,37 +62,37 @@ const ReportManagement = () => {
     setSelectedReport(report);
     setShowReportDetails(true);
   };
-
+  
   const handleCreateReport = () => {
     setSelectedReport(null);
     setSelectedTemplate(null);
     setShowCreateForm(true);
   };
-
+  
   const handleCreateFromTemplate = (template: any) => {
     setSelectedTemplate(template);
     setShowCreateForm(true);
     setShowTemplates(false);
   };
-
+  
   const handleEditReport = (report: Report) => {
     setSelectedReport(report);
     setShowEditForm(true);
     setShowReportDetails(false);
   };
-
+  
   const handleCloseDetails = () => {
     setShowReportDetails(false);
     setSelectedReport(null);
   };
-
+  
   const handleCloseForm = () => {
     setShowCreateForm(false);
     setShowEditForm(false);
     setSelectedReport(null);
     setSelectedTemplate(null);
   };
-
+  
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -220,11 +220,11 @@ const ReportManagement = () => {
         </div>
       ) : (
         <>
-          {/* Reports list */}
-          <ReportsList 
-            onSelectReport={handleSelectReport}
-            onCreateReport={handleCreateReport}
-          />
+      {/* Reports list */}
+      <ReportsList 
+        onSelectReport={handleSelectReport}
+        onCreateReport={handleCreateReport}
+      />
         </>
       )}
       

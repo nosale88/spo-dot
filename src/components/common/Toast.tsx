@@ -62,7 +62,7 @@ const Toast: React.FC<ToastProps> = ({ toast, onRemove }) => {
   return (
     <AnimatePresence>
       {isVisible && (
-        <motion.div
+          <motion.div
           initial={{ opacity: 0, x: 300, scale: 0.3 }}
           animate={{ opacity: 1, x: 0, scale: 1 }}
           exit={{ opacity: 0, x: 300, scale: 0.5 }}
@@ -95,19 +95,19 @@ const Toast: React.FC<ToastProps> = ({ toast, onRemove }) => {
                 )}
               </div>
               <div className="ml-4 flex-shrink-0 flex">
-                <button
+              <button
                   onClick={() => {
                     setIsVisible(false);
                     setTimeout(() => onRemove(toast.id), 300);
                   }}
                   className="inline-flex text-slate-400 hover:text-slate-500 focus:outline-none"
-                >
+              >
                   <X className="w-4 h-4" />
-                </button>
+              </button>
               </div>
             </div>
-          </div>
-        </motion.div>
+            </div>
+          </motion.div>
       )}
     </AnimatePresence>
   );

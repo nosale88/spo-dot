@@ -215,26 +215,26 @@ export const SuggestionProvider: React.FC<{ children: ReactNode }> = ({ children
   const generateSampleSuggestionsInSupabase = async () => {
     const sampleSuggestions = [
       {
-        title: '체육관 시설 개선 건의',
-        content: '러닝머신 중 2대가 고장나 있습니다. 빠른 수리 부탁드립니다.',
+    title: '체육관 시설 개선 건의',
+    content: '러닝머신 중 2대가 고장나 있습니다. 빠른 수리 부탁드립니다.',
         category: 'facility' as const,
         author_id: user?.id,
         author_name: user?.name || '김민수',
         status: 'pending' as const
-      },
-      {
-        title: '샤워실 온수 문제',
-        content: '아침 시간에 샤워실 온수가 잘 나오지 않습니다. 개선해주세요.',
+  },
+  {
+    title: '샤워실 온수 문제',
+    content: '아침 시간에 샤워실 온수가 잘 나오지 않습니다. 개선해주세요.',
         category: 'facility' as const,
         author_name: '익명 사용자',
         status: 'approved' as const,
         admin_response: '확인 결과 보일러 설정에 문제가 있었습니다. 현재는 정상적으로 온수가 공급됩니다. 이용에 불편을 드려 죄송합니다.',
         admin_response_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
         admin_response_by: '관리자'
-      },
-      {
-        title: '요가 수업 시간 추가 요청',
-        content: '저녁 시간대 요가 수업이 너무 인기가 많아 참여하기 어렵습니다. 추가 개설을 검토해주시면 감사하겠습니다.',
+  },
+  {
+    title: '요가 수업 시간 추가 요청',
+    content: '저녁 시간대 요가 수업이 너무 인기가 많아 참여하기 어렵습니다. 추가 개설을 검토해주시면 감사하겠습니다.',
         category: 'service' as const,
         author_name: '박서준',
         status: 'pending' as const
@@ -306,8 +306,8 @@ export const SuggestionProvider: React.FC<{ children: ReactNode }> = ({ children
       const { data: newSuggestion, error: insertError } = await supabase
         .from('suggestions')
         .insert({
-          title,
-          content,
+      title,
+      content,
           category: supabaseCategory,
           author_id: createdBy?.id,
           author_name: createdBy ? createdBy.name : '익명 사용자',

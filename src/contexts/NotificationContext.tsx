@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabaseApiService } from '../services/supabaseApi';
+import { Announcement, Task, Suggestion } from '../types/index';
 
 // 알림 유형 타입
 export type NotificationType = 'info' | 'warning' | 'success' | 'error';
@@ -110,8 +111,8 @@ async function getUnreadAnnouncementsCount(userId: string): Promise<number> {
     const announcements = response.data;
     
     // 사용자가 읽지 않은 공지사항 수 (active하고 읽지 않은 것들)
-    const unreadCount = announcements.filter(ann => 
-      ann.isActive && !ann.readBy?.includes(userId)
+    const unreadCount = announcements.filter((ann: any) => 
+      ann.isActive !== false && (!ann.readBy || !ann.readBy.includes(userId))
     ).length;
     
     return unreadCount;
@@ -123,12 +124,10 @@ async function getUnreadAnnouncementsCount(userId: string): Promise<number> {
 
 async function getMyPendingTasksCount(userId: string): Promise<number> {
   try {
-    const response = await supabaseApiService.tasks.getAll({ 
-      status: 'pending' 
-    });
+    const response = await supabaseApiService.tasks.getAll();
     
     // 나에게 할당된 대기 중인 업무 수
-    const myPendingTasks = response.data.filter(task => 
+    const myPendingTasks = response.data.filter((task: any) => 
       task.assigneeId === userId && task.status === 'pending'
     ).length;
     
@@ -176,7 +175,8 @@ async function getNewManualsCount(): Promise<number> {
 
 async function getUnreadNotificationsCount(userId: string): Promise<number> {
   try {
-    const notifications = await supabaseApiService.notifications.getAll();
+    const response = await supabaseApiService.notifications.getAll();
+    const notifications = response.data;
     
     // 읽지 않은 알림 수
     const unreadCount = notifications.filter(notification => 

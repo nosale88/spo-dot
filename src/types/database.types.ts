@@ -253,31 +253,49 @@ export type Database = {
       tasks: {
         Row: {
           assigned_to: string | null
+          category: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
+          due_date: string | null
+          end_time: string | null
           id: string
+          priority: string | null
+          start_time: string | null
           status: string
+          tags: Json | null
           title: string
           updated_at: string | null
         }
         Insert: {
           assigned_to?: string | null
+          category?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          due_date?: string | null
+          end_time?: string | null
           id?: string
+          priority?: string | null
+          start_time?: string | null
           status?: string
+          tags?: Json | null
           title: string
           updated_at?: string | null
         }
         Update: {
           assigned_to?: string | null
+          category?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          due_date?: string | null
+          end_time?: string | null
           id?: string
+          priority?: string | null
+          start_time?: string | null
           status?: string
+          tags?: Json | null
           title?: string
           updated_at?: string | null
         }
@@ -297,6 +315,277 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      task_comments: {
+        Row: {
+          author_id: string | null
+          author_name: string
+          content: string
+          created_at: string | null
+          id: string
+          task_id: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          author_name: string
+          content: string
+          created_at?: string | null
+          id?: string
+          task_id?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_task_comments_task_id"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_task_comments_author_id"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_reports: {
+        Row: {
+          author_id: string | null
+          author_name: string
+          content: string | null
+          created_at: string | null
+          date: string
+          id: string
+          images: Json | null
+          issues: string | null
+          tasks: Json | null
+          tomorrow: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          author_name: string
+          content?: string | null
+          created_at?: string | null
+          date: string
+          id?: string
+          images?: Json | null
+          issues?: string | null
+          tasks?: Json | null
+          tomorrow?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string
+          content?: string | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          images?: Json | null
+          issues?: string | null
+          tasks?: Json | null
+          tomorrow?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_daily_reports_author_id"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcements: {
+        Row: {
+          attachments: Json | null
+          author_id: string | null
+          author_name: string
+          content: string
+          created_at: string | null
+          expiry_date: string | null
+          id: string
+          is_active: boolean | null
+          is_pinned: boolean | null
+          priority: string | null
+          read_by: Json | null
+          tags: Json | null
+          target_roles: Json | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          attachments?: Json | null
+          author_id?: string | null
+          author_name: string
+          content: string
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_pinned?: boolean | null
+          priority?: string | null
+          read_by?: Json | null
+          tags?: Json | null
+          target_roles?: Json | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          attachments?: Json | null
+          author_id?: string | null
+          author_name?: string
+          content?: string
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_pinned?: boolean | null
+          priority?: string | null
+          read_by?: Json | null
+          tags?: Json | null
+          target_roles?: Json | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_announcements_author_id"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedules: {
+        Row: {
+          client_id: string | null
+          client_name: string
+          created_at: string | null
+          date: string
+          end_time: string
+          id: string
+          is_completed: boolean | null
+          notes: string | null
+          recurrence: string | null
+          recurrence_end_date: string | null
+          start_time: string
+          trainer_id: string
+          trainer_name: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          client_name: string
+          created_at?: string | null
+          date: string
+          end_time: string
+          id?: string
+          is_completed?: boolean | null
+          notes?: string | null
+          recurrence?: string | null
+          recurrence_end_date?: string | null
+          start_time: string
+          trainer_id: string
+          trainer_name: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          client_name?: string
+          created_at?: string | null
+          date?: string
+          end_time?: string
+          id?: string
+          is_completed?: boolean | null
+          notes?: string | null
+          recurrence?: string | null
+          recurrence_end_date?: string | null
+          start_time?: string
+          trainer_id?: string
+          trainer_name?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_schedules_trainer_id"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_schedules_client_id"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suggestions: {
+        Row: {
+          admin_response: string | null
+          admin_response_at: string | null
+          admin_response_by: string | null
+          author_id: string | null
+          author_name: string
+          category: string | null
+          content: string
+          created_at: string | null
+          id: string
+          priority: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          admin_response?: string | null
+          admin_response_at?: string | null
+          admin_response_by?: string | null
+          author_id?: string | null
+          author_name: string
+          category?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          priority?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          admin_response?: string | null
+          admin_response_at?: string | null
+          admin_response_by?: string | null
+          author_id?: string | null
+          author_name?: string
+          category?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          priority?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       teams: {
         Row: {

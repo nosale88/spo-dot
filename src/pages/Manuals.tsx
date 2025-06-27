@@ -599,8 +599,8 @@ const ManualViewer = ({ manual, onClose, onEdit, onDelete }: ManualViewerProps) 
                 {manual.content}
               </ReactMarkdown>
             </div>
-            </div>
           </div>
+        </div>
       </motion.div>
     </motion.div>
   );

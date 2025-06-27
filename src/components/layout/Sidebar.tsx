@@ -235,37 +235,43 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
           </PermissionGate>
 
           {/* 공지사항 - 모든 사용자 */}
-          <SidebarLink 
-            name="공지사항" 
-            path="/dashboard/announcements" 
-            icon={<Megaphone size={22} />} 
-            badge={0}
-            open={open}
-            isMobile={isMobile}
-            setOpen={setOpen}
-          />
+          <PermissionGate permission="announcements.read">
+            <SidebarLink 
+              name="공지사항" 
+              path="/dashboard/announcements" 
+              icon={<Megaphone size={22} />} 
+              badge={0}
+              open={open}
+              isMobile={isMobile}
+              setOpen={setOpen}
+            />
+          </PermissionGate>
 
           {/* 매뉴얼 - 모든 사용자 */}
-          <SidebarLink 
-            name="매뉴얼" 
-            path="/dashboard/manuals" 
-            icon={<BookOpen size={22} />} 
-            badge={0}
-            open={open}
-            isMobile={isMobile}
-            setOpen={setOpen}
-          />
+          <PermissionGate permission="manuals.read">
+            <SidebarLink 
+              name="매뉴얼" 
+              path="/dashboard/manuals" 
+              icon={<BookOpen size={22} />} 
+              badge={0}
+              open={open}
+              isMobile={isMobile}
+              setOpen={setOpen}
+            />
+          </PermissionGate>
 
-          {/* 건의사항 - 모든 사용자 */}
-          <SidebarLink 
-            name="건의사항" 
-            path="/dashboard/suggestions" 
-            icon={<MessageSquare size={22} />} 
-            badge={0}
-            open={open}
-            isMobile={isMobile}
-            setOpen={setOpen}
-          />
+          {/* 건의사항 - 건의사항 생성/조회 권한이 있는 사용자 */}
+          <PermissionGate permission={['suggestions.create', 'suggestions.read']}>
+            <SidebarLink 
+              name="건의사항" 
+              path="/dashboard/suggestions" 
+              icon={<MessageSquare size={22} />} 
+              badge={0}
+              open={open}
+              isMobile={isMobile}
+              setOpen={setOpen}
+            />
+          </PermissionGate>
 
           {/* 매출/업무 관련 메뉴 */}
           {open && (

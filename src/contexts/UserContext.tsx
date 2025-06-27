@@ -3,9 +3,8 @@ import { Team } from '../types';
 // Supabase 클라이언트 임포트
 import { supabase } from '../supabaseClient';
 import type { Database } from '../types/database.types';
-
-// 사용자 역할 타입
-export type UserRole = 'client' | 'trainer' | 'admin' | 'staff';
+// 권한 시스템 import
+import { UserRole } from '../types/permissions';
 
 // 사용자 성별 타입
 export type Gender = 'male' | 'female' | 'other';
@@ -31,9 +30,15 @@ export interface User {
   password?: string;
 }
 
-// 고객 인터페이스
-export interface Client extends User {
-  role: 'client';
+// 고객 인터페이스 (별도 관리)
+export interface Client {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: UserStatus;
+  createdAt: string;
+  updatedAt: string;
   dateOfBirth?: string;
   gender?: Gender;
   address?: string;
@@ -49,9 +54,15 @@ export interface Client extends User {
   assignedTrainerName?: string;
 }
 
-// 트레이너 인터페이스
-export interface Trainer extends User {
-  role: 'trainer';
+// 트레이너 인터페이스 (별도 관리)
+export interface Trainer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: UserStatus;
+  createdAt: string;
+  updatedAt: string;
   dateOfBirth?: string;
   gender?: Gender;
   address?: string;
@@ -79,7 +90,7 @@ export interface Trainer extends User {
   experience?: string;
 }
 
-// 직원 인터페이스
+// 직원 인터페이스 - 새로운 권한 시스템 사용
 export interface Staff extends User {
   id: string;
   employeeId?: string;
@@ -87,7 +98,7 @@ export interface Staff extends User {
   position?: string;
   hireDate?: string;
   department?: string;
-  permissions?: string[];
+  permissions?: string[]; // 개별 설정된 권한 배열
   name: string;
   email: string;
   phone: string;
@@ -238,10 +249,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       console.log('직원 추가 시도:', staffData);
       
-      // Supabase에서 'staff' 역할이 허용되지 않는 경우 'admin'으로 설정
-      const roleToUse = staffData.role === 'staff' ? 'admin' : staffData.role || 'admin';
-      
-      // 기본 사용자 데이터 추가
+      // 기본 사용자 데이터 추가 - role을 그대로 사용
       const { data, error } = await supabase
         .from('users')
         .insert([
@@ -249,7 +257,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             name: staffData.name,
             email: staffData.email,
             password: staffData.password || '123456', // 기본 비밀번호
-            role: roleToUse, // 'admin' 역할 사용
+            role: staffData.role, // UserRole 그대로 사용
             phone: staffData.phone || '',
             department: staffData.department || '',
             position: staffData.position || '',
@@ -278,7 +286,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const newStaff = {
         ...staffData,
         id: data[0].id,
-        role: data[0].role, // 실제로 저장된 role 사용
+        role: data[0].role as UserRole,
         createdAt: data[0].created_at || new Date().toISOString(),
         updatedAt: data[0].updated_at || new Date().toISOString(),
       };
@@ -302,9 +310,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
   // 직원 수정 함수
   const updateStaffMember = async (id: string, staffData: Partial<Staff>): Promise<boolean> => {
     try {
-      // Supabase에서 'staff' 역할이 허용되지 않는 경우 'admin'으로 설정
-      const roleToUse = staffData.role === 'staff' ? 'admin' : staffData.role;
-      
       // Supabase에 업데이트
       const { error } = await supabase
         .from('users')
@@ -312,7 +317,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           name: staffData.name,
           email: staffData.email,
           phone: staffData.phone,
-          role: roleToUse,
+          role: staffData.role,
           status: staffData.status,
           department: staffData.department,
           position: staffData.position,

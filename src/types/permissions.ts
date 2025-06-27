@@ -331,23 +331,197 @@ export const getDataAccessLevel = (userRole: UserRole, dataType: string): DataAc
   return roleDataAccess[userRole]?.[dataType] || 'none';
 };
 
-export const canModifyData = (userRole: UserRole, dataType: string, dataOwnerId?: string, currentUserId?: string): boolean => {
+export const canModifyData = (userRole: UserRole, dataType: string, dataOwnerId?: string, currentUserId?: string, userDepartment?: string, itemDepartment?: string, assignedUsers?: string[]): boolean => {
   const accessLevel = getDataAccessLevel(userRole, dataType);
   
   switch (accessLevel) {
     case 'all':
       return true;
+      
     case 'department':
-      // TODO: 부서 정보를 활용한 검사 구현
-      return true;
-    case 'assigned':
-      // TODO: 배정된 데이터인지 검사 구현
-      return true;
-    case 'own':
+      // 부서 정보를 활용한 엄격한 검사
+      if (!userDepartment) return false;
+      
+      // 관리자는 모든 부서 데이터 접근 가능
+      if (userRole === 'admin') return true;
+      
+      // 같은 부서만 접근 가능
+      if (itemDepartment) {
+        return userDepartment === itemDepartment;
+      }
+      
+      // 부서 정보가 없는 경우 소유자 기반 검사
       return dataOwnerId === currentUserId;
+      
+    case 'assigned':
+      // 배정된 데이터인지 엄격한 검사
+      if (!currentUserId) return false;
+      
+      // 배정된 사용자 목록이 있는 경우
+      if (assignedUsers && Array.isArray(assignedUsers)) {
+        return assignedUsers.includes(currentUserId);
+      }
+      
+      // 배정 정보가 없으면 소유자인지 확인
+      return dataOwnerId === currentUserId;
+      
+    case 'own':
+      // 본인 소유 데이터만 접근 가능
+      if (!currentUserId || !dataOwnerId) return false;
+      return dataOwnerId === currentUserId;
+      
     case 'none':
     default:
       return false;
+  }
+};
+
+// 🔐 보안 강화된 데이터 필터링 함수
+export const filterDataByPermission = <T extends { 
+  created_by?: string; 
+  assigned_to?: string | string[]; 
+  department?: string; 
+  id?: string 
+}>(
+  data: T[], 
+  userRole: UserRole, 
+  dataType: string, 
+  currentUserId: string, 
+  userDepartment?: string
+): T[] => {
+  const accessLevel = getDataAccessLevel(userRole, dataType);
+  
+  switch (accessLevel) {
+    case 'all':
+      return data;
+      
+    case 'department':
+      if (userRole === 'admin') return data;
+      if (!userDepartment) return [];
+      
+      return data.filter(item => {
+        // 부서 정보가 있으면 부서로 필터링
+        if (item.department) {
+          return item.department === userDepartment;
+        }
+        // 부서 정보가 없으면 생성자 기준
+        return item.created_by === currentUserId;
+      });
+      
+    case 'assigned':
+      return data.filter(item => {
+        // 배정된 사용자 확인
+        if (item.assigned_to) {
+          if (Array.isArray(item.assigned_to)) {
+            return item.assigned_to.includes(currentUserId);
+          }
+          return item.assigned_to === currentUserId;
+        }
+        // 배정 정보가 없으면 생성자 확인
+        return item.created_by === currentUserId;
+      });
+      
+    case 'own':
+      return data.filter(item => item.created_by === currentUserId);
+      
+    case 'none':
+    default:
+      return [];
+  }
+};
+
+// 🛡️ 특별 권한 검사 (관리자, 팀장 등)
+export const hasElevatedPermission = (
+  userRole: UserRole, 
+  userPosition: UserPosition | undefined, 
+  requiredLevel: 'team_lead' | 'manager' | 'admin'
+): boolean => {
+  // 관리자는 모든 권한 보유
+  if (userRole === 'admin') return true;
+  
+  switch (requiredLevel) {
+    case 'admin':
+      return userRole === 'admin';
+      
+    case 'manager':
+      if (userRole === 'admin') return true;
+      return userPosition !== undefined && ['팀장', '부팀장', '매니저', '리셉션 매니저'].includes(userPosition);
+             
+    case 'team_lead':
+      if (userRole === 'admin') return true;
+      return userPosition !== undefined && canManageTeam(userPosition);
+             
+    default:
+      return false;
+  }
+};
+
+// 🔍 권한 검사 결과와 이유를 반환하는 상세 함수
+export const checkPermissionWithReason = (
+  userRole: UserRole, 
+  permission: Permission, 
+  userPosition?: UserPosition
+): { allowed: boolean; reason: string } => {
+  // 기본 권한 검사
+  const hasBasicPermission = hasPermission(userRole, permission);
+  
+  if (!hasBasicPermission) {
+    return {
+      allowed: false,
+      reason: `${departmentNames[userRole]} 부서에서는 '${permission}' 권한이 없습니다.`
+    };
+  }
+  
+  // 특별 권한이 필요한 경우 추가 검사
+  const adminOnlyPermissions: Permission[] = [
+    'users.create', 'users.delete', 'announcements.delete', 
+    'reports.approve', 'admin.settings', 'admin.logs', 'admin.backup'
+  ];
+  
+  if (adminOnlyPermissions.includes(permission) && userRole !== 'admin') {
+    return {
+      allowed: false,
+      reason: `'${permission}' 권한은 관리자만 사용할 수 있습니다.`
+    };
+  }
+  
+  // 팀장급 권한이 필요한 경우
+  const managerPermissions: Permission[] = [
+    'users.update', 'tasks.assign', 'ot.assign', 'notifications.send'
+  ];
+  
+  if (managerPermissions.includes(permission)) {
+    const hasManagerLevel = hasElevatedPermission(userRole, userPosition, 'manager');
+    if (!hasManagerLevel) {
+      return {
+        allowed: false,
+        reason: `'${permission}' 권한은 팀장 이상만 사용할 수 있습니다.`
+      };
+    }
+  }
+  
+  return {
+    allowed: true,
+    reason: '권한이 확인되었습니다.'
+  };
+};
+
+// 🔒 보안 감사를 위한 권한 로깅 함수
+export const logPermissionCheck = (
+  userId: string,
+  userRole: UserRole,
+  action: string,
+  resource: string,
+  result: 'allowed' | 'denied',
+  reason?: string
+): void => {
+  // 프로덕션 환경에서는 보안 로그 시스템으로 전송
+  if (process.env.NODE_ENV === 'production') {
+    // TODO: 실제 보안 로그 시스템 연동
+    console.warn(`[SECURITY] ${result.toUpperCase()}: User ${userId} (${userRole}) attempted ${action} on ${resource}. Reason: ${reason || 'N/A'}`);
+  } else {
+    // 개발 환경에서는 디버그 로그
+    console.log(`[PERMISSION] ${result}: ${userId} (${userRole}) -> ${action} on ${resource}`);
   }
 };
 

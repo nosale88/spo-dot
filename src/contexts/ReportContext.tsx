@@ -518,7 +518,7 @@ export const ReportProvider = ({ children }: { children: ReactNode }) => {
       console.error('샘플 템플릿 생성 중 오류:', err);
     }
   };
-
+  
   // 샘플 보고서를 Supabase에 생성
   const generateSampleReportsInSupabase = async () => {
     if (!user) return;
@@ -568,7 +568,7 @@ export const ReportProvider = ({ children }: { children: ReactNode }) => {
         console.error('샘플 보고서 생성 실패:', error);
       } else {
         console.log('✅ 샘플 보고서가 성공적으로 생성되었습니다.');
-      }
+    }
     } catch (err) {
       console.error('샘플 보고서 생성 중 오류:', err);
     }
@@ -583,61 +583,61 @@ export const ReportProvider = ({ children }: { children: ReactNode }) => {
       });
     }
   }, [user, migrateLocalStorageData, fetchReports, fetchTemplates]);
-
+  
   // 보고서 필터링
   const filterReports = (options: ReportFilterOptions) => {
     let filtered = [...reports];
-
+    
     if (options.type && options.type !== 'all') {
       filtered = filtered.filter(report => report.type === options.type);
     }
-
+    
     if (options.category && options.category !== 'all') {
       filtered = filtered.filter(report => report.category === options.category);
     }
-
+    
     if (options.status && options.status !== 'all') {
       filtered = filtered.filter(report => report.status === options.status);
     }
-
+    
     if (options.startDate) {
       filtered = filtered.filter(report => report.createdAt >= options.startDate!);
     }
-
+    
     if (options.endDate) {
       filtered = filtered.filter(report => report.createdAt <= options.endDate!);
     }
-
+    
     if (options.createdBy) {
       filtered = filtered.filter(report => report.createdBy === options.createdBy);
     }
-
+    
     if (options.assignedTo) {
       filtered = filtered.filter(report => report.assignedTo === options.assignedTo);
     }
-
+    
     if (options.searchQuery) {
       const query = options.searchQuery.toLowerCase();
-      filtered = filtered.filter(report =>
+      filtered = filtered.filter(report => 
         report.title.toLowerCase().includes(query) ||
         report.content.toLowerCase().includes(query) ||
         report.createdByName.toLowerCase().includes(query)
       );
     }
-
+    
     setFilteredReports(filtered);
   };
-
+  
   // 보고서 조회
   const getReportById = (id: string) => {
     return reports.find(report => report.id === id);
   };
-
+  
   // 템플릿 조회
   const getTemplateById = (id: string) => {
     return templates.find(template => template.id === id);
   };
-
+  
   // 보고서 생성
   const createReport = async (reportData: Omit<Report, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
     try {
@@ -684,7 +684,7 @@ export const ReportProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
   };
-
+  
   // 보고서 수정
   const updateReport = async (id: string, reportData: Partial<Report>): Promise<boolean> => {
     try {
@@ -728,7 +728,7 @@ export const ReportProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
-
+  
   // 보고서 삭제
   const deleteReport = async (id: string): Promise<boolean> => {
     try {
@@ -758,25 +758,25 @@ export const ReportProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
-
+  
   // 보고서 제출
   const submitReport = async (id: string): Promise<boolean> => {
     return await updateReport(id, { 
-      status: 'submitted', 
+              status: 'submitted', 
       submittedAt: new Date().toISOString() 
     });
   };
-
+  
   // 보고서 검토
   const reviewReport = async (id: string, reviewerId: string, reviewerName: string, approved: boolean): Promise<boolean> => {
     return await updateReport(id, {
-      status: approved ? 'approved' : 'rejected',
-      reviewedAt: new Date().toISOString(),
-      reviewedBy: reviewerId,
+              status: approved ? 'approved' : 'rejected', 
+              reviewedAt: new Date().toISOString(),
+              reviewedBy: reviewerId,
       reviewedByName: reviewerName
     });
   };
-
+  
   // 댓글 추가
   const addComment = async (reportId: string, commentData: Omit<ReportComment, 'id' | 'reportId' | 'createdAt'>): Promise<string | null> => {
     try {
@@ -810,7 +810,7 @@ export const ReportProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
   };
-
+  
   // 댓글 삭제
   const deleteComment = async (reportId: string, commentId: string): Promise<boolean> => {
     try {
@@ -834,21 +834,21 @@ export const ReportProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
-
+  
   // 첨부파일 추가 (향후 구현)
   const addAttachment = async (reportId: string, attachment: Omit<ReportAttachment, 'id' | 'reportId' | 'uploadedAt'>): Promise<string | null> => {
     // TODO: 첨부파일 기능은 별도 테이블과 스토리지 연동 필요
     console.log('첨부파일 기능은 향후 구현 예정입니다.');
     return null;
   };
-
+  
   // 첨부파일 삭제 (향후 구현)
   const deleteAttachment = async (reportId: string, attachmentId: string): Promise<boolean> => {
     // TODO: 첨부파일 기능은 별도 테이블과 스토리지 연동 필요
     console.log('첨부파일 기능은 향후 구현 예정입니다.');
     return false;
   };
-
+  
   // 템플릿 생성
   const createTemplate = async (templateData: Omit<ReportTemplate, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
     try {
@@ -884,7 +884,7 @@ export const ReportProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
   };
-
+  
   // 템플릿 수정
   const updateTemplate = async (id: string, templateData: Partial<ReportTemplate>): Promise<boolean> => {
     try {
@@ -916,7 +916,7 @@ export const ReportProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
-
+  
   // 템플릿 삭제
   const deleteTemplate = async (id: string): Promise<boolean> => {
     try {
@@ -940,18 +940,18 @@ export const ReportProvider = ({ children }: { children: ReactNode }) => {
       return false;
     }
   };
-
+  
   // 기간별 보고서 통계
   const getReportStatsByPeriod = (startDate: string, endDate: string) => {
     const filteredByPeriod = reports.filter(report => 
       report.createdAt >= startDate && report.createdAt <= endDate
     );
-
+    
     const byStatus = filteredByPeriod.reduce((acc, report) => {
       acc[report.status] = (acc[report.status] || 0) + 1;
       return acc;
     }, {} as Record<ReportStatus, number>);
-
+    
     const byType = filteredByPeriod.reduce((acc, report) => {
       acc[report.type] = (acc[report.type] || 0) + 1;
       return acc;
@@ -961,7 +961,7 @@ export const ReportProvider = ({ children }: { children: ReactNode }) => {
       acc[report.category] = (acc[report.category] || 0) + 1;
       return acc;
     }, {} as Record<ReportCategory, number>);
-
+    
     return {
       total: filteredByPeriod.length,
       byStatus,
@@ -969,11 +969,11 @@ export const ReportProvider = ({ children }: { children: ReactNode }) => {
       byCategory
     };
   };
-
+  
   // 사용자별 보고서 통계
   const getUserReportStats = (userId: string) => {
     const userReports = reports.filter(report => report.createdBy === userId);
-
+    
     return {
       created: userReports.length,
       submitted: userReports.filter(r => r.status === 'submitted').length,
@@ -981,29 +981,29 @@ export const ReportProvider = ({ children }: { children: ReactNode }) => {
       rejected: userReports.filter(r => r.status === 'rejected').length
     };
   };
-
+  
   const contextValue: ReportContextType = {
-    reports,
-    templates,
-    filteredReports,
+        reports,
+        templates,
+        filteredReports,
     loading,
     error,
-    filterReports,
-    createReport,
-    updateReport,
-    deleteReport,
-    getReportById,
-    submitReport,
-    reviewReport,
-    addComment,
-    deleteComment,
-    addAttachment,
-    deleteAttachment,
-    createTemplate,
-    updateTemplate,
-    deleteTemplate,
-    getTemplateById,
-    getReportStatsByPeriod,
+        filterReports,
+        createReport,
+        updateReport,
+        deleteReport,
+        getReportById,
+        submitReport,
+        reviewReport,
+        addComment,
+        deleteComment,
+        addAttachment,
+        deleteAttachment,
+        createTemplate,
+        updateTemplate,
+        deleteTemplate,
+        getTemplateById,
+        getReportStatsByPeriod,
     getUserReportStats,
     fetchReports,
     fetchTemplates

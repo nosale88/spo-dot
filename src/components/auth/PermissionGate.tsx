@@ -28,10 +28,15 @@ const PermissionGate = ({
     return <>{fallback}</>;
   }
 
+  // 권한과 역할이 모두 지정되지 않은 경우 항상 표시
+  if (!permission && !role) {
+    return <>{children}</>;
+  }
+
   let hasRequiredPermission = true;
   let hasRequiredRole = true;
 
-  // 권한 검사
+  // 권한 검사 (권한이 지정된 경우만)
   if (permission) {
     const permissions = Array.isArray(permission) ? permission : [permission];
     
@@ -42,7 +47,7 @@ const PermissionGate = ({
     }
   }
 
-  // 역할 검사
+  // 역할 검사 (역할이 지정된 경우만)
   if (role) {
     const roles = Array.isArray(role) ? role : [role];
     
@@ -53,10 +58,19 @@ const PermissionGate = ({
     }
   }
 
-  // 조건 결합
-  const shouldShow = showIf === 'all' 
-    ? hasRequiredPermission && hasRequiredRole
-    : hasRequiredPermission || hasRequiredRole;
+  // 조건 결합: 권한과 역할이 모두 지정된 경우 둘 다 만족해야 함
+  let shouldShow = true;
+  
+  if (permission && role) {
+    // 권한과 역할이 모두 지정된 경우: 둘 다 만족해야 함
+    shouldShow = hasRequiredPermission && hasRequiredRole;
+  } else if (permission) {
+    // 권한만 지정된 경우: 권한만 확인
+    shouldShow = hasRequiredPermission;
+  } else if (role) {
+    // 역할만 지정된 경우: 역할만 확인
+    shouldShow = hasRequiredRole;
+  }
 
   return shouldShow ? <>{children}</> : <>{fallback}</>;
 };

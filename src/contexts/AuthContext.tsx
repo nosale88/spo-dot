@@ -2,12 +2,18 @@ import { ReactNode, createContext, useContext, useState, useEffect, useCallback 
 import { supabaseApiService } from '../services/supabaseApi';
 import { 
   UserRole, 
+  UserPosition,
   Permission, 
   hasPermission as checkPermission, 
   hasPageAccess as checkPageAccess,
   getDataAccessLevel,
   canModifyData as checkDataModification,
-  DataAccessLevel
+  filterDataByPermission,
+  hasElevatedPermission,
+  checkPermissionWithReason,
+  logPermissionCheck,
+  DataAccessLevel,
+  rolePermissions
 } from '../types/permissions';
 
 // AuthContext 타입 정의
@@ -17,8 +23,9 @@ interface User {
   email: string;
   role: UserRole;
   department?: string;
-  position?: string; // 세부 역할 (팀장, 트레이너 등)
+  position?: UserPosition;
   avatar?: string;
+  permissions?: string[]; // 개별 설정된 권한 추가
 }
 
 interface AuthContextType {
@@ -27,17 +34,26 @@ interface AuthContextType {
   logout: () => void;
   isLoading: boolean;
   
-  // 🔐 권한 관리 함수들
+  // 🔐 기본 권한 관리 함수들
   hasPermission: (permission: Permission) => boolean;
   hasAnyPermission: (permissions: Permission[]) => boolean;
   hasPageAccess: (pathname: string) => boolean;
   getDataAccess: (dataType: string) => DataAccessLevel;
-  canModifyData: (dataType: string, dataOwnerId?: string) => boolean;
+  
+  // 🛡️ 강화된 권한 검사 함수들
+  canModifyData: (dataType: string, dataOwnerId?: string, itemDepartment?: string, assignedUsers?: string[]) => boolean;
+  filterUserData: <T extends { created_by?: string; assigned_to?: string | string[]; department?: string; id?: string }>(data: T[], dataType: string) => T[];
+  hasElevatedAccess: (level: 'team_lead' | 'manager' | 'admin') => boolean;
+  checkPermissionWithDetails: (permission: Permission) => { allowed: boolean; reason: string };
+  
+  // 편의 함수들
   isAdmin: boolean;
   isReception: boolean;
   isFitness: boolean;
   isTennis: boolean;
   isGolf: boolean;
+  isManager: boolean;
+  isTeamLead: boolean;
 }
 
 // 기본 Context 생성
@@ -54,7 +70,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUserId = localStorage.getItem('currentUserId');
         if (currentUserId) {
           const userData = await supabaseApiService.auth.getCurrentUser();
-          setUser(userData);
+          setUser({
+            ...userData,
+            position: userData.position as UserPosition
+          });
           console.log('✅ 사용자 인증 확인:', userData.role);
         }
       } catch (error) {
@@ -79,7 +98,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('currentUserName', response.user.name);
       localStorage.setItem('authToken', response.token);
       
-      setUser(response.user);
+      setUser({
+        ...response.user,
+        position: response.user.position as UserPosition
+      });
       console.log('✅ 로그인 성공:', response.user.role);
     } catch (error) {
       throw error;
@@ -102,10 +124,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // 🔐 권한 관리 함수들
+  // 🔐 권한 관리 함수들 - 개별 권한과 역할별 권한을 모두 고려
   const hasPermission = useCallback((permission: Permission): boolean => {
     if (!user) return false;
-    return checkPermission(user.role, permission);
+    
+    // 1. 역할별 기본 권한 확인
+    const basePermissions = rolePermissions[user.role] || [];
+    
+    // 2. 개별 설정된 권한 확인 (데이터베이스에서 가져온)
+    const customPermissions = user.permissions || [];
+    
+    // 3. 모든 권한 조합
+    const allPermissions = [...basePermissions, ...customPermissions];
+    
+    // 4. 권한 확인 (중복 제거)
+    const hasAccess = allPermissions.includes(permission);
+    
+    // 5. 권한 체크 로깅 (개발 환경에서만)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`권한 체크: ${permission}`, {
+        user: user.name,
+        role: user.role,
+        hasAccess,
+        basePermissions: basePermissions.length,
+        customPermissions: customPermissions.length
+      });
+    }
+    
+    return hasAccess;
   }, [user]);
 
   const hasAnyPermission = useCallback((permissions: Permission[]): boolean => {
@@ -123,9 +169,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return getDataAccessLevel(user.role, dataType);
   }, [user]);
 
-  const canModifyData = useCallback((dataType: string, dataOwnerId?: string): boolean => {
+  const canModifyData = useCallback((dataType: string, dataOwnerId?: string, itemDepartment?: string, assignedUsers?: string[]): boolean => {
     if (!user) return false;
-    return checkDataModification(user.role, dataType, dataOwnerId, user.id);
+    return checkDataModification(
+      user.role, 
+      dataType, 
+      dataOwnerId, 
+      user.id, 
+      user.department, 
+      itemDepartment, 
+      assignedUsers
+    );
+  }, [user]);
+
+  // 🛡️ 강화된 권한 검사 함수들
+  const filterUserData = useCallback(<T extends { created_by?: string; assigned_to?: string | string[]; department?: string; id?: string }>(data: T[], dataType: string): T[] => {
+    if (!user) return [];
+    return filterDataByPermission(data, user.role, dataType, user.id, user.department);
+  }, [user]);
+
+  const hasElevatedAccess = useCallback((level: 'team_lead' | 'manager' | 'admin'): boolean => {
+    if (!user) return false;
+    return hasElevatedPermission(user.role, user.position, level);
+  }, [user]);
+
+  const checkPermissionWithDetails = useCallback((permission: Permission): { allowed: boolean; reason: string } => {
+    if (!user) return { allowed: false, reason: 'User not authenticated' };
+    return checkPermissionWithReason(user.role, permission, user.position);
   }, [user]);
 
   // 역할별 편의 함수들
@@ -134,6 +204,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isFitness = user?.role === 'fitness';
   const isTennis = user?.role === 'tennis';
   const isGolf = user?.role === 'golf';
+  
+  // 직책별 편의 함수들
+  const isManager = user?.position && ['팀장', '부팀장', '매니저', '리셉션 매니저'].includes(user.position);
+  const isTeamLead = user?.position && ['팀장', '부팀장'].includes(user.position);
 
   return (
     <AuthContext.Provider value={{ 
@@ -146,11 +220,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       hasPageAccess,
       getDataAccess,
       canModifyData,
+      filterUserData,
+      hasElevatedAccess,
+      checkPermissionWithDetails,
       isAdmin,
       isReception,
       isFitness,
       isTennis,
-      isGolf
+      isGolf,
+      isManager,
+      isTeamLead
     }}>
       {children}
     </AuthContext.Provider>

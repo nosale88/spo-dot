@@ -269,25 +269,25 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
                 직원 목록을 불러오는 중...
               </div>
             ) : (
-              <div className="space-y-2 max-h-40 overflow-y-auto border border-slate-300 rounded-md p-3">
+            <div className="space-y-2 max-h-40 overflow-y-auto border border-slate-300 rounded-md p-3">
                 {activeStaff.length === 0 ? (
                   <div className="text-slate-500 text-sm">등록된 직원이 없습니다.</div>
                 ) : (
                   activeStaff.map(staff => (
                     <label key={staff.id} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
+                  <input
+                    type="checkbox"
                         checked={formData.assignedTo.includes(staff.id)}
                         onChange={() => handleAssigneeChange(staff.id)}
-                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-slate-700">
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-slate-700">
                         {staff.name} {staff.department && `(${staff.department})`}
-                      </span>
-                    </label>
+                  </span>
+                </label>
                   ))
                 )}
-              </div>
+            </div>
             )}
           </div>
 
