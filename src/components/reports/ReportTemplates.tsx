@@ -46,7 +46,7 @@ const ReportTemplates = ({ onClose, onSelectTemplate }: ReportTemplatesProps) =>
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
       onClick={onClose}
     >
       <div 

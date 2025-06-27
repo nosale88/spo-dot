@@ -70,7 +70,7 @@ const MainLayout = () => {
 
       {isMobile && sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-slate-900/50 z-40 backdrop-blur-sm"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
           style={{
             willChange: 'opacity',
