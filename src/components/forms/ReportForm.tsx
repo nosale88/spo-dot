@@ -200,17 +200,17 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center">
+        <div className="p-6 border-b border-slate-200 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-slate-900 flex items-center">
             <FileText className="h-5 w-5 mr-2 text-primary" />
             {isEditMode ? '보고서 수정' : '업무 보고서 작성'}
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="text-slate-400 hover:text-slate-600"
           >
             <X size={24} />
           </button>
@@ -219,7 +219,7 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
         <form onSubmit={(e) => handleSubmit(e, true)} className="p-6 space-y-6">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 보고서 종류
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -229,7 +229,7 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
                   className={`p-3 rounded-lg flex items-center justify-center text-sm font-medium ${
                     formData.type === 'daily'
                       ? 'bg-primary text-white'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   일일 보고서
@@ -240,7 +240,7 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
                   className={`p-3 rounded-lg flex items-center justify-center text-sm font-medium ${
                     formData.type === 'weekly'
                       ? 'bg-primary text-white'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   주간 보고서
@@ -251,7 +251,7 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
                   className={`p-3 rounded-lg flex items-center justify-center text-sm font-medium ${
                     formData.type === 'monthly'
                       ? 'bg-primary text-white'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   월간 보고서
@@ -260,7 +260,7 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 카테고리
               </label>
               <select
@@ -277,7 +277,7 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 보고서 제목
               </label>
               <input
@@ -291,7 +291,7 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 보고서 내용
               </label>
               <textarea
@@ -305,7 +305,7 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
 
             {/* 태그 섹션 */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 태그
               </label>
               <div className="flex space-x-2">
@@ -331,13 +331,13 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
                   {formData.tags.map(tag => (
                     <span
                       key={tag}
-                      className="bg-slate-100 text-slate-700 px-2 py-1 rounded-full text-sm flex items-center dark:bg-slate-700 dark:text-slate-300"
+                      className="bg-slate-100 text-slate-700 px-2 py-1 rounded-full text-sm flex items-center"
                     >
                       {tag}
                       <button
                         type="button"
                         onClick={() => removeTag(tag)}
-                        className="ml-1 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                        className="ml-1 text-slate-500 hover:text-slate-700"
                       >
                         <X size={14} />
                       </button>
@@ -349,7 +349,7 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
 
             {/* 메트릭 섹션 */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 메트릭 (선택)
               </label>
               <div className="flex space-x-2">
@@ -378,10 +378,10 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
               </div>
               
               {Object.keys(formData.metrics).length > 0 && (
-                <div className="mt-2 bg-slate-50 dark:bg-slate-700 rounded-lg p-4">
+                <div className="mt-2 bg-slate-50 rounded-lg p-4">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-slate-200 dark:border-slate-600">
+                      <tr className="border-b border-slate-200">
                         <th className="text-left py-2 px-4 font-medium">항목</th>
                         <th className="text-left py-2 px-4 font-medium">값</th>
                         <th className="text-right py-2 px-4 font-medium w-10"></th>
@@ -389,14 +389,14 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
                     </thead>
                     <tbody>
                       {Object.entries(formData.metrics).map(([key, value]) => (
-                        <tr key={key} className="border-b border-slate-200 dark:border-slate-600">
+                        <tr key={key} className="border-b border-slate-200">
                           <td className="py-2 px-4">{key}</td>
                           <td className="py-2 px-4">{value}</td>
                           <td className="py-2 px-4 text-right">
                             <button
                               type="button"
                               onClick={() => removeMetric(key)}
-                              className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                              className="text-red-500 hover:text-red-700"
                             >
                               <Trash2 size={14} />
                             </button>
@@ -411,7 +411,7 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
 
             {/* 첨부파일 섹션 */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 첨부파일
               </label>
               <div className="flex items-center space-x-2">
@@ -433,7 +433,7 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
               
               {/* 선택한 파일 목록 */}
               {files.length > 0 && (
-                <div className="mt-2 bg-slate-50 dark:bg-slate-700 rounded-lg p-4">
+                <div className="mt-2 bg-slate-50 rounded-lg p-4">
                   <ul className="space-y-2">
                     {files.map((file, index) => (
                       <li key={index} className="flex items-center justify-between text-sm">
@@ -441,36 +441,13 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
                         <button
                           type="button"
                           onClick={() => removeFile(index)}
-                          className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                          className="text-red-500 hover:text-red-700"
                         >
                           <Trash2 size={14} />
                         </button>
                       </li>
                     ))}
                   </ul>
-                </div>
-              )}
-              
-              {/* 기존 첨부파일 목록 (수정 모드) */}
-              {isEditMode && report?.attachments && report.attachments.length > 0 && (
-                <div className="mt-2">
-                  <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">기존 첨부파일</h4>
-                  <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4">
-                    <ul className="space-y-2">
-                      {report.attachments.map((attachment) => (
-                        <li key={attachment.id} className="flex items-center justify-between text-sm">
-                          <a 
-                            href={attachment.fileUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 truncate"
-                          >
-                            {attachment.fileName} ({(attachment.fileSize / 1024).toFixed(1)} KB)
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
                 </div>
               )}
             </div>
