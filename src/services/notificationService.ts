@@ -12,21 +12,42 @@ export interface NotificationData {
 }
 
 class NotificationService {
-  // 단일 알림 생성
+  // 기본 알림 생성
   async createNotification(data: NotificationData) {
     try {
-      await supabaseApiService.notifications.create(data);
+      const { error } = await supabase
+        .from('notifications')
+        .insert([{
+          user_id: data.userId,
+          type: data.type,
+          title: data.title,
+          message: data.message,
+          link: data.link || null,
+          is_read: false
+        }]);
+
+      if (error) throw error;
       console.log(`알림 생성됨: ${data.title} -> ${data.userId}`);
     } catch (error) {
       console.error('알림 생성 실패:', error);
     }
   }
 
-  // 여러 사용자에게 알림 생성
+  // 일괄 알림 생성
   async createBulkNotifications(notifications: NotificationData[]) {
     try {
-      const promises = notifications.map(notif => this.createNotification(notif));
-      await Promise.all(promises);
+      const { error } = await supabase
+        .from('notifications')
+        .insert(notifications.map(data => ({
+          user_id: data.userId,
+          type: data.type,
+          title: data.title,
+          message: data.message,
+          link: data.link || null,
+          is_read: false
+        })));
+
+      if (error) throw error;
       console.log(`${notifications.length}개의 알림이 생성됨`);
     } catch (error) {
       console.error('일괄 알림 생성 실패:', error);
@@ -49,7 +70,7 @@ class NotificationService {
       type: 'info',
       title: '새로운 업무가 배정되었습니다',
       message: `${taskData.assignerName}님이 "${taskData.title}" 업무를 배정했습니다. (마감: ${dueDateFormatted})`,
-      link: `/tasks/${taskData.id}`
+      link: `/my-tasks?task=${taskData.id}`
     });
   }
 
@@ -65,59 +86,84 @@ class NotificationService {
       type: 'success',
       title: '업무가 완료되었습니다',
       message: `${taskData.assigneeName}님이 "${taskData.title}" 업무를 완료했습니다.`,
-      link: `/tasks/${taskData.id}`
+      link: `/all-tasks?task=${taskData.id}`
     });
   }
 
   // 3. 마감일 임박 알림 (1일, 3일 전)
   async checkAndNotifyUpcomingDeadlines() {
     try {
-      // 모든 대기 중인 업무 조회
-      const tasksResponse = await supabaseApiService.tasks.getAll({ 
-        status: 'pending' 
-      });
+      // Supabase에서 진행중인 업무들 조회
+      const { data: tasks, error } = await supabase
+        .from('tasks')
+        .select(`
+          id,
+          title,
+          due_date,
+          assigned_to,
+          status
+        `)
+        .in('status', ['pending', 'in-progress'])
+        .not('assigned_to', 'is', null);
+
+      if (error) throw error;
       
       const today = new Date();
       const tomorrow = addDays(today, 1);
       const threeDaysLater = addDays(today, 3);
 
-      for (const task of tasksResponse.data) {
-        if (!task.dueDate || !task.assigneeId) continue;
+      for (const task of tasks || []) {
+        if (!task.due_date || !task.assigned_to) continue;
         
-        const dueDate = parseISO(task.dueDate);
+        const dueDate = parseISO(task.due_date);
         const dueDateFormatted = format(dueDate, 'M월 d일', { locale: ko });
 
         // 1일 전 알림
         if (format(dueDate, 'yyyy-MM-dd') === format(tomorrow, 'yyyy-MM-dd')) {
           await this.createNotification({
-            userId: task.assigneeId,
+            userId: task.assigned_to,
             type: 'warning',
             title: '⏰ 업무 마감일이 내일입니다',
             message: `"${task.title}" 업무의 마감일이 ${dueDateFormatted}입니다.`,
-            link: `/tasks/${task.id}`
+            link: `/my-tasks?task=${task.id}`
           });
         }
 
         // 3일 전 알림
         if (format(dueDate, 'yyyy-MM-dd') === format(threeDaysLater, 'yyyy-MM-dd')) {
           await this.createNotification({
-            userId: task.assigneeId,
+            userId: task.assigned_to,
             type: 'info',
             title: '📅 업무 마감일 알림',
             message: `"${task.title}" 업무의 마감일이 3일 후(${dueDateFormatted})입니다.`,
-            link: `/tasks/${task.id}`
+            link: `/my-tasks?task=${task.id}`
           });
         }
 
-        // 마감일 초과 알림
+        // 마감일 초과 알림 (오늘 하루에 한 번만)
         if (isAfter(today, dueDate)) {
-          await this.createNotification({
-            userId: task.assigneeId,
-            type: 'error',
-            title: '🚨 업무 마감일 초과',
-            message: `"${task.title}" 업무의 마감일(${dueDateFormatted})이 지났습니다. 즉시 처리해주세요.`,
-            link: `/tasks/${task.id}`
-          });
+          // 오늘 이미 같은 업무에 대한 마감일 초과 알림을 보냈는지 확인
+          const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+          
+          const { data: existingNotification } = await supabase
+            .from('notifications')
+            .select('id')
+            .eq('user_id', task.assigned_to)
+            .eq('title', '🚨 업무 마감일 초과')
+            .like('message', `%"${task.title}"%`)
+            .gte('created_at', todayStart.toISOString())
+            .single();
+
+          // 오늘 이미 알림을 보내지 않았다면 전송
+          if (!existingNotification) {
+            await this.createNotification({
+              userId: task.assigned_to,
+              type: 'error',
+              title: '🚨 업무 마감일 초과',
+              message: `"${task.title}" 업무의 마감일(${dueDateFormatted})이 지났습니다. 즉시 처리해주세요.`,
+              link: `/my-tasks?task=${task.id}`
+            });
+          }
         }
       }
     } catch (error) {
@@ -142,7 +188,7 @@ class NotificationService {
         type: announcementData.priority === 'urgent' ? 'warning' : 'info',
         title: '📢 새로운 공지사항',
         message: `${announcementData.authorName}님이 "${announcementData.title}" 공지사항을 등록했습니다.`,
-        link: `/announcements/${announcementData.id}`
+        link: `/announcements?id=${announcementData.id}`
       }));
 
       await this.createBulkNotifications(notifications);
@@ -169,7 +215,7 @@ class NotificationService {
         type: 'info',
         title: '💬 업무에 댓글이 추가되었습니다',
         message: `${commentData.authorName}님이 "${commentData.taskTitle}" 업무에 댓글을 남겼습니다.`,
-        link: `/tasks/${commentData.taskId}`
+        link: `/my-tasks?task=${commentData.taskId}`
       });
     }
 
@@ -181,7 +227,7 @@ class NotificationService {
         type: 'info',
         title: '💬 업무에 댓글이 추가되었습니다',
         message: `${commentData.authorName}님이 "${commentData.taskTitle}" 업무에 댓글을 남겼습니다.`,
-        link: `/tasks/${commentData.taskId}`
+        link: `/all-tasks?task=${commentData.taskId}`
       });
     }
 
@@ -203,7 +249,7 @@ class NotificationService {
         type: 'info',
         title: '📋 일일 보고서가 제출되었습니다',
         message: `${reportData.authorName}님이 ${reportData.date} 일일 보고서를 제출했습니다.`,
-        link: `/daily-reports/${reportData.id}`
+        link: `/admin/reports?id=${reportData.id}`
       }));
 
       await this.createBulkNotifications(notifications);
@@ -221,14 +267,14 @@ class NotificationService {
   }) {
     try {
       // 모든 직원에게 알림
-      const allUsers = await this.getUsersByRoles(['admin', 'staff', 'trainer']);
+      const allUsers = await this.getUsersByRoles(['admin', 'reception', 'fitness', 'tennis', 'golf']);
       
       const notifications: NotificationData[] = allUsers.map(user => ({
         userId: user.id,
         type: 'info',
         title: '📚 메뉴얼이 업데이트되었습니다',
         message: `${manualData.authorName}님이 "${manualData.title}" 메뉴얼을 업데이트했습니다.`,
-        link: `/manuals/${manualData.id}`
+        link: `/manuals?id=${manualData.id}`
       }));
 
       await this.createBulkNotifications(notifications);
@@ -240,10 +286,15 @@ class NotificationService {
   // 유틸리티: 역할별 사용자 조회
   private async getUsersByRoles(roles: string[]): Promise<Array<{id: string, name: string, email: string}>> {
     try {
+      // 모든 역할을 포함하려면 'all' 사용
+      const targetRoles = roles.includes('all') ? 
+        ['admin', 'reception', 'fitness', 'tennis', 'golf'] : 
+        roles;
+
       const { data, error } = await supabase
         .from('users')
         .select('id, name, email')
-        .in('role', roles.includes('all') ? ['admin', 'staff', 'trainer'] : roles);
+        .in('role', targetRoles);
       
       if (error) throw error;
       

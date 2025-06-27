@@ -70,6 +70,22 @@ export type Permission =
   | 'members.view_department'
   | 'members.view_assigned'
   
+  // 고객 관리
+  | 'customers.create'
+  | 'customers.read'
+  | 'customers.update'
+  | 'customers.delete'
+  | 'customers.view_all'
+  | 'customers.view_department'
+  
+  // 트레이너 관리
+  | 'trainers.create'
+  | 'trainers.read'
+  | 'trainers.update'
+  | 'trainers.delete'
+  | 'trainers.view_all'
+  | 'trainers.view_department'
+  
   // 일정 관리
   | 'schedules.create'
   | 'schedules.read'
@@ -123,6 +139,10 @@ export type Permission =
   | 'admin.settings'
   | 'admin.logs'
   | 'admin.backup'
+  | 'admin.task_management'
+  | 'admin.announcements'
+  | 'admin.reports'
+  | 'admin.suggestions'
   
   // 알림 관리
   | 'notifications.send'
@@ -138,13 +158,15 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'reports.create', 'reports.read', 'reports.update', 'reports.delete', 'reports.view_all', 'reports.approve',
     'sales.create', 'sales.read', 'sales.update', 'sales.delete', 'sales.view_all', 'sales.view_own',
     'members.create', 'members.read', 'members.update', 'members.delete', 'members.view_all',
+    'customers.create', 'customers.read', 'customers.update', 'customers.delete', 'customers.view_all',
+    'trainers.create', 'trainers.read', 'trainers.update', 'trainers.delete', 'trainers.view_all',
     'schedules.create', 'schedules.read', 'schedules.update', 'schedules.delete', 'schedules.view_all',
     'ot.create', 'ot.read', 'ot.update', 'ot.delete', 'ot.assign', 'ot.view_all', 'ot.view_assigned', 'ot.progress_update',
     'pass.create', 'pass.read', 'pass.update', 'pass.delete', 'pass.view_all',
     'vending.create', 'vending.read', 'vending.update', 'vending.view_all', 'vending.view_own',
     'suggestions.create', 'suggestions.read', 'suggestions.update', 'suggestions.delete', 'suggestions.respond', 'suggestions.view_all', 'suggestions.view_own',
     'manuals.read', 'manuals.create', 'manuals.update', 'manuals.delete',
-    'admin.dashboard', 'admin.settings', 'admin.logs', 'admin.backup',
+    'admin.dashboard', 'admin.settings', 'admin.logs', 'admin.backup', 'admin.task_management', 'admin.announcements', 'admin.reports', 'admin.suggestions',
     'notifications.send', 'notifications.manage'
   ],
   
@@ -156,6 +178,8 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'reports.create', 'reports.read', 'reports.view_department', 'reports.view_own',
     'sales.create', 'sales.read', 'sales.update', 'sales.view_all',
     'members.create', 'members.read', 'members.update', 'members.view_all',
+    'customers.read', 'customers.update', 'customers.view_all',
+    'trainers.read', 'trainers.view_all',
     'schedules.create', 'schedules.read', 'schedules.update', 'schedules.view_all',
     'ot.create', 'ot.read', 'ot.update', 'ot.assign', 'ot.view_all', 'ot.view_assigned', 'ot.progress_update',
     'pass.create', 'pass.read', 'pass.update', 'pass.view_all',

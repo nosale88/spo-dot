@@ -156,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const hasAnyPermission = useCallback((permissions: Permission[]): boolean => {
     if (!user) return false;
-    return permissions.some(permission => checkPermission(user.role, permission));
+    return permissions.some(permission => hasPermission(permission));
   }, [user]);
 
   const hasPageAccess = useCallback((pathname: string): boolean => {
@@ -206,8 +206,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isGolf = user?.role === 'golf';
   
   // 직책별 편의 함수들
-  const isManager = user?.position && ['팀장', '부팀장', '매니저', '리셉션 매니저'].includes(user.position);
-  const isTeamLead = user?.position && ['팀장', '부팀장'].includes(user.position);
+  const isManager = Boolean(user?.position && ['팀장', '부팀장', '매니저', '리셉션 매니저'].includes(user.position));
+  const isTeamLead = Boolean(user?.position && ['팀장', '부팀장'].includes(user.position));
 
   return (
     <AuthContext.Provider value={{ 

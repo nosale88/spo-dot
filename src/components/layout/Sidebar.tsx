@@ -154,6 +154,13 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
                     </>
                   )}
                 </div>
+                {/* 개발 환경에서만 권한 디버그 정보 표시 */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="mt-2 text-xs text-gray-400">
+                    <p>권한: {user?.permissions?.length || 0}개</p>
+                    <p>역할 권한: {user?.role}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -183,7 +190,7 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
           />
 
           {/* 내 업무 - 업무 관련 권한이 있는 사용자 */}
-          <PermissionGate permission={['tasks.view_assigned', 'tasks.view_own']}>
+          <PermissionGate permission="tasks.view_assigned">
             <SidebarLink 
               name="내 업무" 
               path="/dashboard/my-tasks" 
@@ -195,8 +202,8 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
             />
           </PermissionGate>
 
-          {/* 전체 업무 보기 - 부서 이상 권한 */}
-          <CanViewAllTasks>
+          {/* 팀 업무 보기 - 팀 업무 조회 권한이 있는 사용자 */}
+          <PermissionGate permission="tasks.view_department">
             <SidebarLink 
               name="팀 업무 보기" 
               path="/dashboard/all-tasks" 
@@ -206,7 +213,7 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
               isMobile={isMobile}
               setOpen={setOpen}
             />
-          </CanViewAllTasks>
+          </PermissionGate>
 
           {/* 일일 업무 보고 - 보고서 작성 권한이 있는 사용자 */}
           <PermissionGate permission="reports.create">
@@ -234,7 +241,7 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
             />
           </PermissionGate>
 
-          {/* 공지사항 - 모든 사용자 */}
+          {/* 공지사항 */}
           <PermissionGate permission="announcements.read">
             <SidebarLink 
               name="공지사항" 
@@ -247,7 +254,7 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
             />
           </PermissionGate>
 
-          {/* 매뉴얼 - 모든 사용자 */}
+          {/* 매뉴얼 */}
           <PermissionGate permission="manuals.read">
             <SidebarLink 
               name="매뉴얼" 
@@ -260,8 +267,8 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
             />
           </PermissionGate>
 
-          {/* 건의사항 - 건의사항 생성/조회 권한이 있는 사용자 */}
-          <PermissionGate permission={['suggestions.create', 'suggestions.read']}>
+          {/* 건의사항 */}
+          <PermissionGate permission="suggestions.create">
             <SidebarLink 
               name="건의사항" 
               path="/dashboard/suggestions" 
@@ -282,7 +289,7 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
             </div>
           )}
 
-          {/* 매출 등록 - 매출 생성 권한이 있는 사용자 */}
+          {/* 매출 등록 */}
           <PermissionGate permission="sales.create">
             <SidebarLink 
               name="매출 등록" 
@@ -295,8 +302,8 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
             />
           </PermissionGate>
 
-          {/* 매출 보고서 작성 - 보고서 작성 권한이 있는 사용자 */}
-          <PermissionGate permission={['reports.create', 'sales.view_department', 'sales.view_own']}>
+          {/* 매출보고 작성 */}
+          <PermissionGate permission="sales.view_department">
             <SidebarLink 
               name="매출보고 작성" 
               path="/dashboard/sales-report-create" 
@@ -308,7 +315,7 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
             />
           </PermissionGate>
 
-          {/* 매출 보고서 조회 - 개인 매출 조회 권한이 있는 사용자 */}
+          {/* 매출 보고서 */}
           <PermissionGate permission="sales.view_own">
             <SidebarLink 
               name="매출 보고서" 
@@ -321,8 +328,8 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
             />
           </PermissionGate>
 
-          {/* 자판기 관리 - 매출 생성 권한이 있는 사용자 */}
-          <PermissionGate permission="sales.create">
+          {/* 자판기 관리 */}
+          <PermissionGate permission="vending.view_own">
             <SidebarLink 
               name="자판기 관리" 
               path="/dashboard/vending-sales" 
@@ -335,7 +342,7 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
           </PermissionGate>
 
           {/* 운영팀 전용 메뉴 */}
-          <OperationTeam>
+          <PermissionGate permission={['members.view_department', 'customers.view_all', 'trainers.view_all']}>
             {open && (
               <div className="mt-6 mb-2 px-4">
                 <h3 className="text-xs font-semibold text-indigo-300 uppercase tracking-wider">
@@ -345,7 +352,7 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
             )}
 
             {/* 회원 관리 */}
-            <CanManageMembers>
+            <PermissionGate permission="members.view_department">
               <SidebarLink 
                 name="회원 관리" 
                 path="/dashboard/members" 
@@ -355,44 +362,63 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
                 isMobile={isMobile}
                 setOpen={setOpen}
               />
-            </CanManageMembers>
+            </PermissionGate>
 
             {/* 고객 관리 */}
-            <SidebarLink 
-              name="고객 관리" 
-              path="/dashboard/customer/list" 
-              icon={<UserCheck size={22} />} 
-              badge={0}
-              open={open}
-              isMobile={isMobile}
-              setOpen={setOpen}
-            />
+            <PermissionGate permission="customers.view_all">
+              <SidebarLink 
+                name="고객 관리" 
+                path="/dashboard/customers" 
+                icon={<ClipboardList size={22} />} 
+                badge={0}
+                open={open}
+                isMobile={isMobile}
+                setOpen={setOpen}
+              />
+            </PermissionGate>
+
+            {/* 트레이너 관리 */}
+            <PermissionGate permission="trainers.view_all">
+              <SidebarLink 
+                name="트레이너 관리" 
+                path="/dashboard/trainers" 
+                icon={<UserCheck size={22} />} 
+                badge={0}
+                open={open}
+                isMobile={isMobile}
+                setOpen={setOpen}
+              />
+            </PermissionGate>
+
+            {/* OT 배정 */}
+            <PermissionGate permission="ot.view_assigned">
+              <SidebarLink 
+                name="OT 배정" 
+                path="/dashboard/ot-assignment" 
+                icon={<Dumbbell size={22} />} 
+                badge={0}
+                open={open}
+                isMobile={isMobile}
+                setOpen={setOpen}
+              />
+            </PermissionGate>
 
             {/* 이용권 관리 */}
-            <SidebarLink 
-              name="이용권 관리" 
-              path="/dashboard/pass-management" 
-              icon={<CreditCard size={22} />} 
-              badge={0}
-              open={open}
-              isMobile={isMobile}
-              setOpen={setOpen}
-            />
-
-            {/* OT배정 */}
-            <SidebarLink 
-              name="OT배정" 
-              path="/dashboard/ot-assignment" 
-              icon={<Dumbbell size={22} />} 
-              badge={0}
-              open={open}
-              isMobile={isMobile}
-              setOpen={setOpen}
-            />
-          </OperationTeam>
+            <PermissionGate permission="pass.view_all">
+              <SidebarLink 
+                name="이용권 관리" 
+                path="/dashboard/pass-management" 
+                icon={<CreditCard size={22} />} 
+                badge={0}
+                open={open}
+                isMobile={isMobile}
+                setOpen={setOpen}
+              />
+            </PermissionGate>
+          </PermissionGate>
 
           {/* 관리자 전용 메뉴 */}
-          <AdminOnly>
+          <PermissionGate permission={['users.view_all', 'admin.task_management', 'admin.announcements', 'admin.reports', 'admin.suggestions']}>
             {open && (
               <div className="mt-6 mb-2 px-4">
                 <h3 className="text-xs font-semibold text-indigo-300 uppercase tracking-wider">
@@ -402,79 +428,83 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
             )}
 
             {/* 직원 관리 */}
-            <CanManageUsers>
+            <PermissionGate permission="users.view_all">
               <SidebarLink 
                 name="직원 관리" 
-                path="/dashboard/admin/staff" 
+                path="/dashboard/admin/staff-management" 
                 icon={<Users size={22} />} 
                 badge={0}
                 open={open}
                 isMobile={isMobile}
                 setOpen={setOpen}
               />
-            </CanManageUsers>
+            </PermissionGate>
 
             {/* 업무 관리 */}
-            <CanViewAllTasks>
+            <PermissionGate permission="admin.task_management">
               <SidebarLink 
-                name="전체 업무 관리" 
-                path="/dashboard/admin/tasks" 
-                icon={<ClipboardList size={22} />} 
-                badge={0}
-                open={open}
-                isMobile={isMobile}
-                setOpen={setOpen}
-              />
-            </CanViewAllTasks>
-
-            {/* 건의사항 관리 */}
-            <SidebarLink 
-              name="건의사항 관리" 
-              path="/dashboard/admin/suggestions" 
-              icon={<Archive size={22} />} 
-              badge={0}
-              open={open}
-              isMobile={isMobile}
-              setOpen={setOpen}
-            />
-
-            {/* 공지사항 관리 */}
-            <CanManageAnnouncements>
-              <SidebarLink 
-                name="공지사항 관리" 
-                path="/dashboard/admin/announcements" 
-                icon={<Megaphone size={22} />} 
-                badge={0}
-                open={open}
-                isMobile={isMobile}
-                setOpen={setOpen}
-              />
-            </CanManageAnnouncements>
-
-            {/* 보고서 관리 */}
-            <SidebarLink 
-              name="보고서 관리" 
-              path="/dashboard/admin/reports" 
-              icon={<FileText size={22} />} 
-              badge={0}
-              open={open}
-              isMobile={isMobile}
-              setOpen={setOpen}
-            />
-
-            {/* 매출보고 관리 */}
-            <PermissionGate permission="sales.view_all">
-              <SidebarLink 
-                name="매출보고 관리" 
-                path="/dashboard/sales-report" 
-                icon={<PieChart size={22} />} 
+                name="업무 관리" 
+                path="/dashboard/admin/task-management" 
+                icon={<ListChecks size={22} />} 
                 badge={0}
                 open={open}
                 isMobile={isMobile}
                 setOpen={setOpen}
               />
             </PermissionGate>
-          </AdminOnly>
+
+            {/* 공지사항 관리 */}
+            <PermissionGate permission="admin.announcements">
+              <SidebarLink 
+                name="공지사항 관리" 
+                path="/dashboard/admin/announcements-management" 
+                icon={<Megaphone size={22} />} 
+                badge={0}
+                open={open}
+                isMobile={isMobile}
+                setOpen={setOpen}
+              />
+            </PermissionGate>
+
+            {/* 보고서 관리 */}
+            <PermissionGate permission="admin.reports">
+              <SidebarLink 
+                name="보고서 관리" 
+                path="/dashboard/admin/report-management" 
+                icon={<FileText size={22} />} 
+                badge={0}
+                open={open}
+                isMobile={isMobile}
+                setOpen={setOpen}
+              />
+            </PermissionGate>
+
+            {/* 건의사항 관리 */}
+            <PermissionGate permission="admin.suggestions">
+              <SidebarLink 
+                name="건의사항 관리" 
+                path="/dashboard/admin/suggestions-management" 
+                icon={<MessageSquare size={22} />} 
+                badge={0}
+                open={open}
+                isMobile={isMobile}
+                setOpen={setOpen}
+              />
+            </PermissionGate>
+          </PermissionGate>
+
+          {/* 시스템 설정 */}
+          <PermissionGate permission="users.view_all">
+            <SidebarLink 
+              name="시스템 설정" 
+              path="/dashboard/admin-settings" 
+              icon={<Archive size={22} />} 
+              badge={0}
+              open={open}
+              isMobile={isMobile}
+              setOpen={setOpen}
+            />
+          </PermissionGate>
         </nav>
 
         {/* 로그아웃 버튼 */}

@@ -13,70 +13,82 @@ export interface AddStaffFormProps {
 
 const AVAILABLE_PERMISSIONS = [
   // 업무 관리
-  { id: 'tasks.view_assigned', label: '내 업무 조회', category: '업무 관리' },
-  { id: 'tasks.view_department', label: '팀 업무 조회', category: '업무 관리' },
+  { id: 'tasks.view_assigned', label: '내 업무', category: '업무 관리' },
+  { id: 'tasks.view_department', label: '팀 업무 보기', category: '업무 관리' },
   { id: 'tasks.view_all', label: '전체 업무 조회', category: '업무 관리' },
   { id: 'tasks.create', label: '업무 생성', category: '업무 관리' },
   { id: 'tasks.update', label: '업무 편집', category: '업무 관리' },
-  { id: 'tasks.assign', label: '업무 할당', category: '업무 관리' },
   { id: 'tasks.comment', label: '업무 댓글', category: '업무 관리' },
   
-  // 일정 관리
-  { id: 'schedules.view_own', label: '내 일정 조회', category: '일정 관리' },
-  { id: 'schedules.view_department', label: '팀 일정 조회', category: '일정 관리' },
-  { id: 'schedules.view_all', label: '전체 일정 조회', category: '일정 관리' },
-  { id: 'schedules.create', label: '일정 생성', category: '일정 관리' },
-  { id: 'schedules.update', label: '일정 편집', category: '일정 관리' },
-  
-  // 회원/고객 관리
-  { id: 'members.view_department', label: '팀 회원 조회', category: '회원 관리' },
-  { id: 'members.view_all', label: '전체 회원 조회', category: '회원 관리' },
-  { id: 'members.create', label: '회원 생성', category: '회원 관리' },
-  { id: 'members.update', label: '회원 편집', category: '회원 관리' },
-  
-  // 매출 관리
-  { id: 'sales.create', label: '매출 등록', category: '매출 관리' },
-  { id: 'sales.view_own', label: '내 매출 조회', category: '매출 관리' },
-  { id: 'sales.view_department', label: '팀 매출 조회', category: '매출 관리' },
-  { id: 'sales.view_all', label: '전체 매출 조회', category: '매출 관리' },
-  
   // 보고서 관리
-  { id: 'reports.create', label: '일일 업무 보고 작성', category: '보고서 관리' },
+  { id: 'reports.create', label: '일일 업무 보고', category: '보고서 관리' },
   { id: 'reports.view_own', label: '내 보고서 조회', category: '보고서 관리' },
   { id: 'reports.view_department', label: '팀 보고서 조회', category: '보고서 관리' },
   { id: 'reports.view_all', label: '전체 보고서 조회', category: '보고서 관리' },
   
-  // OT 관리
-  { id: 'ot.view_assigned', label: 'OT 진행 조회', category: 'OT 관리' },
-  { id: 'ot.view_all', label: '전체 OT 조회', category: 'OT 관리' },
-  { id: 'ot.assign', label: 'OT 배정', category: 'OT 관리' },
-  { id: 'ot.progress_update', label: 'OT 진행 업데이트', category: 'OT 관리' },
+  // 일정 관리
+  { id: 'schedules.view_own', label: '내 일정 조회', category: '일정 관리' },
+  { id: 'schedules.view_department', label: '팀 일정 조회', category: '일정 관리' },
+  { id: 'schedules.view_all', label: '일정 관리', category: '일정 관리' },
+  { id: 'schedules.create', label: '일정 생성', category: '일정 관리' },
+  { id: 'schedules.update', label: '일정 편집', category: '일정 관리' },
   
-  // 이용권 관리
-  { id: 'pass.view_all', label: '이용권 조회', category: '이용권 관리' },
-  { id: 'pass.create', label: '이용권 생성', category: '이용권 관리' },
+  // 공지사항
+  { id: 'announcements.read', label: '공지사항', category: '공지사항' },
+  { id: 'announcements.create', label: '공지사항 작성', category: '공지사항' },
   
-  // 자판기 관리
-  { id: 'vending.view_own', label: '내 자판기 매출', category: '자판기 관리' },
-  { id: 'vending.view_all', label: '전체 자판기 매출', category: '자판기 관리' },
+  // 매뉴얼
+  { id: 'manuals.read', label: '매뉴얼', category: '매뉴얼' },
   
   // 건의사항
-  { id: 'suggestions.create', label: '건의사항 작성', category: '건의사항' },
+  { id: 'suggestions.create', label: '건의사항', category: '건의사항' },
   { id: 'suggestions.view_own', label: '내 건의사항 조회', category: '건의사항' },
   { id: 'suggestions.view_all', label: '전체 건의사항 조회', category: '건의사항' },
   { id: 'suggestions.respond', label: '건의사항 응답', category: '건의사항' },
   
-  // 공지사항
-  { id: 'announcements.read', label: '공지사항 조회', category: '공지사항' },
-  { id: 'announcements.create', label: '공지사항 작성', category: '공지사항' },
+  // 매출 관리
+  { id: 'sales.create', label: '매출 등록', category: '매출 관리' },
+  { id: 'sales.view_own', label: '매출 보고서', category: '매출 관리' },
+  { id: 'sales.view_department', label: '매출보고 작성', category: '매출 관리' },
+  { id: 'sales.view_all', label: '전체 매출 조회', category: '매출 관리' },
   
-  // 매뉴얼
-  { id: 'manuals.read', label: '매뉴얼 조회', category: '매뉴얼' },
+  // 자판기 관리
+  { id: 'vending.view_own', label: '자판기 관리', category: '자판기 관리' },
+  { id: 'vending.view_all', label: '전체 자판기 매출', category: '자판기 관리' },
+  
+  // 운영 관리
+  { id: 'members.view_department', label: '회원 관리', category: '운영 관리' },
+  { id: 'members.view_all', label: '전체 회원 조회', category: '운영 관리' },
+  { id: 'members.create', label: '회원 생성', category: '운영 관리' },
+  { id: 'members.update', label: '회원 편집', category: '운영 관리' },
+  
+  { id: 'customers.view_all', label: '고객 관리', category: '운영 관리' },
+  { id: 'customers.create', label: '고객 생성', category: '운영 관리' },
+  { id: 'customers.update', label: '고객 편집', category: '운영 관리' },
+  
+  { id: 'trainers.view_all', label: '트레이너 관리', category: '운영 관리' },
+  { id: 'trainers.create', label: '트레이너 생성', category: '운영 관리' },
+  { id: 'trainers.update', label: '트레이너 편집', category: '운영 관리' },
+  
+  // OT 관리
+  { id: 'ot.view_assigned', label: 'OT 배정', category: 'OT 관리' },
+  { id: 'ot.view_all', label: '전체 OT 조회', category: 'OT 관리' },
+  { id: 'ot.assign', label: 'OT 할당', category: 'OT 관리' },
+  { id: 'ot.progress_update', label: 'OT 진행 업데이트', category: 'OT 관리' },
+  
+  // 이용권 관리
+  { id: 'pass.view_all', label: '이용권 관리', category: '이용권 관리' },
+  { id: 'pass.create', label: '이용권 생성', category: '이용권 관리' },
   
   // 시스템 관리
-  { id: 'users.view_all', label: '직원 조회', category: '시스템 관리' },
+  { id: 'users.view_all', label: '직원 관리', category: '시스템 관리' },
   { id: 'users.create', label: '직원 생성', category: '시스템 관리' },
   { id: 'users.update', label: '직원 편집', category: '시스템 관리' },
+  
+  { id: 'admin.task_management', label: '업무 관리', category: '시스템 관리' },
+  { id: 'admin.announcements', label: '공지사항 관리', category: '시스템 관리' },
+  { id: 'admin.reports', label: '보고서 관리', category: '시스템 관리' },
+  { id: 'admin.suggestions', label: '건의사항 관리', category: '시스템 관리' },
 ];
 
 const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
@@ -89,7 +101,6 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
     password: '',
     confirmPassword: '',
     status: 'active' as UserStatus,
-    department: '',
     position: '' as UserPosition,
     hireDate: format(new Date(), 'yyyy-MM-dd'),
     role: 'reception' as UserRole,
@@ -108,63 +119,40 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
       setErrors({ ...errors, [name]: '' });
     }
     
-    // 부서에 따른 기본 권한 설정
-    if (name === 'department') {
+    // 역할에 따른 기본 권한 설정
+    if (name === 'role') {
       let defaultPermissions: string[] = [];
       switch (value) {
         case 'admin':
-          defaultPermissions = ['all']; // 모든 권한
+          // 관리자는 모든 권한
+          defaultPermissions = AVAILABLE_PERMISSIONS.map(p => p.id);
           break;
         case 'reception':
           defaultPermissions = [
             'tasks.view_assigned', 'tasks.view_department', 'tasks.create', 'tasks.update', 'tasks.comment',
             'schedules.view_all', 'schedules.create', 'schedules.update',
-            'members.view_all', 'members.create', 'members.update',
+            'members.view_department', 'members.create', 'members.update',
+            'customers.view_all', 'customers.update',
+            'trainers.view_all',
             'sales.create', 'sales.view_all',
             'reports.create', 'reports.view_department',
-            'ot.view_all', 'ot.assign', 'ot.progress_update',
+            'ot.view_assigned', 'ot.assign', 'ot.progress_update',
             'pass.view_all', 'pass.create',
-            'vending.view_all',
+            'vending.view_own',
             'announcements.read',
             'suggestions.create', 'suggestions.view_own',
             'manuals.read'
           ];
           break;
         case 'fitness':
-          defaultPermissions = [
-            'tasks.view_assigned', 'tasks.view_department', 'tasks.create', 'tasks.update', 'tasks.comment',
-            'schedules.view_department', 'schedules.create', 'schedules.update',
-            'members.view_department', 'members.update',
-            'sales.create', 'sales.view_department',
-            'reports.create', 'reports.view_department',
-            'ot.view_assigned', 'ot.progress_update',
-            'vending.view_own',
-            'announcements.read',
-            'suggestions.create', 'suggestions.view_own',
-            'manuals.read'
-          ];
-          break;
         case 'tennis':
-          defaultPermissions = [
-            'tasks.view_assigned', 'tasks.view_department', 'tasks.create', 'tasks.update', 'tasks.comment',
-            'schedules.view_department', 'schedules.create', 'schedules.update',
-            'members.view_department', 'members.update',
-            'sales.create', 'sales.view_department',
-            'reports.create', 'reports.view_department',
-            'ot.view_assigned', 'ot.progress_update',
-            'vending.view_own',
-            'announcements.read',
-            'suggestions.create', 'suggestions.view_own',
-            'manuals.read'
-          ];
-          break;
         case 'golf':
           defaultPermissions = [
-            'tasks.view_assigned', 'tasks.view_department', 'tasks.create', 'tasks.update', 'tasks.comment',
-            'schedules.view_department', 'schedules.create', 'schedules.update',
+            'tasks.view_assigned', 'tasks.create', 'tasks.update', 'tasks.comment',
+            'schedules.view_department', 'schedules.view_own', 'schedules.create', 'schedules.update',
             'members.view_department', 'members.update',
-            'sales.create', 'sales.view_department',
-            'reports.create', 'reports.view_department',
+            'sales.create', 'sales.view_own',
+            'reports.create', 'reports.view_own',
             'ot.view_assigned', 'ot.progress_update',
             'vending.view_own',
             'announcements.read',
@@ -178,58 +166,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
       
       setFormData(prev => ({
         ...prev,
-        department: value,
-        permissions: defaultPermissions
-      }));
-    }
-    
-    // 역할에 따른 권한 설정
-    if (name === 'role') {
-      let rolePermissions: string[] = [];
-      switch (value) {
-        case 'admin':
-          rolePermissions = ['all'];
-          break;
-        case 'reception':
-          rolePermissions = [
-            'tasks.view_assigned', 'tasks.view_department', 'tasks.create', 'tasks.update', 'tasks.comment',
-            'schedules.view_all', 'schedules.create', 'schedules.update',
-            'members.view_all', 'members.create', 'members.update',
-            'sales.create', 'sales.view_all',
-            'reports.create', 'reports.view_department',
-            'ot.view_all', 'ot.assign', 'ot.progress_update',
-            'pass.view_all', 'pass.create',
-            'vending.view_all',
-            'announcements.read',
-            'suggestions.create', 'suggestions.view_own',
-            'manuals.read'
-          ];
-          break;
-        case 'fitness':
-        case 'tennis':
-        case 'golf':
-          rolePermissions = [
-            'tasks.view_assigned', 'tasks.view_department', 'tasks.create', 'tasks.update', 'tasks.comment',
-            'schedules.view_department', 'schedules.create', 'schedules.update',
-            'members.view_department', 'members.update',
-            'sales.create', 'sales.view_department',
-            'reports.create', 'reports.view_department',
-            'ot.view_assigned', 'ot.progress_update',
-            'vending.view_own',
-            'announcements.read',
-            'suggestions.create', 'suggestions.view_own',
-            'manuals.read'
-          ];
-          break;
-        default:
-          // 기존 부서별 권한 유지
-          rolePermissions = formData.permissions;
-      }
-      
-      setFormData(prev => ({
-        ...prev,
         role: value as UserRole,
-        permissions: value === 'admin' ? ['all'] : rolePermissions
+        permissions: defaultPermissions
       }));
     }
   };
@@ -280,7 +218,6 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
       newErrors.confirmPassword = '비밀번호가 일치하지 않습니다';
     }
     
-    if (!formData.department) newErrors.department = '부서를 입력해 주세요';
     if (!formData.position) newErrors.position = '직책을 입력해 주세요';
     
     setErrors(newErrors);
@@ -304,7 +241,6 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
         password: formData.password,
         status: formData.status,
         role: formData.role,
-        department: formData.department,
         position: formData.position,
         hireDate: formData.hireDate,
         permissions: formData.permissions
@@ -499,34 +435,6 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
               <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
                 <h3 className="font-medium text-slate-900 mb-3">직원 정보</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* 부서 */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      부서
-                      <span className="text-red-500 ml-1">*</span>
-                    </label>
-                    <select
-                      name="department"
-                      value={formData.department}
-                      onChange={handleChange}
-                      className={clsx(
-                        'w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-                        errors.department ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
-                      )}
-                      required
-                    >
-                      <option value="">부서 선택</option>
-                      <option value="admin">관리자</option>
-                      <option value="reception">리셉션</option>
-                      <option value="fitness">헬스</option>
-                      <option value="tennis">테니스</option>
-                      <option value="golf">골프</option>
-                    </select>
-                    {errors.department && (
-                      <p className="mt-1 text-sm text-red-500">{errors.department}</p>
-                    )}
-                  </div>
-                  
                   {/* 직책 */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -584,7 +492,6 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       required
                     >
-                      <option value="staff">일반 직원</option>
                       <option value="reception">리셉션</option>
                       <option value="fitness">헬스</option>
                       <option value="tennis">테니스</option>
@@ -592,7 +499,6 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       <option value="admin">관리자</option>
                     </select>
                     <p className="mt-1 text-xs text-slate-500">
-                      • 일반 직원: 부서별 기본 권한<br/>
                       • 리셉션: 회원관리, 일정관리, 매출관리 등 프론트 업무 권한<br/>
                       • 헬스: 회원관리, 일정관리, OT 진행 권한<br/>
                       • 테니스: 회원관리, 일정관리, OT 진행 권한<br/>
