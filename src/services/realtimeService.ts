@@ -380,11 +380,14 @@ export class RealtimeService {
     }
     
     this.reconnectAttempts++;
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+    const delay = Math.min(this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1), 30000); // 최대 30초
     
     logger.info(`재연결 시도 ${this.reconnectAttempts}/${this.maxReconnectAttempts} (${delay}ms 후) - ${channelName}`);
     
-    setTimeout(() => {
+    // setTimeout 대신 Promise 기반으로 처리
+    Promise.resolve().then(() => {
+      return new Promise(resolve => setTimeout(resolve, delay));
+    }).then(() => {
       try {
         // 기존 채널이 있으면 먼저 정리
         if (this.channels.has(channelName)) {
@@ -396,7 +399,9 @@ export class RealtimeService {
       } catch (error) {
         logger.error(`재연결 중 오류 [${channelName}]:`, error);
       }
-    }, delay);
+    }).catch(error => {
+      logger.error(`재연결 Promise 오류 [${channelName}]:`, error);
+    });
   }
 
   // 채널 구독 해제 - 안전한 방식으로 수정
@@ -409,10 +414,17 @@ export class RealtimeService {
         // 채널을 먼저 Map에서 제거하여 재귀 방지
         this.channels.delete(channelName);
         
-        // 그 다음 Supabase에서 제거
-        supabase.removeChannel(channel);
-        
-        logger.info(`채널 구독 해제 완료: ${channelName}`);
+        // Promise 기반 작업을 안전하게 처리
+        Promise.resolve().then(() => {
+          try {
+            supabase.removeChannel(channel);
+            logger.info(`채널 구독 해제 완료: ${channelName}`);
+          } catch (removeError) {
+            logger.error(`Supabase 채널 제거 중 오류 [${channelName}]:`, removeError);
+          }
+        }).catch(error => {
+          logger.error(`채널 제거 Promise 오류 [${channelName}]:`, error);
+        });
       }
     } catch (error) {
       logger.error(`채널 구독 해제 중 오류 [${channelName}]:`, error);

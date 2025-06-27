@@ -306,7 +306,7 @@ export class ErrorHandler {
     this.errorLog.push(appError);
 
     // 개발 환경에서는 상세 로그
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.group(`🚨 [ERROR ${appError.severity.toUpperCase()}] ${appError.type}`);
       console.error('Original:', appError.message);
       console.info('User Message:', appError.userMessage);
@@ -315,7 +315,7 @@ export class ErrorHandler {
     }
 
     // 프로덕션에서는 중요한 에러만
-    if (process.env.NODE_ENV === 'production' && 
+    if (import.meta.env.PROD && 
         (appError.severity === 'high' || appError.severity === 'critical')) {
       console.error('[ERROR]', {
         type: appError.type,

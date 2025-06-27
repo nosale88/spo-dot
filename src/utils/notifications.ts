@@ -237,7 +237,7 @@ class NotificationSystem {
 
 // 🚀 Logger 시스템 (console.log 대체)
 class Logger {
-  private isDevelopment = process.env.NODE_ENV === 'development';
+  private isDevelopment = import.meta.env.DEV;
 
   // 개발 환경에서만 콘솔 출력
   private log(level: 'log' | 'error' | 'warn' | 'info', message: string, ...args: any[]) {
@@ -317,7 +317,7 @@ export const confirmDelete = (itemName?: string) =>
   });
 
 // 개발용 코드 감지 및 경고
-if (process.env.NODE_ENV === 'production') {
+if (import.meta.env.PROD) {
   // 프로덕션에서 console.log 사용시 경고
   const originalLog = console.log;
   console.log = (...args) => {

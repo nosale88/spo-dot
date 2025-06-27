@@ -69,6 +69,7 @@ export default defineConfig({
   
   // 환경 변수 설정
   define: {
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0')
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
   }
 });

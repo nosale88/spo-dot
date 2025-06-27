@@ -540,7 +540,7 @@ export const logPermissionCheck = (
   reason?: string
 ): void => {
   // 프로덕션 환경에서는 보안 로그 시스템으로 전송
-  if (process.env.NODE_ENV === 'production') {
+  if (import.meta.env.PROD) {
     // TODO: 실제 보안 로그 시스템 연동
     console.warn(`[SECURITY] ${result.toUpperCase()}: User ${userId} (${userRole}) attempted ${action} on ${resource}. Reason: ${reason || 'N/A'}`);
   } else {

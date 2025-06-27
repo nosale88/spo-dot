@@ -57,7 +57,7 @@ export class SecurityAuditSystem {
     this.notifyListeners(securityEvent);
     
     // 콘솔 출력 (개발/프로덕션 구분)
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       this.logToConsole(securityEvent);
     } else {
       this.logToProduction(securityEvent);
