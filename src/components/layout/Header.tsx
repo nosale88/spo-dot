@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationCenter from '@/components/common/NotificationCenter';
 import InitialsAvatar from '@/components/common/InitialsAvatar';
-import { RealtimeStatusBar, RealtimeDebugPanel } from '@/components/common/RealtimeStatus';
+import { RealtimeDebugPanel } from '@/components/common/RealtimeStatus';
 import { rolePermissions } from '../../types/permissions';
 import Icon from '../common/Icon';
 
@@ -85,8 +85,7 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
           </div>
         )}
         
-        {/* 실시간 상태 표시 */}
-        <RealtimeStatusBar />
+        {/* 실시간 상태 표시 (비활성화됨) */}
         
         {/* 알림 아이콘 */}
         <button 

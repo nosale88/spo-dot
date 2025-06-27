@@ -34,4 +34,9 @@ export const TeamOnlineUsers: React.FC = () => {
 export const RealtimeDebugPanel: React.FC = () => {
   // 실시간 기능 비활성화로 인한 빈 컴포넌트
   return null;
-}; 
+};
+
+// 레거시 호환성을 위한 추가 export들
+export const RealtimeStatusBar: React.FC = () => null;
+export const OnlineUsers: React.FC = () => null;
+export const RealtimeNotificationBadge: React.FC = () => null; 
