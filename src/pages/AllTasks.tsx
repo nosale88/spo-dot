@@ -14,6 +14,7 @@ import { ko, Locale } from 'date-fns/locale';
 import { startOfWeek, getDay } from 'date-fns'; 
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import '../styles/calendar.css';
+import TaskDetails from '../components/tasks/TaskDetails';
 
 const locales = {
   'ko': ko,
@@ -75,6 +76,8 @@ const AllTasks = () => {
   const [currentView, setCurrentView] = useState<AllTaskView>('list');
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [selectedStaffId, setSelectedStaffId] = useState<string>('all');
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showTaskDetails, setShowTaskDetails] = useState(false);
 
   const today = new Date();
   const formattedDate = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 ${
@@ -125,6 +128,17 @@ const AllTasks = () => {
     allDay: true,
     originalTask: task,
   })), [filteredTasks]);
+
+  // 업무 선택 핸들러
+  const handleTaskSelect = (task: Task) => {
+    setSelectedTask(task);
+    setShowTaskDetails(true);
+  };
+
+  // 캘린더 이벤트 클릭 핸들러
+  const handleEventSelect = (event: CalendarEvent) => {
+    handleTaskSelect(event.originalTask);
+  };
 
   if (loadingStaff) {
     return (
@@ -223,7 +237,13 @@ const AllTasks = () => {
                     <tr key={task.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                       <td className="py-3 pr-3 font-medium text-slate-800">{getAssignedToDisplay(task)}</td>
                       <td className="py-3 pr-3">
-                        <p className="font-semibold text-slate-800">{task.title}</p>
+                        <p 
+                          className="font-semibold text-slate-800 hover:text-blue-600 cursor-pointer transition-colors"
+                          onClick={() => handleTaskSelect(task)}
+                          title="클릭하여 상세 보기"
+                        >
+                          {task.title}
+                        </p>
                         {task.description && <p className="text-xs text-slate-500 mt-1">{task.description}</p>}
                         {task.startTime && task.endTime && (
                           <p className="text-xs text-blue-600 mt-1">
@@ -258,6 +278,7 @@ const AllTasks = () => {
               onView={(view) => setCurrentView(view as AllTaskView)}
               date={calendarDate}
               onNavigate={(date) => setCalendarDate(date)}
+              onSelectEvent={handleEventSelect}
               culture="ko"
               messages={{
                 next: '다음',
@@ -286,12 +307,13 @@ const AllTasks = () => {
                   })(),
                   color: 'white',
                   border: 'none',
-                  borderRadius: '4px'
+                  borderRadius: '4px',
+                  cursor: 'pointer'
                 }
               })}
               components={{
                 event: ({ event }) => (
-                  <div className="text-xs">
+                  <div className="text-xs cursor-pointer">
                     <div className="font-medium">{event.title}</div>
                     <div className="text-xs opacity-90">
                       {getAssignedToDisplay(event.originalTask)}
@@ -328,6 +350,16 @@ const AllTasks = () => {
           </p>
         </div>
       </section>
+
+      {showTaskDetails && selectedTask && (
+        <TaskDetails
+          task={selectedTask}
+          onClose={() => {
+            setShowTaskDetails(false);
+            setSelectedTask(null);
+          }}
+        />
+      )}
     </div>
   );
 };
