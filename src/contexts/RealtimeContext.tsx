@@ -61,77 +61,11 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
     };
   }, [user?.id]);
 
-  // 실시간 연결 초기화
+  // 실시간 연결 초기화 (비활성화)
   const initializeRealtimeConnections = async () => {
-    if (!user?.id) return;
-
-    try {
-      logger.info('실시간 연결 초기화 시작');
-
-      // 1. 사용자별 알림 구독
-      const unsubscribeNotifications = realtimeService.subscribeToUserNotifications(
-        user.id,
-        (notification) => {
-          logger.info('실시간 알림 수신:', notification);
-          // 등록된 모든 콜백 함수 호출
-          notificationCallbacks.forEach(callback => callback(notification));
-        }
-      );
-      unsubscribeFunctions.add(unsubscribeNotifications);
-
-      // 2. 작업 변경 구독
-      const unsubscribeTasks = realtimeService.subscribeToTaskChanges(
-        user.id,
-        (event) => {
-          logger.info('작업 변경 감지:', event);
-          // 필요시 작업 목록 새로고침 등의 처리
-        }
-      );
-      unsubscribeFunctions.add(unsubscribeTasks);
-
-      // 3. 공지사항 구독
-      const unsubscribeAnnouncements = realtimeService.subscribeToAnnouncements(
-        (event) => {
-          logger.info('공지사항 변경 감지:', event);
-          // 필요시 공지사항 목록 새로고침 등의 처리
-        }
-      );
-      unsubscribeFunctions.add(unsubscribeAnnouncements);
-
-      // 4. 일정 변경 구독
-      const unsubscribeSchedule = realtimeService.subscribeToScheduleChanges(
-        user.id,
-        (event) => {
-          logger.info('일정 변경 감지:', event);
-          // 필요시 일정 목록 새로고침 등의 처리
-        }
-      );
-      unsubscribeFunctions.add(unsubscribeSchedule);
-
-      // 5. 온라인 사용자 추적 (전체 워크스페이스)
-      const unsubscribePresence = realtimeService.subscribeToPresence(
-        'workspace_presence',
-        user.id,
-        {
-          name: user.name || user.email || '사용자',
-          role: user.role || 'member',
-          avatar: user.avatar
-        },
-        (presences) => {
-          setOnlineUsers(presences);
-        }
-      );
-      unsubscribeFunctions.add(unsubscribePresence);
-
-      // 연결 상태 확인
-      const connectionStatus = await realtimeService.checkConnection();
-      setIsConnected(connectionStatus);
-
-      logger.info('실시간 연결 초기화 완료');
-    } catch (error) {
-      logger.error('실시간 연결 초기화 실패:', error);
-      setIsConnected(false);
-    }
+    // 실시간 기능 비활성화
+    logger.info('실시간 연결 비활성화됨');
+    setIsConnected(false);
   };
 
   // 정리 함수
@@ -171,30 +105,13 @@ export const RealtimeProvider: React.FC<{ children: ReactNode }> = ({ children }
     return unsubscribe;
   };
 
-  // 연결 상태 새로고침
+  // 연결 상태 새로고침 (비활성화)
   const refreshConnection = async () => {
-    const connectionStatus = await realtimeService.checkConnection();
-    setIsConnected(connectionStatus);
-    
-    if (!connectionStatus && user?.id) {
-      // 연결이 끊어진 경우 재연결 시도
-      cleanup();
-      setTimeout(() => {
-        initializeRealtimeConnections();
-      }, 1000);
-    }
+    // 실시간 기능 비활성화로 인한 더미 함수
+    setIsConnected(false);
   };
 
-  // 주기적 연결 상태 확인 (30초마다)
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      if (user?.id) {
-        await refreshConnection();
-      }
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [user?.id]);
+  // 주기적 연결 상태 확인 비활성화
 
   const value: RealtimeContextType = {
     isConnected,

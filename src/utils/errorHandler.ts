@@ -189,11 +189,12 @@ export class ErrorHandler {
   private handleNetworkError(error: any, context?: Partial<AppError['context']>): AppError {
     return {
       type: 'network',
-      severity: 'medium',
+      severity: 'low',
       message: error.message,
-      userMessage: '네트워크 연결을 확인하고 다시 시도해주세요.',
+      userMessage: '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
       context: { ...context, timestamp: new Date() },
-      retryable: true
+      retryable: true,
+      silent: true // 네트워크 에러 알림 숨김
     };
   }
 
