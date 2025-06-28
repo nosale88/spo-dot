@@ -39,6 +39,10 @@ const Schedule = () => {
   const [expandedDay, setExpandedDay] = useState<Date | null>(null);
   const [daySchedules, setDaySchedules] = useState<ScheduleType[]>([]);
   
+  // ESC 키로 모달 닫기 훅
+  useEscClose(() => setShowDetails(false), showDetails);
+  useEscClose(() => setExpandedDay(null), !!expandedDay);
+  
   // 날짜에 맞는 일정 필터링
   useEffect(() => {
     let dateStr = format(currentDate, 'yyyy-MM-dd');
@@ -659,7 +663,6 @@ const Schedule = () => {
         
         {/* 일정 상세 보기 */}
         {showDetails && selectedSchedule && (
-          useEscClose(() => setShowDetails(false), true),
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -770,7 +773,6 @@ const Schedule = () => {
 
         {/* 날짜별 일정 확장 보기 모달 */}
         {expandedDay && (
-          useEscClose(() => setExpandedDay(null), true),
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

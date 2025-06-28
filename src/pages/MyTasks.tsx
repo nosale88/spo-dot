@@ -11,6 +11,7 @@ import {
   Check,
   X,
   Edit,
+  Plus,
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { useTask, Task, TaskStatus, TaskPriority } from '../contexts/TaskContext';
@@ -18,15 +19,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
 import type { Database } from '../types/database.types';
 import AddTaskModal from '../components/tasks/AddTaskModal';
-import { format, parseISO } from 'date-fns';
+import TaskDetails from '../components/tasks/TaskDetails';
+import { format, parseISO, isSameDay, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth } from 'date-fns';
 import { parse as dateFnsParse } from 'date-fns/parse'; 
 import { Calendar, dateFnsLocalizer, SlotInfo } from 'react-big-calendar';
 import { ko, Locale } from 'date-fns/locale';
-import { startOfWeek, getDay } from 'date-fns'; 
+import { getDay } from 'date-fns'; 
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import '../styles/calendar.css'; // Import custom calendar styles
-import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type Handover = Database['public']['Tables']['handovers']['Row'];
 type HandoverInput = Database['public']['Tables']['handovers']['Insert'];
@@ -93,6 +95,21 @@ const MyTasks = () => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  // 업무 상세보기 상태 추가
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isTaskDetailsOpen, setIsTaskDetailsOpen] = useState(false);
+
+  // 업무 클릭 핸들러 추가
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setIsTaskDetailsOpen(true);
+  };
+
+  const handleCloseTaskDetails = () => {
+    setIsTaskDetailsOpen(false);
+    setSelectedTask(null);
+  };
 
   // 현재 사용자에게 배정된 업무만 필터링
   const myTasks = useMemo(() => {
@@ -248,6 +265,58 @@ const MyTasks = () => {
     setIsAddTaskModalOpen(true);
   };
 
+  const handleEventClick = (event: CalendarEvent) => {
+    handleTaskClick(event.originalTask);
+  };
+
+  // 주간 뷰용 데이터 생성
+  const getWeekTasks = () => {
+    const weekStart = startOfWeek(calendarDate);
+    const weekEnd = endOfWeek(calendarDate);
+    const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+    
+    return days.map(day => {
+      const dayTasks = myTasks.filter(task => 
+        isSameDay(parseISO(task.dueDate), day)
+      );
+      
+      return {
+        date: day,
+        tasks: dayTasks
+      };
+    });
+  };
+
+  // 일간 뷰용 데이터 생성
+  const getDayTasks = () => {
+    return myTasks.filter(task => 
+      isSameDay(parseISO(task.dueDate), calendarDate)
+    );
+  };
+
+  // 월간 뷰용 데이터 생성
+  const getMonthTasks = () => {
+    const monthStart = startOfMonth(calendarDate);
+    const monthEnd = endOfMonth(calendarDate);
+    const calendarStart = startOfWeek(monthStart);
+    const calendarEnd = endOfWeek(monthEnd);
+    
+    const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+    
+    return days.map(day => {
+      const dayTasks = myTasks.filter(task => 
+        isSameDay(parseISO(task.dueDate), day)
+      );
+      
+      return {
+        date: day,
+        isCurrentMonth: isSameMonth(day, calendarDate),
+        tasks: dayTasks
+      };
+    });
+  };
+
+  // 캘린더 컴포넌트를 위한 CustomMonthDateCell
   const CustomMonthDateCell = ({ children, value: date, className }: { children: React.ReactNode, value: Date, className?: string }) => {
     const dayEvents = calendarEvents.filter(event => {
       const eventStartDate = new Date(event.start);
@@ -288,274 +357,598 @@ const MyTasks = () => {
     );
   };
 
+  // 캘린더 컴포넌트 설정
   const calendarComponents = useMemo(() => {
     if (currentView === 'month') {
       return {
         dateCellWrapper: CustomMonthDateCell,
       };
     }
-    return undefined; // Or an empty object {}, undefined should be fine for RBC components prop
-  }, [currentView, calendarEvents]); // CustomMonthDateCell implicitly depends on calendarEvents
+    return undefined;
+  }, [currentView, calendarEvents]);
 
   return (
-    <div className="p-6 bg-slate-100 min-h-screen">
-      <header className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">내 업무</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-sm text-slate-600">
-              {user?.name || '사용자'}님
-            </span>
-            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-              hasPermission('admin.dashboard') 
-                ? 'bg-blue-100 text-blue-800' 
-                : 'bg-gray-100 text-gray-600'
-            }`}>
-              {hasPermission('admin.dashboard') ? '관리자' : '일반 사용자'}
-            </span>
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* 헤더 섹션 */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 flex items-center">
+                <CalendarDays className="mr-3 text-blue-600" size={32} />
+                내 업무
+              </h1>
+              <p className="text-slate-600 mt-2">
+                {user?.name || '사용자'}님의 배정된 업무를 관리하세요
+                <span className={`ml-2 px-2 py-1 text-xs font-medium rounded-full ${
+                  hasPermission('admin.dashboard') 
+                    ? 'bg-blue-100 text-blue-800' 
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {hasPermission('admin.dashboard') ? '관리자' : '일반 사용자'}
+                </span>
+              </p>
+            </div>
+            
+            {/* 날짜 및 알림 */}
+            <div className="flex items-center gap-3">
+              <span className="text-slate-600 text-sm">{formattedDate}</span>
+              <button aria-label="Notifications" className="relative p-2 rounded-lg hover:bg-slate-100 transition-colors">
+                <Bell className="text-slate-600" size={20} />
+                <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+              </button>
+              {hasPermission('tasks.create') && (
+                <button 
+                  onClick={() => {
+                    setSelectedDateForNewTask(undefined);
+                    setIsAddTaskModalOpen(true);
+                  }} 
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg flex items-center space-x-2 transition-all hover:scale-105 shadow-md hover:shadow-lg"
+                >
+                  <PlusSquare size={20} />
+                  <span>업무 추가</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
-        <div className="flex items-center space-x-4">
-          <button aria-label="Notifications" className="relative">
-            <Bell className="text-slate-600 hover:text-slate-800 transition-colors" size={24} />
-            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-          </button>
-          <span className="text-sm text-slate-600">{formattedDate}</span>
+
+        {/* 공지사항 */}
+        <div className="bg-blue-600 text-white p-4 rounded-xl flex items-center space-x-3 shadow-sm">
+          <Megaphone size={24} className="flex-shrink-0" />
+          <p className="text-sm font-medium">공지사항: 이번 주 금요일 오후 3시에 전체 회의가 있습니다. 모든 직원은 참석해주세요.</p>
         </div>
-      </header>
 
-      <div className="bg-blue-600 text-white p-3 rounded-lg flex items-center space-x-3 mb-6 shadow-md">
-        <Megaphone size={24} className="flex-shrink-0" />
-        <p className="text-sm font-medium">공지사항: 이번 주 금요일 오후 3시에 전체 회의가 있습니다. 모든 직원은 참석해주세요.</p>
-      </div>
-
-      <section className="bg-white p-6 rounded-xl shadow-lg mb-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-          <h2 className="text-xl font-semibold text-slate-700 mb-3 sm:mb-0">내 업무 목록</h2>
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center p-1 bg-slate-200 rounded-lg">
+        {/* 업무 보기 컨트롤 */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* 뷰 모드 선택 */}
+            <div className="flex space-x-2 bg-slate-100 p-1 rounded-lg">
               {(['list', 'month', 'week', 'day'] as MyTaskView[]).map((view) => (
                 <button
                   key={view}
                   onClick={() => setCurrentView(view)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors 
-                              ${currentView === view 
-                                ? 'bg-blue-600 text-white shadow-sm'
-                                : 'text-slate-600 hover:bg-slate-300'}`}
+                  className={clsx(
+                    'px-4 py-2 rounded-md text-sm font-medium transition-all',
+                    currentView === view 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'text-slate-700 hover:text-slate-900 hover:bg-white'
+                  )}
                 >
                   {view === 'list' ? '목록' : view === 'month' ? '월간' : view === 'week' ? '주간' : '일간'}
                 </button>
               ))}
             </div>
-            <div className="relative">
-              <input 
-                type="date" 
-                defaultValue={new Date().toISOString().split('T')[0]} 
-                onChange={(e) => setCalendarDate(parseISO(e.target.value))} 
-                className="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pl-10"
-              />
-              <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+            
+            {/* 날짜 네비게이션 */}
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <input 
+                  type="date" 
+                  defaultValue={new Date().toISOString().split('T')[0]} 
+                  onChange={(e) => setCalendarDate(parseISO(e.target.value))} 
+                  className="pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-48"
+                />
+              </div>
+              {currentView !== 'list' && (
+                <button 
+                  onClick={() => setCalendarDate(new Date())} 
+                  className="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 hover:text-slate-900 hover:bg-slate-50 font-medium text-sm transition-colors"
+                >
+                  오늘
+                </button>
+              )}
             </div>
-            {currentView !== 'list' && (
-              <button 
-                onClick={() => setCalendarDate(new Date())} 
-                className="px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-slate-600 hover:bg-slate-300 border border-slate-300">
-                오늘
-              </button>
-            )}
-            {hasPermission('tasks.create') && (
-              <button 
-                onClick={() => {
-                  setSelectedDateForNewTask(undefined); // Clear any previously selected date for general add
-                  setIsAddTaskModalOpen(true);
-                }} 
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center space-x-2 transition-colors">
-                <PlusSquare size={18} />
-                <span>업무 추가</span>
-              </button>
+          </div>
+        </div>
+
+        {/* 업무 내용 */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-slate-900 flex items-center mb-4">
+              <CalendarDays className="mr-2 text-blue-600" size={20} />
+              내 업무 목록
+            </h3>
+
+            {currentView === 'list' ? (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[800px]">
+                  <thead>
+                    <tr className="border-b border-slate-200">
+                      <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider w-[35%]">업무</th>
+                      <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">담당자</th>
+                      <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">상태</th>
+                      <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">마감일</th>
+                      <th className="pb-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider">중요도</th>
+                      <th className="pb-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider">카테고리</th>
+                      <th className="pb-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider">작업</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {myTasks.length === 0 ? (
+                      <tr><td colSpan={7} className="text-center py-10 text-slate-500">표시할 업무가 없습니다.</td></tr>
+                    ) : (
+                      myTasks.map((task) => (
+                        <tr key={task.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors group">
+                          <td className="py-3 pr-3">
+                            <div className="flex items-center">
+                              <GripVertical className="w-5 h-5 text-slate-400 mr-2 opacity-0 group-hover:opacity-100 cursor-grab" />
+                                                             <div>
+                                 <p 
+                                   className="font-semibold text-slate-800 cursor-pointer hover:text-blue-600 transition-colors"
+                                   onClick={() => handleTaskClick(task)}
+                                 >
+                                   {task.title}
+                                 </p>
+                                {task.description && <p className="text-xs text-slate-500">{task.description}</p>}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 pr-3 text-sm text-slate-700">{Array.isArray(task.assignedToName) ? task.assignedToName.join(', ') : task.assignedToName}</td>
+                          <td className="py-3 pr-3">
+                            <select 
+                              value={task.status}
+                              onChange={(e) => handleTaskStatusChange(task.id, e.target.value as TaskStatus)}
+                              disabled={!hasPermission('tasks.update')}
+                              className={`text-sm p-1.5 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                                !hasPermission('tasks.update') ? 'bg-gray-100 cursor-not-allowed text-gray-500' : 'bg-white'
+                              }`}
+                              title={!hasPermission('tasks.update') ? '업무 수정 권한이 없습니다' : ''}
+                            >
+                              {taskStatusOptions.map(statusValue => (
+                                  <option key={statusValue} value={statusValue}>{getStatusDisplayName(statusValue)}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="py-3 pr-3 text-sm text-slate-700">
+                            {format(parseISO(task.dueDate), 'yyyy-MM-dd')}
+                          </td>
+                          <td className="py-3 text-center">
+                            <span className={`inline-block h-3 w-3 rounded-full ${getPriorityClass(task.priority)}`} title={task.priority}></span>
+                          </td>
+                          <td className="py-3 pr-3 text-sm text-slate-700 text-center">{task.category}</td>
+                          <td className="py-3 text-center">
+                            {hasPermission('tasks.update') || hasPermission('tasks.delete') ? (
+                              <div className="flex justify-center space-x-2">
+                                {hasPermission('tasks.update') && (
+                                  <button 
+                                    onClick={() => {
+                                      setEditingTask(task);
+                                    }} 
+                                    className="text-slate-500 hover:text-blue-600 transition-colors" 
+                                    title="수정"
+                                  >
+                                    <Edit size={14} />
+                                  </button>
+                                )}
+                                {hasPermission('tasks.delete') && (
+                                  <button 
+                                    onClick={() => {
+                                      if (window.confirm('정말로 이 업무를 삭제하시겠습니까?')) {
+                                        handleTaskDelete(task.id);
+                                      }
+                                    }} 
+                                    className="text-slate-500 hover:text-red-600 transition-colors" 
+                                    title="삭제"
+                                  >
+                                    <Trash2 size={18} />
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="flex justify-center">
+                                <span className="text-xs text-gray-400 px-2 py-1 bg-gray-100 rounded">
+                                  읽기 전용
+                                </span>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ) : currentView === 'month' ? (
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                {/* 요일 헤더 */}
+                <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
+                  {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (
+                    <div key={index} className="py-3 text-center font-semibold text-slate-700 border-r last:border-r-0 border-slate-200">
+                      {day}요일
+                    </div>
+                  ))}
+                </div>
+                
+                {/* 달력 그리드 */}
+                <div className="grid grid-cols-7 grid-rows-6 min-h-[600px]" style={{ height: 'calc(100vh - 350px)' }}>
+                  {getMonthTasks().map((day, index) => (
+                    <div 
+                      key={index} 
+                      className={clsx(
+                        "border-r border-b last:border-r-0 border-slate-200 p-2 overflow-hidden relative",
+                        !day.isCurrentMonth && "bg-slate-50",
+                        isSameDay(day.date, new Date()) && "bg-blue-50 ring-1 ring-blue-200"
+                      )}
+                    >
+                      {/* 날짜와 업무 추가 버튼 */}
+                      <div className="flex justify-between items-center mb-2">
+                        <span 
+                          className={clsx(
+                            "flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium cursor-pointer transition-colors",
+                            isSameDay(day.date, new Date()) 
+                              ? "bg-blue-600 text-white" 
+                              : day.isCurrentMonth 
+                                ? "text-slate-900 hover:bg-slate-100" 
+                                : "text-slate-400"
+                          )}
+                        >
+                          {format(day.date, 'd')}
+                        </span>
+                        
+                        {day.isCurrentMonth && hasPermission('tasks.create') && (
+                          <button 
+                            className="text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-300 hover:border-blue-600 p-1.5 rounded-lg transition-all hover:scale-110 shadow-sm"
+                            onClick={() => {
+                              // 로컬 시간대를 유지하여 정확한 날짜 전달
+                              const year = day.date.getFullYear();
+                              const month = String(day.date.getMonth() + 1).padStart(2, '0');
+                              const dayStr = String(day.date.getDate()).padStart(2, '0');
+                              const selectedDateStr = `${year}-${month}-${dayStr}`;
+                              console.log('📅 월간 뷰 업무 추가 날짜:', { originalDate: day.date, selectedDateStr });
+                              setSelectedDateForNewTask(selectedDateStr);
+                              setIsAddTaskModalOpen(true);
+                            }}
+                            title="업무 추가"
+                          >
+                            <Plus size={16} />
+                          </button>
+                        )}
+                      </div>
+                      
+                      {/* 업무 목록 */}
+                      <div className="space-y-1 max-h-24 overflow-hidden">
+                        {day.tasks.slice(0, 3).map(task => (
+                          <div 
+                            key={task.id}
+                            className={clsx(
+                              "p-1.5 text-xs rounded cursor-pointer text-white font-medium truncate transition-opacity hover:opacity-80",
+                              task.priority === 'urgent' && "bg-purple-500",
+                              task.priority === 'high' && "bg-red-500",
+                              task.priority === 'medium' && "bg-orange-500",
+                              task.priority === 'low' && "bg-green-500",
+                              !task.priority && "bg-blue-500",
+                              task.status === 'completed' && "opacity-60"
+                            )}
+                            onClick={() => handleTaskClick(task)}
+                            title={`${task.title} (${task.status})`}
+                          >
+                            <span className="flex items-center">
+                              <span className="ml-1">
+                                {task.title}
+                              </span>
+                            </span>
+                          </div>
+                        ))}
+                        
+                        {day.tasks.length > 3 && (
+                          <div className="text-xs text-center text-slate-500 cursor-pointer hover:text-blue-600 font-medium py-1">
+                            +{day.tasks.length - 3}개 더
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : currentView === 'week' ? (
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                {/* 주간 헤더 */}
+                <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
+                  {getWeekTasks().map((day, index) => (
+                    <div 
+                      key={index} 
+                      className={clsx(
+                        "py-4 px-2 text-center font-medium border-r last:border-r-0 border-slate-200",
+                        isSameDay(day.date, new Date()) && "bg-blue-50 border-blue-200"
+                      )}
+                    >
+                      <p className="text-sm text-slate-500 mb-1">
+                        {format(day.date, 'EEEE', { locale: ko })}
+                      </p>
+                      <p className={clsx(
+                        "text-lg font-semibold",
+                        isSameDay(day.date, new Date()) 
+                          ? "text-blue-600" 
+                          : "text-slate-900"
+                      )}>
+                        {format(day.date, 'd')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* 주간 캘린더 그리드 */}
+                <div className="grid grid-cols-7 min-h-[500px]" style={{ height: 'calc(100vh - 400px)' }}>
+                  {getWeekTasks().map((day, index) => (
+                    <div 
+                      key={index} 
+                      className={clsx(
+                        "border-r last:border-r-0 border-slate-200 p-3 overflow-y-auto",
+                        isSameDay(day.date, new Date()) && "bg-blue-50/30"
+                      )}
+                    >
+                      <div className="space-y-2">
+                        {day.tasks.map(task => (
+                          <div 
+                            key={task.id}
+                            className={clsx(
+                              "p-3 rounded-lg border transition-colors cursor-pointer hover:shadow-sm",
+                              task.status === 'completed' 
+                                ? "border-green-200 bg-green-50" 
+                                : "border-slate-200 bg-white hover:border-slate-300"
+                            )}
+                            onClick={() => handleTaskClick(task)}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className={clsx(
+                                "px-2 py-1 rounded-full text-xs font-medium",
+                                task.priority === 'urgent' && "bg-purple-100 text-purple-800",
+                                task.priority === 'high' && "bg-red-100 text-red-800",
+                                task.priority === 'medium' && "bg-orange-100 text-orange-800",
+                                task.priority === 'low' && "bg-green-100 text-green-800",
+                                !task.priority && "bg-blue-100 text-blue-800"
+                              )}>
+                                {task.priority === 'urgent' ? '긴급' : 
+                                 task.priority === 'high' ? '높음' : 
+                                 task.priority === 'medium' ? '보통' : 
+                                 task.priority === 'low' ? '낮음' : '기본'}
+                              </span>
+                            </div>
+                            
+                            <h4 className="font-medium text-sm text-slate-900 truncate mb-1">{task.title}</h4>
+                            
+                            <div className="text-xs text-slate-600">
+                              마감일: {format(parseISO(task.dueDate), 'MM-dd')}
+                            </div>
+                            
+                            <div className="text-xs text-slate-500 mt-1">
+                              상태: {getStatusDisplayName(task.status)}
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {day.tasks.length === 0 && hasPermission('tasks.create') && (
+                          <div 
+                            className="h-32 flex flex-col items-center justify-center border-2 border-dashed border-blue-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all hover:scale-105 group"
+                            onClick={() => {
+                              // 로컬 시간대를 유지하여 정확한 날짜 전달
+                              const year = day.date.getFullYear();
+                              const month = String(day.date.getMonth() + 1).padStart(2, '0');
+                              const dayStr = String(day.date.getDate()).padStart(2, '0');
+                              const selectedDateStr = `${year}-${month}-${dayStr}`;
+                              console.log('📅 주간 뷰 업무 추가 날짜:', { originalDate: day.date, selectedDateStr });
+                              setSelectedDateForNewTask(selectedDateStr);
+                              setIsAddTaskModalOpen(true);
+                            }}
+                          >
+                            <Plus size={24} className="text-blue-500 mb-2 group-hover:text-blue-600" />
+                            <span className="text-blue-600 text-sm font-medium text-center group-hover:text-blue-700">
+                              업무 추가
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : currentView === 'day' ? (
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                {/* 일간 헤더 */}
+                <div className="border-b border-slate-200 bg-slate-50 p-4">
+                  <div className="text-center">
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      {format(calendarDate, 'yyyy년 M월 d일 (EEEE)', { locale: ko })}
+                    </h3>
+                    <p className="text-sm text-slate-600 mt-1">
+                      총 {getDayTasks().length}개의 업무
+                    </p>
+                  </div>
+                </div>
+                
+                {/* 일간 업무 목록 */}
+                <div className="p-6">
+                  {getDayTasks().length === 0 ? (
+                    <div className="py-12 text-center">
+                      <CalendarDays className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+                      <h4 className="text-lg font-medium text-slate-900 mb-2">업무가 없습니다</h4>
+                      <p className="text-slate-500 mb-4">이 날짜에 예정된 업무가 없습니다.</p>
+                      {hasPermission('tasks.create') && (
+                        <button 
+                          onClick={() => {
+                            // 로컬 시간대를 유지하여 정확한 날짜 전달
+                            const year = calendarDate.getFullYear();
+                            const month = String(calendarDate.getMonth() + 1).padStart(2, '0');
+                            const dayStr = String(calendarDate.getDate()).padStart(2, '0');
+                            const selectedDateStr = `${year}-${month}-${dayStr}`;
+                            console.log('📅 일간 뷰 업무 추가 날짜:', { originalDate: calendarDate, selectedDateStr });
+                            setSelectedDateForNewTask(selectedDateStr);
+                            setIsAddTaskModalOpen(true);
+                          }}
+                          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          <Plus size={16} className="mr-1.5" />
+                          업무 추가하기
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="grid gap-4">
+                      {getDayTasks().map(task => (
+                        <div 
+                          key={task.id}
+                          className={clsx(
+                            "p-4 rounded-lg border transition-colors cursor-pointer hover:shadow-sm",
+                            task.status === 'completed' 
+                              ? "border-green-200 bg-green-50" 
+                              : "border-slate-200 bg-white hover:border-slate-300"
+                          )}
+                          onClick={() => handleTaskClick(task)}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              <span className={clsx(
+                                "px-3 py-1 rounded-full text-xs font-medium",
+                                task.priority === 'urgent' && "bg-purple-100 text-purple-800",
+                                task.priority === 'high' && "bg-red-100 text-red-800",
+                                task.priority === 'medium' && "bg-orange-100 text-orange-800",
+                                task.priority === 'low' && "bg-green-100 text-green-800",
+                                !task.priority && "bg-blue-100 text-blue-800"
+                              )}>
+                                {task.priority === 'urgent' ? '긴급' : 
+                                 task.priority === 'high' ? '높음' : 
+                                 task.priority === 'medium' ? '보통' : 
+                                 task.priority === 'low' ? '낮음' : '기본'}
+                              </span>
+                              
+                              <span className={clsx(
+                                "px-3 py-1 rounded-full text-xs font-medium",
+                                task.status === 'completed' && "bg-green-100 text-green-800",
+                                task.status === 'in-progress' && "bg-blue-100 text-blue-800",
+                                task.status === 'pending' && "bg-yellow-100 text-yellow-800",
+                                task.status === 'cancelled' && "bg-red-100 text-red-800"
+                              )}>
+                                {getStatusDisplayName(task.status)}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <h4 className="font-semibold text-lg text-slate-900 mb-2">{task.title}</h4>
+                          
+                          {task.description && (
+                            <p className="text-slate-600 mb-3">{task.description}</p>
+                          )}
+                          
+                          <div className="flex items-center justify-between text-sm text-slate-500">
+                            <span>마감일: {format(parseISO(task.dueDate), 'yyyy-MM-dd')}</span>
+                            <span>생성일: {format(parseISO(task.createdAt), 'yyyy-MM-dd')}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl shadow-lg" style={{ height: 'calc(100vh - 280px)' }}>
+                <Calendar<CalendarEvent>
+                  localizer={localizer}
+                  events={calendarEvents}
+                  startAccessor="start"
+                  endAccessor="end"
+                  titleAccessor="title"
+                  style={{ height: '100%' }}
+                  date={calendarDate}
+                  onNavigate={(newDate) => setCalendarDate(newDate)}
+                  onView={(newView) => setCurrentView(newView as MyTaskView)}
+                  view={currentView as Exclude<MyTaskView, 'list'>}
+                  messages={{
+                    allDay: '하루 종일',
+                    previous: '이전',
+                    next: '다음',
+                    today: '오늘',
+                    month: '월',
+                    week: '주',
+                    day: '일',
+                    agenda: '목록',
+                    date: '날짜',
+                    time: '시간',
+                    event: '이벤트',
+                    noEventsInRange: '이 범위에는 업무가 없습니다.',
+                    showMore: total => `+${total} 더보기`,
+                  }}
+                  selectable 
+                  onSelectSlot={handleSelectSlot} 
+                  onSelectEvent={handleEventClick}
+                  components={calendarComponents} 
+                  className="rbc-calendar-main"
+                />
+              </div>
             )}
           </div>
         </div>
 
-        {currentView === 'list' ? (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider w-[35%]">업무</th>
-                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">담당자</th>
-                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">상태</th>
-                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">마감일</th>
-                  <th className="pb-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider">중요도</th>
-                  <th className="pb-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider">카테고리</th>
-                  <th className="pb-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider">작업</th>
-                </tr>
-              </thead>
-              <tbody>
-                {myTasks.length === 0 ? (
-                  <tr><td colSpan={7} className="text-center py-10 text-slate-500">표시할 업무가 없습니다.</td></tr>
-                ) : (
-                  myTasks.map((task) => (
-                    <tr key={task.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors group">
-                      <td className="py-3 pr-3">
-                        <div className="flex items-center">
-                          <GripVertical className="w-5 h-5 text-slate-400 mr-2 opacity-0 group-hover:opacity-100 cursor-grab" />
-                          <div>
-                            <p className="font-semibold text-slate-800">{task.title}</p>
-                            {task.description && <p className="text-xs text-slate-500">{task.description}</p>}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 pr-3 text-sm text-slate-700">{Array.isArray(task.assignedToName) ? task.assignedToName.join(', ') : task.assignedToName}</td>
-                      <td className="py-3 pr-3">
-                        <select 
-                          value={task.status}
-                          onChange={(e) => handleTaskStatusChange(task.id, e.target.value as TaskStatus)}
-                          disabled={!hasPermission('tasks.update')}
-                          className={`text-sm p-1.5 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 ${
-                            !hasPermission('tasks.update') ? 'bg-gray-100 cursor-not-allowed text-gray-500' : 'bg-white'
-                          }`}
-                          title={!hasPermission('tasks.update') ? '업무 수정 권한이 없습니다' : ''}
-                        >
-                          {taskStatusOptions.map(statusValue => (
-                              <option key={statusValue} value={statusValue}>{getStatusDisplayName(statusValue)}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="py-3 pr-3 text-sm text-slate-700">
-                        {format(parseISO(task.dueDate), 'yyyy-MM-dd')}
-                      </td>
-                      <td className="py-3 text-center">
-                        <span className={`inline-block h-3 w-3 rounded-full ${getPriorityClass(task.priority)}`} title={task.priority}></span>
-                      </td>
-                      <td className="py-3 pr-3 text-sm text-slate-700 text-center">{task.category}</td>
-                      <td className="py-3 text-center">
-                        {hasPermission('tasks.update') || hasPermission('tasks.delete') ? (
-                          <div className="flex justify-center space-x-2">
-                            {hasPermission('tasks.update') && (
-                              <button 
-                                onClick={() => {
-                                  setEditingTask(task);
-                                }} 
-                                className="text-slate-500 hover:text-blue-600 transition-colors" 
-                                title="수정"
-                              >
-                                <Edit size={14} />
-                              </button>
-                            )}
-                            {hasPermission('tasks.delete') && (
-                              <button 
-                                onClick={() => {
-                                  if (window.confirm('정말로 이 업무를 삭제하시겠습니까?')) {
-                                    handleTaskDelete(task.id);
-                                  }
-                                }} 
-                                className="text-slate-500 hover:text-red-600 transition-colors" 
-                                title="삭제"
-                              >
-                                <Trash2 size={18} />
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex justify-center">
-                            <span className="text-xs text-gray-400 px-2 py-1 bg-gray-100 rounded">
-                              읽기 전용
-                            </span>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl shadow-lg" style={{ height: 'calc(100vh - 280px)' }}>
-            <Calendar<CalendarEvent>
-              localizer={localizer}
-              events={calendarEvents}
-              startAccessor="start"
-              endAccessor="end"
-              titleAccessor="title"
-              style={{ height: '100%' }}
-              date={calendarDate}
-              onNavigate={(newDate) => setCalendarDate(newDate)}
-              onView={(newView) => setCurrentView(newView as MyTaskView)}
-              view={currentView as Exclude<MyTaskView, 'list'>}
-              messages={{
-                allDay: '하루 종일',
-                previous: '이전',
-                next: '다음',
-                today: '오늘',
-                month: '월',
-                week: '주',
-                day: '일',
-                agenda: '목록',
-                date: '날짜',
-                time: '시간',
-                event: '이벤트',
-                noEventsInRange: '이 범위에는 업무가 없습니다.',
-                showMore: total => `+${total} 더보기`,
-              }}
-              selectable 
-              onSelectSlot={handleSelectSlot} 
-              components={calendarComponents} 
-              className="rbc-calendar-main"
-            />
-          </div>
-        )}
-      </section>
-
-      {/* 에러 및 성공 메시지 */}
-      <AnimatePresence>
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center"
-          >
-            <AlertCircle className="text-red-500 mr-3" size={20} />
-            <span className="text-red-700">{error}</span>
-            <button
-              onClick={() => setError(null)}
-              className="ml-auto text-red-500 hover:text-red-700"
+        {/* 에러 및 성공 메시지 */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center"
             >
-              <X size={16} />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <AlertCircle className="text-red-500 mr-3" size={20} />
+              <span className="text-red-700">{error}</span>
+              <button
+                onClick={() => setError(null)}
+                className="ml-auto text-red-500 hover:text-red-700"
+              >
+                <X size={16} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <AnimatePresence>
-        {success && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center"
-          >
-            <Check className="text-green-500 mr-3" size={20} />
-            <span className="text-green-700">{success}</span>
-            <button
-              onClick={() => setSuccess(null)}
-              className="ml-auto text-green-500 hover:text-green-700"
+        <AnimatePresence>
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center"
             >
-              <X size={16} />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <Check className="text-green-500 mr-3" size={20} />
+              <span className="text-green-700">{success}</span>
+              <button
+                onClick={() => setSuccess(null)}
+                className="ml-auto text-green-500 hover:text-green-700"
+              >
+                <X size={16} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* 금일 인계사항 작성 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-6 rounded-xl shadow-lg"
-        >
+                {/* 인계사항 섹션 */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 금일 인계사항 작성 */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white p-6 rounded-xl shadow-sm border border-slate-200"
+          >
           <h2 className="text-xl font-semibold text-slate-700 mb-4 flex items-center">
             <Edit3 className="mr-2 text-blue-600" size={20} />
             금일 인계사항 작성
@@ -635,12 +1028,12 @@ const MyTasks = () => {
         </motion.div>
 
         {/* 이전 인계사항 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white p-6 rounded-xl shadow-lg"
-        >
+                  <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white p-6 rounded-xl shadow-sm border border-slate-200"
+          >
           <h2 className="text-xl font-semibold text-slate-700 mb-4 flex items-center">
             <CalendarDays className="mr-2 text-purple-600" size={20} />
             이전 인계사항
@@ -679,9 +1072,10 @@ const MyTasks = () => {
               <CalendarDays size={48} className="mx-auto text-slate-300 mb-3" />
               <p className="text-sm text-slate-500">이전 인계사항이 없습니다.</p>
             </div>
-          )}
-        </motion.div>
-      </section>
+                      )}
+          </motion.div>
+        </section>
+      </div>
 
       {isAddTaskModalOpen && (
         <AddTaskModal 
@@ -701,6 +1095,14 @@ const MyTasks = () => {
             updateTask(editingTask.id, updates);
             setEditingTask(null);
           }}
+        />
+      )}
+
+      {/* 업무 상세보기 모달 */}
+      {selectedTask && isTaskDetailsOpen && (
+        <TaskDetails
+          task={selectedTask}
+          onClose={handleCloseTaskDetails}
         />
       )}
     </div>

@@ -24,6 +24,7 @@ import StaffManagement from "./pages/admin/StaffManagement";
 import AdminTaskManagement from "./pages/admin/TaskManagement";
 import AnnouncementsManagement from "./pages/admin/AnnouncementsManagement";
 import AdminSuggestionsManagement from "./pages/admin/SuggestionsManagement";
+import DailyReportManagement from "./pages/admin/DailyReportManagement";
 import CustomerList from "./pages/customer/CustomerList";
 import Clients from "./pages/Clients";
 import SalesReport from "./pages/SalesReport";
@@ -40,6 +41,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { NotificationProvider } from './contexts/NotificationContext';
 import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
 import SalesReportCreate from "./pages/SalesReportCreate";
+import Toast from './components/common/Toast';
 
 function App() {
   // 🚀 자동 알림 스케줄러 활성화
@@ -185,6 +187,17 @@ function App() {
                               </ProtectedRoute>
                             } 
                           />
+                          <Route 
+                            path="admin/daily-reports" 
+                            element={
+                              <ProtectedRoute 
+                                requiredRole="admin"
+                                requiredPermission="reports.view_all"
+                              >
+                                <DailyReportManagement />
+                              </ProtectedRoute>
+                            } 
+                          />
                           
                           {/* 운영팀 전용 경로 */}
                           <Route 
@@ -271,6 +284,7 @@ function App() {
             </AnnouncementProvider>
           </MemberProvider>
         </UserProvider>
+        <Toast />
       </NotificationProvider>
     </AuthProvider>
   );

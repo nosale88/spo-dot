@@ -30,7 +30,6 @@ const TaskComments = ({ taskId, comments }: TaskCommentsProps) => {
       
       if (success) {
         setNewComment('');
-        console.log('✅ 댓글이 성공적으로 추가되었습니다.');
       } else {
         console.error('❌ 댓글 추가 실패');
       }
@@ -50,32 +49,32 @@ const TaskComments = ({ taskId, comments }: TaskCommentsProps) => {
   
   return (
     <div className="space-y-4">
-      <h3 className="text-md font-medium text-slate-900 dark:text-white">댓글</h3>
+      <h3 className="text-md font-medium text-slate-900">댓글</h3>
       
       <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
         {comments && comments.length > 0 ? (
           comments.map(comment => (
-            <div key={comment.id} className="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
+            <div key={comment.id} className="p-3 bg-slate-50 rounded-lg">
               <div className="flex justify-between items-start">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
                     {comment.authorName.charAt(0)}
                   </div>
                   <div className="ml-2">
-                    <span className="font-medium text-slate-900 dark:text-white">{comment.authorName}</span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 ml-2">
+                    <span className="font-medium text-slate-900">{comment.authorName}</span>
+                    <span className="text-xs text-slate-500 ml-2">
                       {format(parseISO(comment.createdAt), 'yyyy.MM.dd HH:mm', { locale: ko })}
                     </span>
                   </div>
                 </div>
               </div>
-              <div className="mt-2 text-slate-700 dark:text-slate-300 text-sm whitespace-pre-wrap">
+              <div className="mt-2 text-slate-700 text-sm whitespace-pre-wrap">
                 {comment.content}
               </div>
             </div>
           ))
         ) : (
-          <div className="text-center py-6 text-slate-400 dark:text-slate-500">
+          <div className="text-center py-6 text-slate-400">
             <p>아직 댓글이 없습니다.</p>
           </div>
         )}
@@ -87,13 +86,13 @@ const TaskComments = ({ taskId, comments }: TaskCommentsProps) => {
           onChange={(e) => setNewComment(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="댓글을 입력하세요..."
-          className="form-input pr-12 w-full min-h-[80px]"
+          className="w-full min-h-[80px] p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none pr-12"
           disabled={isSubmitting}
         />
         <button
           onClick={handleAddComment}
           disabled={!newComment.trim() || isSubmitting}
-          className="absolute right-2 bottom-2 p-2 rounded-full bg-primary text-white disabled:opacity-50 disabled:pointer-events-none"
+          className="absolute right-2 bottom-2 p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none transition-colors"
         >
           {isSubmitting ? (
             <Loader2 size={18} className="animate-spin" />

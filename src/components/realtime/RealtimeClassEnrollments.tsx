@@ -80,7 +80,6 @@ export function RealtimeClassEnrollments() {
     const unsubscribe = subscribeToTable<ClassEnrollment>(
       'class_enrollments',
       async (payload: RealtimePayload<ClassEnrollment>) => {
-        console.log('수업 등록 변경:', payload);
         
         // 변경사항 발생 시 전체 목록 다시 가져오기
         const { data } = await supabase

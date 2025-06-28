@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useAnnouncement } from '../../contexts/AnnouncementContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotification } from '../../contexts/NotificationContext';
 import { Announcement } from '../../types'; 
 import { format, parseISO } from 'date-fns';
 import { Edit3, Trash2, PlusCircle, CheckSquare, Square } from 'lucide-react';
@@ -9,6 +10,7 @@ import { Edit3, Trash2, PlusCircle, CheckSquare, Square } from 'lucide-react';
 
 const AnnouncementsManagement: React.FC = () => {
   const { user } = useAuth();
+  const { showToast } = useNotification();
   const {
     announcements,
     loading,
@@ -83,7 +85,7 @@ const AnnouncementsManagement: React.FC = () => {
 
   const handleSaveAnnouncement = async () => {
     if (!currentAnnouncement || !currentAnnouncement.title?.trim() || !currentAnnouncement.content?.trim()) {
-      alert('제목과 내용은 필수 항목입니다.'); 
+      showToast('warning', '필수 항목 누락', '제목과 내용은 필수 항목입니다.'); 
       return;
     }
 
@@ -92,6 +94,7 @@ const AnnouncementsManagement: React.FC = () => {
       const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
       if (isEditMode && currentAnnouncement.id) {
         await updateAnnouncement({ ...currentAnnouncement, category, tags } as Partial<Announcement> & { id: string });
+        showToast('success', '공지사항 수정 완료', '공지사항이 성공적으로 수정되었습니다.');
       } else {
         const newAnnouncementData: Omit<Announcement, 'id' | 'createdAt' | 'updatedAt'> = {
           title: currentAnnouncement.title,
@@ -105,12 +108,13 @@ const AnnouncementsManagement: React.FC = () => {
           authorName: currentAnnouncement.authorName || user?.name || ''
         };
         await addAnnouncement(newAnnouncementData);
+        showToast('success', '공지사항 추가 완료', '새로운 공지사항이 성공적으로 추가되었습니다.');
       }
       handleCloseModal();
       fetchAnnouncements(); 
     } catch (saveError) {
       console.error('Failed to save announcement:', saveError);
-      alert('공지사항 저장에 실패했습니다.'); 
+      showToast('error', '공지사항 저장 실패', '공지사항 저장에 실패했습니다.'); 
     }
   };
 
@@ -119,9 +123,10 @@ const AnnouncementsManagement: React.FC = () => {
       try {
         await deleteAnnouncement(id);
         fetchAnnouncements(); 
+        showToast('success', '공지사항 삭제 완료', '공지사항이 성공적으로 삭제되었습니다.');
       } catch (deleteError) {
         console.error('Failed to delete announcement:', deleteError);
-        alert('공지사항 삭제에 실패했습니다.'); 
+        showToast('error', '공지사항 삭제 실패', '공지사항 삭제에 실패했습니다.'); 
       }
     }
   };

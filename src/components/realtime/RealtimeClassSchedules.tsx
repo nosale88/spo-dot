@@ -77,7 +77,6 @@ export function RealtimeClassSchedules() {
     const unsubscribe = subscribeToTable<ClassSchedule>(
       'class_schedules',
       async (payload: RealtimePayload<ClassSchedule>) => {
-        console.log('수업 일정 변경:', payload);
 
         // 변경사항 발생 시 전체 목록 다시 가져오기
         const { data } = await supabase

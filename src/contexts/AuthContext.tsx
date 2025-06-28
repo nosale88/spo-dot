@@ -1,5 +1,6 @@
 import { ReactNode, createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabaseApiService } from '../services/supabaseApi';
+import { secureApiService } from '../services/secureApiService';
 import { 
   UserRole, 
   Permission, 
@@ -9,6 +10,7 @@ import {
   canModifyData as checkDataModification,
   DataAccessLevel
 } from '../types/permissions';
+import { isSessionValid, refreshSession } from '../utils/securityUtils';
 
 // AuthContext 타입 정의
 interface User {
@@ -38,6 +40,11 @@ interface AuthContextType {
   isFitness: boolean;
   isTennis: boolean;
   isGolf: boolean;
+  
+  // 🔐 보안 강화 함수들
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  validateSession: () => boolean;
+  refreshUserSession: () => Promise<boolean>;
 }
 
 // 기본 Context 생성
@@ -51,36 +58,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 페이지 로드 시 저장된 사용자 정보 확인
     const checkAuth = async () => {
       try {
+        // 세션 유효성 검사
+        if (!isSessionValid()) {
+          localStorage.removeItem('currentUserId');
+          localStorage.removeItem('currentUserName');
+          localStorage.removeItem('authToken');
+          setIsLoading(false);
+          return;
+        }
+
         const currentUserId = localStorage.getItem('currentUserId');
         if (currentUserId) {
-          const userData = await supabaseApiService.auth.getCurrentUser();
-          setUser(userData);
-          console.log('✅ 사용자 인증 확인:', userData.role);
+          // 보안 강화된 API 사용
+          const response = await secureApiService.auth.getCurrentUser();
+          if (response.success && response.data) {
+            setUser(response.data);
+            
+            // 세션 자동 갱신
+            await refreshSession();
+          } else {
+            // 인증 실패 시 로그아웃 처리
+            await logout();
+          }
         }
       } catch (error) {
         console.error('Auth check failed:', error);
         localStorage.removeItem('currentUserId');
         localStorage.removeItem('currentUserName');
+        localStorage.removeItem('authToken');
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAuth();
+
+    // 세션 유효성을 주기적으로 확인 (5분마다)
+    const sessionCheck = setInterval(() => {
+      if (!isSessionValid()) {
+        logout();
+      } else {
+        refreshSession();
+      }
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(sessionCheck);
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const response = await supabaseApiService.auth.login({ email, password });
+      
+      // 보안 강화된 로그인 사용
+      const response = await secureApiService.auth.login({ email, password });
+      
+      if (!response.success || !response.data) {
+        throw new Error(response.error || '로그인에 실패했습니다.');
+      }
       
       // 로컬 스토리지에 사용자 정보 저장
-      localStorage.setItem('currentUserId', response.user.id);
-      localStorage.setItem('currentUserName', response.user.name);
-      localStorage.setItem('authToken', response.token);
+      localStorage.setItem('currentUserId', response.data.user.id);
+      localStorage.setItem('currentUserName', response.data.user.name);
+      localStorage.setItem('authToken', response.data.token);
       
-      setUser(response.user);
-      console.log('✅ 로그인 성공:', response.user.role);
+      setUser(response.data.user);
     } catch (error) {
       throw error;
     } finally {
@@ -101,6 +142,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
     }
   };
+
+  // 🔐 보안 강화 함수들
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    const response = await secureApiService.auth.changePassword(currentPassword, newPassword);
+    if (!response.success) {
+      throw new Error(response.error || '비밀번호 변경에 실패했습니다.');
+    }
+  };
+
+  const validateSession = useCallback((): boolean => {
+    return isSessionValid();
+  }, []);
+
+  const refreshUserSession = useCallback(async (): Promise<boolean> => {
+    try {
+      const result = await refreshSession();
+      if (!result) {
+        await logout();
+        return false;
+      }
+      return true;
+    } catch {
+      await logout();
+      return false;
+    }
+  }, []);
 
   // 🔐 권한 관리 함수들
   const hasPermission = useCallback((permission: Permission): boolean => {
@@ -150,7 +217,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isReception,
       isFitness,
       isTennis,
-      isGolf
+      isGolf,
+      changePassword,
+      validateSession,
+      refreshUserSession
     }}>
       {children}
     </AuthContext.Provider>

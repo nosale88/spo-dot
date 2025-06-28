@@ -445,6 +445,19 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
               />
             </CanManageAnnouncements>
 
+            {/* 일일 업무 보고 관리 */}
+            <PermissionGate permission="reports.view_all">
+              <SidebarLink 
+                name="일일 업무 보고 관리" 
+                path="/dashboard/admin/daily-reports" 
+                icon={<FileText size={22} />} 
+                badge={0}
+                open={open}
+                isMobile={isMobile}
+                setOpen={setOpen}
+              />
+            </PermissionGate>
+
             {/* 매출보고 관리 */}
             <PermissionGate permission="sales.view_all">
               <SidebarLink 

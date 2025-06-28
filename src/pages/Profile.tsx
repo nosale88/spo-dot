@@ -174,8 +174,6 @@ const NotificationSettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClo
 
   const handleSave = () => {
     // 실제로는 API를 통해 저장
-    console.log('이메일 알림 설정 저장:', emailNotifications);
-    console.log('앱 알림 설정 저장:', appNotifications);
     onClose();
   };
 

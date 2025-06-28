@@ -7,7 +7,7 @@ import { X, Save, Loader2 } from 'lucide-react';
 interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialDueDate?: string;
+  initialDueDate?: string | Date;
 }
 
 type TaskFormData = {
@@ -16,7 +16,7 @@ type TaskFormData = {
   dueDate: string;
   priority: TaskPriority;
   category: TaskCategory;
-  assignedToName: string; // For simplicity, we'll use name directly. In a real app, this would be a user ID.
+  assignedToName: string[]; // Changed from string to string[]
 };
 
 const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDueDate }) => {
@@ -32,19 +32,46 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
   } = useForm<TaskFormData>();
 
   useEffect(() => {
-    if (isOpen && initialDueDate) {
-      try {
-        const formattedDate = new Date(initialDueDate).toISOString().split('T')[0];
-        setValue('dueDate', formattedDate);
-      } catch (error) {
-        console.error("Error formatting initialDueDate:", error);
-        setValue('dueDate', new Date().toISOString().split('T')[0]);
+    if (isOpen) {
+      // 마감일 설정 - 시간대 문제 해결
+      if (initialDueDate) {
+        try {
+          // Date 객체인 경우와 문자열인 경우 모두 처리
+          const date = typeof initialDueDate === 'string' ? new Date(initialDueDate) : initialDueDate;
+          
+          // 로컬 시간대로 YYYY-MM-DD 형식 생성 (UTC 변환 없이)
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const formattedDate = `${year}-${month}-${day}`;
+          
+          console.log('📅 날짜 설정:', { originalDate: initialDueDate, formattedDate });
+          setValue('dueDate', formattedDate);
+        } catch (error) {
+          console.error("Error formatting initialDueDate:", error);
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const day = String(today.getDate()).padStart(2, '0');
+          setValue('dueDate', `${year}-${month}-${day}`);
+        }
+      } else {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        setValue('dueDate', `${year}-${month}-${day}`);
       }
-    } else if (!isOpen) {
+      
+      // 담당자 이름 기본값 설정
+      if (currentUser?.name) {
+        setValue('assignedToName', [currentUser.name]); // Wrap in array
+      }
+    } else {
       reset();
       setIsSubmitting(false);
     }
-  }, [isOpen, initialDueDate, setValue, reset]);
+  }, [isOpen, initialDueDate, setValue, reset, currentUser]);
 
   const onSubmit = async (data: TaskFormData) => {
     if (!currentUser) {
@@ -62,16 +89,18 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
         priority: data.priority,
         category: data.category,
         status: 'pending', 
-        assignedTo: [`user-${data.assignedToName.replace(/\s+/g, '').toLowerCase()}`], // Array now
-        assignedToName: [data.assignedToName], // Array now
+        assignedTo: [currentUser.id], // 현재 사용자를 담당자로 설정
+        assignedToName: data.assignedToName, // Now already an array
         assignedBy: currentUser.id,
         assignedByName: currentUser.name || 'Unknown User',
       };
       
+      console.log('📝 업무 추가 시도:', newTaskPayload);
+      
       const taskId = await addTask(newTaskPayload);
       
       if (taskId) {
-        console.log('✅ 업무가 성공적으로 추가되었습니다:', taskId);
+        console.log('✅ 업무 추가 성공:', taskId);
         reset();
         onClose();
       } else {
@@ -223,11 +252,13 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
               name="assignedToName"
               control={control}
               rules={{ required: '담당자 이름은 필수입니다.' }}
-              render={({ field }) => (
+              render={({ field: { onChange, value, ...rest } }) => (
                 <input
-                  {...field}
+                  {...rest}
                   id="assignedToName"
                   type="text"
+                  value={value && value.length > 0 ? value[0] : ''} // Display first element of array
+                  onChange={e => onChange(e.target.value ? [e.target.value] : [])} // Convert to array
                   className={`w-full p-2 border rounded-md ${errors.assignedToName ? 'border-red-500' : 'border-slate-300'}`}
                   placeholder="예: 홍길동"
                 />
@@ -239,28 +270,18 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
           <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
-              onClick={() => { reset(); onClose(); }}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md border border-slate-300"
-              disabled={isSubmitting}
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors"
             >
               취소
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-transparent rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               disabled={isSubmitting || loading}
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" />
-                  <span>저장 중...</span>
-                </>
-              ) : (
-                <>
-                  <Save size={16} />
-                  <span>저장</span>
-                </>
-              )}
+              {isSubmitting || loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <Save size={16} className="mr-2" />}
+              업무 추가
             </button>
           </div>
         </form>

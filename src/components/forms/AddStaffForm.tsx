@@ -3,7 +3,8 @@ import { X, Save, User, Shield, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { useUser, UserStatus, Staff } from '../../contexts/UserContext';
-import { UserPosition, positionInfo } from '../../types/permissions';
+import { useNotification } from '../../contexts/NotificationContext';
+import { UserPosition, UserRole, positionInfo, rolePermissions } from '../../types/permissions';
 import clsx from 'clsx';
 
 export interface AddStaffFormProps {
@@ -31,6 +32,7 @@ const AVAILABLE_PERMISSIONS = [
 
 const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
   const { addStaff } = useUser();
+  const { showToast } = useNotification();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -42,7 +44,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
     department: '',
     position: '' as UserPosition,
     hireDate: format(new Date(), 'yyyy-MM-dd'),
-    role: 'staff' as 'staff' | 'admin',
+    role: 'reception' as UserRole,
     permissions: [] as string[]
   });
   
@@ -58,18 +60,13 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
       setErrors({ ...errors, [name]: '' });
     }
     
-    // 관리자 역할이 선택되면 모든 권한 추가
-    if (name === 'role' && value === 'admin') {
+    // 역할이 변경되면 해당 역할의 기본 권한으로 설정
+    if (name === 'role') {
+      const selectedRole = value as UserRole;
       setFormData(prev => ({
         ...prev,
-        role: 'admin',
-        permissions: ['all']
-      }));
-    } else if (name === 'role' && value === 'staff') {
-      setFormData(prev => ({
-        ...prev,
-        role: 'staff',
-        permissions: []
+        role: selectedRole,
+        permissions: selectedRole === 'admin' ? ['all'] : (rolePermissions[selectedRole] || []).map(p => p.toString())
       }));
     }
   };
@@ -130,10 +127,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('직원 폼 제출 시작');
     
     if (!validateForm()) {
-      console.log('폼 유효성 검사 실패');
       return;
     }
     
@@ -154,28 +149,26 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
         permissions: formData.permissions
       };
       
-      console.log('직원 데이터:', staffData);
       
       // 직원 추가
       if (addStaff) {
-        console.log('addStaff 함수 호출');
         const userId = await addStaff(staffData);
-        console.log('직원 추가 결과:', userId);
         
         if (userId) {
-          alert('직원이 성공적으로 추가되었습니다.\n이메일: ' + formData.email + '\n비밀번호: ' + formData.password);
+          showToast('success', '직원 추가 완료', `직원이 성공적으로 추가되었습니다.\n이메일: ${formData.email}`);
           // 폼 닫기
           onClose();
         } else {
           console.error("직원 추가 실패: userId가 반환되지 않음");
+          showToast('error', '직원 추가 실패', '직원 추가에 실패했습니다.');
         }
       } else {
         console.error("addStaff function is not available in UserContext");
-        setErrors(prev => ({ ...prev, form: "직원 추가 기능을 사용할 수 없습니다." }));
+        showToast('error', '기능 오류', '직원 추가 기능을 사용할 수 없습니다.');
       }
     } catch (error) {
       console.error('직원 추가 중 오류 발생:', error);
-      setErrors(prev => ({ ...prev, form: "직원 추가 중 오류가 발생했습니다." }));
+      showToast('error', '직원 추가 오류', '직원 추가 중 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
     }
@@ -438,8 +431,16 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       className="form-input w-full"
                       required
                     >
-                      <option value="staff">일반 직원</option>
-                      <option value="admin">관리자</option>
+                      {Object.keys(rolePermissions).map((roleKey) => (
+                        <option key={roleKey} value={roleKey}>
+                          {roleKey === 'admin' ? '관리자' :
+                           roleKey === 'reception' ? '리셉션' :
+                           roleKey === 'fitness' ? '피트니스' :
+                           roleKey === 'tennis' ? '테니스' :
+                           roleKey === 'golf' ? '골프' :
+                           roleKey}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>

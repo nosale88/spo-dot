@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, User, Lock, Bell, Calendar, DollarSign, Database, Mail, Zap, Shield, UploadCloud as CloudUpload, Clock, Globe, Check, X, Save, BarChart2, Moon, Sun, Smartphone, Laptop, Trash, Download, ToggleLeft, ToggleRight, Plus } from 'lucide-react';
+import { Settings, User, Lock, Bell, Calendar, DollarSign, Database, Mail, Zap, Shield, UploadCloud as CloudUpload, Clock, Globe, Check, X, Save, BarChart2, Moon, Sun, Smartphone, Laptop, Trash, Download, ToggleLeft, ToggleRight, Plus, Key, FileText, Activity, RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react';
 import clsx from 'clsx';
+import { useAuth } from '../contexts/AuthContext';
+import { usePermissions } from '../hooks/usePermissions';
+import { useNotification } from '../contexts/NotificationContext';
+import PermissionGate, { AdminOnly } from '../components/auth/PermissionGate';
 
 // 알림 빈도 타입
 type NotificationFrequency = 'immediately' | 'hourly' | 'daily' | 'weekly' | 'never';
@@ -15,6 +19,10 @@ interface SettingMenuItem {
 }
 
 const AdminSettings = () => {
+  const { user, changePassword, validateSession, refreshUserSession } = useAuth();
+  const { isAdmin } = usePermissions();
+  const { showToast } = useNotification();
+
   const [activeTab, setActiveTab] = useState<string>('general');
   const [emailNotifications, setEmailNotifications] = useState<boolean>(true);
   const [pushNotifications, setPushNotifications] = useState<boolean>(true);
@@ -60,6 +68,93 @@ const AdminSettings = () => {
     { id: 'integrations', label: '연동 설정', icon: <Zap size={20} />, description: '외부 서비스 연동 및 API 설정' }
   ];
   
+  // 비밀번호 변경 상태
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // 시스템 설정 상태
+  const [systemSettings, setSystemSettings] = useState({
+    sessionTimeout: 24, // 시간
+    maxLoginAttempts: 5,
+    passwordMinLength: 8,
+    enableTwoFactor: false,
+    auditLogging: true,
+    backupInterval: 'daily',
+    maintenanceMode: false
+  });
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  // 권한 확인
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">접근 권한이 없습니다</h1>
+          <p className="text-slate-600">관리자만 접근할 수 있는 페이지입니다.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      showToast('error', '새 비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 8) {
+      showToast('error', '비밀번호는 8자 이상이어야 합니다.');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
+      showToast('success', '비밀번호가 성공적으로 변경되었습니다.');
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      showToast('error', error instanceof Error ? error.message : '비밀번호 변경에 실패했습니다.');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handleSystemSettingsSave = async () => {
+    setIsSaving(true);
+    try {
+      // 실제로는 API를 통해 시스템 설정을 저장
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 모의 API 호출
+      showToast('success', '시스템 설정이 저장되었습니다.');
+    } catch (error) {
+      showToast('error', '설정 저장에 실패했습니다.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSessionRefresh = async () => {
+    try {
+      const result = await refreshUserSession();
+      if (result) {
+        showToast('success', '세션이 갱신되었습니다.');
+      } else {
+        showToast('error', '세션 갱신에 실패했습니다.');
+      }
+    } catch (error) {
+      showToast('error', '세션 갱신 중 오류가 발생했습니다.');
+    }
+  };
+
+  const isSessionValid = validateSession();
+
   // 일반 설정 컴포넌트
   const GeneralSettings = () => (
     <div className="space-y-6">

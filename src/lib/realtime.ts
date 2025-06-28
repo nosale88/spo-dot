@@ -28,11 +28,9 @@ export function subscribeToTable<T extends Record<string, any>>(
   const channelId = `${tableName}:${event}:${filter || 'all'}`;
   
   // 실제 Supabase 연동 시 여기에 실제 구독 로직 구현
-  console.log(`구독 시작: ${channelId}`);
   
   // 채널 객체
   const channel = {
-    unsubscribe: () => console.log(`구독 해제: ${channelId}`)
   };
   
   // 구독 추적

@@ -1,146 +1,197 @@
-import { ReactNode } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { ReactNode } from 'react';
+import { usePermissions } from '../../hooks/usePermissions';
 import { Permission, UserRole } from '../../types/permissions';
+import { ShieldX, Lock } from 'lucide-react';
 
 interface PermissionGateProps {
   children: ReactNode;
   permission?: Permission | Permission[];
   role?: UserRole | UserRole[];
+  requireAll?: boolean; // true면 모든 권한 필요, false면 하나만 필요
   fallback?: ReactNode;
-  showIf?: 'any' | 'all'; // 'any': 하나라도 만족하면 표시, 'all': 모두 만족해야 표시
+  showFallback?: boolean;
+  silent?: boolean; // true면 권한 없을 때 아무것도 렌더링하지 않음
 }
 
 /**
  * 권한 기반 UI 렌더링 컴포넌트
  * 사용자의 권한에 따라 UI 요소를 조건부로 표시합니다.
  */
-const PermissionGate = ({ 
-  children, 
-  permission, 
-  role, 
-  fallback = null,
-  showIf = 'any'
-}: PermissionGateProps) => {
-  const { user, hasPermission } = useAuth();
+export const PermissionGate: React.FC<PermissionGateProps> = ({
+  children,
+  permission,
+  role,
+  requireAll = false,
+  fallback,
+  showFallback = false,
+  silent = false
+}) => {
+  const {
+    checkPermission,
+    checkAnyPermission,
+    checkAllPermissions,
+    checkRole,
+    currentUser
+  } = usePermissions();
 
-  // 사용자가 로그인하지 않은 경우
-  if (!user) {
-    return <>{fallback}</>;
+  // 로그인하지 않은 경우
+  if (!currentUser) {
+    if (silent) return null;
+    if (fallback) return <>{fallback}</>;
+    if (!showFallback) return null;
+    
+    return (
+      <div className="flex items-center gap-2 text-slate-500 text-sm">
+        <Lock className="w-4 h-4" />
+        <span>로그인이 필요합니다</span>
+      </div>
+    );
   }
 
-  let hasRequiredPermission = true;
-  let hasRequiredRole = true;
+  let hasAccess = true;
 
-  // 권한 검사
+  // 권한 체크
   if (permission) {
     const permissions = Array.isArray(permission) ? permission : [permission];
     
-    if (showIf === 'all') {
-      hasRequiredPermission = permissions.every(p => hasPermission(p));
+    if (requireAll) {
+      hasAccess = checkAllPermissions(permissions, false);
     } else {
-      hasRequiredPermission = permissions.some(p => hasPermission(p));
+      hasAccess = checkAnyPermission(permissions, false);
     }
   }
 
-  // 역할 검사
-  if (role) {
-    const roles = Array.isArray(role) ? role : [role];
-    
-    if (showIf === 'all') {
-      hasRequiredRole = roles.every(r => user.role === r);
-    } else {
-      hasRequiredRole = roles.some(r => user.role === r);
-    }
+  // 역할 체크 (권한 체크와 AND 조건)
+  if (hasAccess && role) {
+    hasAccess = checkRole(role, false);
   }
 
-  // 조건 결합
-  const shouldShow = showIf === 'all' 
-    ? hasRequiredPermission && hasRequiredRole
-    : hasRequiredPermission || hasRequiredRole;
+  // 권한이 있는 경우 children 렌더링
+  if (hasAccess) {
+    return <>{children}</>;
+  }
 
-  return shouldShow ? <>{children}</> : <>{fallback}</>;
+  // 권한이 없는 경우 처리
+  if (silent) return null;
+  if (fallback) return <>{fallback}</>;
+  if (!showFallback) return null;
+
+  return (
+    <div className="flex items-center gap-2 text-slate-500 text-sm">
+      <ShieldX className="w-4 h-4" />
+      <span>권한이 없습니다</span>
+    </div>
+  );
 };
 
-export default PermissionGate;
-
-// 편의 컴포넌트들 (부서별 역할 시스템)
-export const AdminOnly = ({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGate role="admin" fallback={fallback}>
+// 편의 컴포넌트들
+export const AdminOnly: React.FC<{ children: ReactNode; fallback?: ReactNode }> = ({ 
+  children, 
+  fallback 
+}) => (
+  <PermissionGate role="admin" fallback={fallback} silent={!fallback}>
     {children}
   </PermissionGate>
 );
 
-export const ReceptionOnly = ({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGate role={['admin', 'reception']} fallback={fallback}>
+export const ReceptionOnly: React.FC<{ children: ReactNode; fallback?: ReactNode }> = ({ 
+  children, 
+  fallback 
+}) => (
+  <PermissionGate role="reception" fallback={fallback} silent={!fallback}>
     {children}
   </PermissionGate>
 );
 
-export const FitnessOnly = ({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGate role={['admin', 'fitness']} fallback={fallback}>
+export const StaffOnly: React.FC<{ children: ReactNode; fallback?: ReactNode }> = ({ 
+  children, 
+  fallback 
+}) => (
+  <PermissionGate role={['admin', 'reception', 'fitness', 'tennis', 'golf']} fallback={fallback} silent={!fallback}>
     {children}
   </PermissionGate>
 );
 
-export const TennisOnly = ({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGate role={['admin', 'tennis']} fallback={fallback}>
+export const ManagerLevel: React.FC<{ children: ReactNode; fallback?: ReactNode }> = ({ 
+  children, 
+  fallback 
+}) => (
+  <PermissionGate role={['admin', 'reception']} fallback={fallback} silent={!fallback}>
     {children}
   </PermissionGate>
 );
 
-export const GolfOnly = ({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGate role={['admin', 'golf']} fallback={fallback}>
-    {children}
-  </PermissionGate>
-);
-
-// 운영팀 (리셉션 + 관리자)
-export const OperationTeam = ({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGate role={['admin', 'reception']} fallback={fallback}>
-    {children}
-  </PermissionGate>
-);
-
-// 트레이닝팀 (피트니스, 테니스, 골프)
-export const TrainingTeam = ({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGate role={['admin', 'fitness', 'tennis', 'golf']} fallback={fallback}>
+export const OperationTeam: React.FC<{ children: ReactNode; fallback?: ReactNode }> = ({ 
+  children, 
+  fallback 
+}) => (
+  <PermissionGate role={['admin', 'reception', 'fitness', 'tennis', 'golf']} fallback={fallback} silent={!fallback}>
     {children}
   </PermissionGate>
 );
 
 // 특정 권한 기반 컴포넌트들
-export const CanCreateTasks = ({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGate permission="tasks.create" fallback={fallback}>
+export const CanCreateTasks: React.FC<{ children: ReactNode; fallback?: ReactNode }> = ({ 
+  children, 
+  fallback 
+}) => (
+  <PermissionGate permission="tasks.create" fallback={fallback} silent={!fallback}>
     {children}
   </PermissionGate>
 );
 
-export const CanViewAllTasks = ({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGate permission={['tasks.view_all', 'tasks.view_department']} showIf="any" fallback={fallback}>
+export const CanViewAllTasks: React.FC<{ children: ReactNode; fallback?: ReactNode }> = ({ 
+  children, 
+  fallback 
+}) => (
+  <PermissionGate permission={['tasks.read', 'tasks.view_all']} fallback={fallback} silent={!fallback}>
     {children}
   </PermissionGate>
 );
 
-export const CanManageUsers = ({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGate permission={['users.create', 'users.update', 'users.delete']} showIf="any" fallback={fallback}>
+export const CanManageUsers: React.FC<{ children: ReactNode; fallback?: ReactNode }> = ({ 
+  children, 
+  fallback 
+}) => (
+  <PermissionGate permission="users.create" fallback={fallback} silent={!fallback}>
     {children}
   </PermissionGate>
 );
 
-export const CanManageAnnouncements = ({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGate permission="announcements.create" fallback={fallback}>
+export const CanManageAnnouncements: React.FC<{ children: ReactNode; fallback?: ReactNode }> = ({ 
+  children, 
+  fallback 
+}) => (
+  <PermissionGate permission={['announcements.create', 'announcements.update', 'announcements.delete']} fallback={fallback} silent={!fallback}>
     {children}
   </PermissionGate>
 );
 
-export const CanManageMembers = ({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGate permission={['members.view_all', 'members.view_department']} showIf="any" fallback={fallback}>
+export const CanManageMembers: React.FC<{ children: ReactNode; fallback?: ReactNode }> = ({ 
+  children, 
+  fallback 
+}) => (
+  <PermissionGate permission={['members.create', 'members.update', 'members.delete']} fallback={fallback} silent={!fallback}>
     {children}
   </PermissionGate>
 );
 
-export const CanManageSchedules = ({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) => (
-  <PermissionGate permission={['schedules.view_all', 'schedules.view_department']} showIf="any" fallback={fallback}>
+export const CanCreateAnnouncements: React.FC<{ children: ReactNode; fallback?: ReactNode }> = ({ 
+  children, 
+  fallback 
+}) => (
+  <PermissionGate permission="announcements.create" fallback={fallback} silent={!fallback}>
     {children}
   </PermissionGate>
-); 
+);
+
+export const CanViewReports: React.FC<{ children: ReactNode; fallback?: ReactNode }> = ({ 
+  children, 
+  fallback 
+}) => (
+  <PermissionGate permission="reports.read" fallback={fallback} silent={!fallback}>
+    {children}
+  </PermissionGate>
+);
+
+export default PermissionGate; 

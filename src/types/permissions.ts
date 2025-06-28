@@ -1,7 +1,10 @@
 // 🔐 권한 관리 시스템 정의 - 부서별 역할 시스템
 
-// 사용자 역할 정의 (부서별)
+// 사용자 역할 정의 (애플리케이션 내부에서 사용)
 export type UserRole = 'admin' | 'reception' | 'fitness' | 'tennis' | 'golf';
+
+// 데이터베이스 역할 정의 (Supabase users 테이블의 role 컬럼과 일치)
+export type DatabaseRole = 'admin' | 'trainer' | 'staff' | 'user' | 'client';
 
 // 세부 직책 정의 (각 부서에서 사용 가능)
 export type UserPosition = 
@@ -128,7 +131,7 @@ export type Permission =
   | 'notifications.send'
   | 'notifications.manage';
 
-// 부서별 권한 매핑
+// 역할별 권한 매핑 (UserRole 기반 유지)
 export const rolePermissions: Record<UserRole, Permission[]> = {
   admin: [
     // 관리자는 모든 권한 보유
@@ -163,7 +166,7 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'suggestions.create', 'suggestions.read', 'suggestions.view_own',
     'manuals.read'
   ],
-  
+
   fitness: [
     // 피트니스팀: 회원 운동 관리, 개인 트레이닝, OT 진행
     'users.view_own',
@@ -178,7 +181,7 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'suggestions.create', 'suggestions.read', 'suggestions.view_own',
     'manuals.read'
   ],
-  
+
   tennis: [
     // 테니스팀: 테니스 레슨, 코트 관리
     'users.view_own',
@@ -193,7 +196,7 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'suggestions.create', 'suggestions.read', 'suggestions.view_own',
     'manuals.read'
   ],
-  
+
   golf: [
     // 골프팀: 골프 레슨, 연습장 관리
     'users.view_own',
@@ -210,7 +213,7 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
   ]
 };
 
-// 페이지별 필요 권한 정의
+// 페이지별 필요 권한 정의 (UserRole 기반 유지)
 export const pagePermissions: Record<string, Permission[]> = {
   '/dashboard': [],
   '/dashboard/my-tasks': ['tasks.view_assigned', 'tasks.view_own'],
@@ -238,7 +241,7 @@ export const pagePermissions: Record<string, Permission[]> = {
 // 데이터 접근 레벨 정의
 export type DataAccessLevel = 'all' | 'department' | 'assigned' | 'own' | 'none';
 
-// 부서별 데이터 접근 레벨
+// 부서별 데이터 접근 레벨 (UserRole 기반 유지)
 export const roleDataAccess: Record<UserRole, Record<string, DataAccessLevel>> = {
   admin: {
     users: 'all',
@@ -252,13 +255,14 @@ export const roleDataAccess: Record<UserRole, Record<string, DataAccessLevel>> =
     pass: 'all',
     vending: 'all',
     suggestions: 'all',
-    manuals: 'all'
+    manuals: 'all',
+    notifications: 'all'
   },
   reception: {
     users: 'own',
     tasks: 'department',
     reports: 'department',
-    sales: 'all',
+    sales: 'all', // 리셉션은 모든 매출 조회
     members: 'all',
     announcements: 'all',
     schedules: 'all',
@@ -266,7 +270,8 @@ export const roleDataAccess: Record<UserRole, Record<string, DataAccessLevel>> =
     pass: 'all',
     vending: 'all',
     suggestions: 'own',
-    manuals: 'all'
+    manuals: 'all',
+    notifications: 'own'
   },
   fitness: {
     users: 'own',
@@ -280,7 +285,8 @@ export const roleDataAccess: Record<UserRole, Record<string, DataAccessLevel>> =
     pass: 'none',
     vending: 'own',
     suggestions: 'own',
-    manuals: 'all'
+    manuals: 'all',
+    notifications: 'own'
   },
   tennis: {
     users: 'own',
@@ -294,7 +300,8 @@ export const roleDataAccess: Record<UserRole, Record<string, DataAccessLevel>> =
     pass: 'none',
     vending: 'own',
     suggestions: 'own',
-    manuals: 'all'
+    manuals: 'all',
+    notifications: 'own'
   },
   golf: {
     users: 'own',
@@ -308,89 +315,115 @@ export const roleDataAccess: Record<UserRole, Record<string, DataAccessLevel>> =
     pass: 'none',
     vending: 'own',
     suggestions: 'own',
-    manuals: 'all'
+    manuals: 'all',
+    notifications: 'own'
   }
 };
 
-// 권한 검사 유틸리티 함수들
+// 사용자 권한 확인 함수
 export const hasPermission = (userRole: UserRole, permission: Permission): boolean => {
-  return rolePermissions[userRole]?.includes(permission) || false;
+  const permissionsForRole = rolePermissions[userRole];
+  if (!permissionsForRole) return false;
+  return permissionsForRole.includes(permission);
 };
 
+// 페이지 접근 권한 확인
 export const hasPageAccess = (userRole: UserRole, pathname: string): boolean => {
   const requiredPermissions = pagePermissions[pathname];
-  
-  if (!requiredPermissions || requiredPermissions.length === 0) {
-    return true; // 권한이 필요하지 않은 페이지
-  }
-  
+  if (!requiredPermissions || requiredPermissions.length === 0) return true; // 권한이 필요 없는 페이지
+
   return requiredPermissions.some(permission => hasPermission(userRole, permission));
 };
 
+// 데이터 접근 레벨 가져오기
 export const getDataAccessLevel = (userRole: UserRole, dataType: string): DataAccessLevel => {
   return roleDataAccess[userRole]?.[dataType] || 'none';
 };
 
+// 데이터 수정 권한 확인
 export const canModifyData = (userRole: UserRole, dataType: string, dataOwnerId?: string, currentUserId?: string): boolean => {
   const accessLevel = getDataAccessLevel(userRole, dataType);
-  
+
+  if (userRole === 'admin') return true; // 관리자는 모든 데이터 수정 가능
+
   switch (accessLevel) {
-    case 'all':
-      return true;
+    case 'all': return true;
     case 'department':
-      // TODO: 부서 정보를 활용한 검사 구현
-      return true;
+      // 이 부분은 department 정보를 기반으로 추가 로직 필요
+      return true; // 임시: department 개념이 현재 이 함수에 전달되지 않음
     case 'assigned':
-      // TODO: 배정된 데이터인지 검사 구현
-      return true;
-    case 'own':
-      return dataOwnerId === currentUserId;
-    case 'none':
-    default:
-      return false;
+      // 이 부분은 assigned 정보를 기반으로 추가 로직 필요
+      return true; // 임시: assigned 개념이 현재 이 함수에 전달되지 않음
+    case 'own': return dataOwnerId === currentUserId;
+    default: return false;
   }
 };
 
-// 부서별 한글 이름 매핑
-export const departmentNames: Record<UserRole, string> = {
-  admin: '관리자',
-  reception: '리셉션',
-  fitness: '피트니스',
-  tennis: '테니스',
-  golf: '골프'
+// 직책별 권한 레벨 (숫자가 높을수록 높은 권한)
+export const positionLevels: Record<UserPosition, number> = {
+  '팀장': 5,
+  '부팀장': 4,
+  '매니저': 4,
+  '과장': 3,
+  '시니어 트레이너': 3,
+  '트레이너': 2,
+  '퍼스널 트레이너': 2,
+  '인턴 트레이너': 1,
+  '리셉션 매니저': 3,
+  '리셉션 직원': 2,
+  '코치': 2,
+  '테니스 코치': 2,
+  '어시스턴트 코치': 1,
+  '프로': 3,
+  '골프 프로': 3,
+  '어시스턴트 프로': 2,
+  '사원': 1,
+  '인턴': 0
 };
 
-// 직책별 한글 이름과 권한 레벨 정의
-export const positionInfo: Record<UserPosition, { name: string; level: number; canManageTeam: boolean }> = {
-  '팀장': { name: '팀장', level: 5, canManageTeam: true },
-  '부팀장': { name: '부팀장', level: 4, canManageTeam: true },
-  '매니저': { name: '매니저', level: 4, canManageTeam: true },
-  '과장': { name: '과장', level: 3, canManageTeam: true },
-  '리셉션 매니저': { name: '리셉션 매니저', level: 4, canManageTeam: true },
-  '시니어 트레이너': { name: '시니어 트레이너', level: 3, canManageTeam: false },
-  '트레이너': { name: '트레이너', level: 2, canManageTeam: false },
-  '퍼스널 트레이너': { name: '퍼스널 트레이너', level: 2, canManageTeam: false },
-  '코치': { name: '코치', level: 2, canManageTeam: false },
-  '테니스 코치': { name: '테니스 코치', level: 2, canManageTeam: false },
-  '프로': { name: '프로', level: 3, canManageTeam: false },
-  '골프 프로': { name: '골프 프로', level: 3, canManageTeam: false },
-  '리셉션 직원': { name: '리셉션 직원', level: 2, canManageTeam: false },
-  '어시스턴트 코치': { name: '어시스턴트 코치', level: 1, canManageTeam: false },
-  '어시스턴트 프로': { name: '어시스턴트 프로', level: 1, canManageTeam: false },
-  '인턴 트레이너': { name: '인턴 트레이너', level: 1, canManageTeam: false },
-  '사원': { name: '사원', level: 2, canManageTeam: false },
-  '인턴': { name: '인턴', level: 1, canManageTeam: false }
+export const positionInfo: Record<UserPosition, { name: string; description: string; departments: UserRole[] }> = {
+  '팀장': { name: '팀장', description: '각 팀의 리더로, 팀 운영 및 성과 관리 책임을 가집니다.', departments: ['reception', 'fitness', 'tennis', 'golf'] },
+  '부팀장': { name: '부팀장', description: '팀장을 보좌하며, 팀 운영의 실무를 담당합니다.', departments: ['reception', 'fitness', 'tennis', 'golf'] },
+  '매니저': { name: '매니저', description: '운영 전반을 관리하고 감독합니다.', departments: ['admin'] }, // admin role에만 매니저 직책이 있다고 가정
+  '과장': { name: '과장', description: '특정 업무 분야를 총괄합니다.', departments: ['admin', 'reception', 'fitness', 'tennis', 'golf'] },
+  '시니어 트레이너': { name: '시니어 트레이너', description: '경험 많은 트레이너로, 주니어 트레이너를 지도합니다.', departments: ['fitness'] },
+  '트레이너': { name: '트레이너', description: '회원들에게 운동 지도를 제공합니다.', departments: ['fitness'] },
+  '퍼스널 트레이너': { name: '퍼스널 트레이너', description: '개인별 맞춤 운동 프로그램을 제공합니다.', departments: ['fitness'] },
+  '인턴 트레이너': { name: '인턴 트레이너', description: '트레이닝 경험을 쌓는 인턴 직원입니다.', departments: ['fitness'] },
+  '리셉션 매니저': { name: '리셉션 매니저', description: '리셉션 업무를 총괄하고 직원을 관리합니다.', departments: ['reception'] },
+  '리셉션 직원': { name: '리셉션 직원', description: '고객 응대 및 시설 안내를 담당합니다.', departments: ['reception'] },
+  '코치': { name: '코치', description: '스포츠 분야 전문 코치입니다.', departments: ['tennis', 'golf'] },
+  '테니스 코치': { name: '테니스 코치', description: '테니스 레슨 및 코트 관리를 담당합니다.', departments: ['tennis'] },
+  '어시스턴트 코치': { name: '어시스턴트 코치', description: '코치를 보좌하며 레슨을 돕습니다.', departments: ['tennis', 'golf'] },
+  '프로': { name: '프로', description: '전문 스포츠 선수 출신으로, 상위 레벨 지도를 담당합니다.', departments: ['tennis', 'golf'] },
+  '골프 프로': { name: '골프 프로', description: '골프 레슨 및 연습장 관리를 담당합니다.', departments: ['golf'] },
+  '어시스턴트 프로': { name: '어시스턴트 프로', description: '골프 프로를 보좌하며 레슨을 돕습니다.', departments: ['golf'] },
+  '사원': { name: '사원', description: '일반적인 사무 업무 및 지원을 담당합니다.', departments: ['reception', 'fitness', 'tennis', 'golf'] },
+  '인턴': { name: '인턴', description: '다양한 업무를 경험하는 인턴 직원입니다.', departments: ['reception', 'fitness', 'tennis', 'golf'] }
 };
 
-// 직책에 따른 추가 권한 검사
 export const hasPositionPermission = (position: UserPosition | undefined, requiredLevel: number): boolean => {
   if (!position) return false;
-  const posInfo = positionInfo[position];
-  return posInfo ? posInfo.level >= requiredLevel : false;
+  const level = positionLevels[position];
+  return level >= requiredLevel;
 };
 
 export const canManageTeam = (position: UserPosition | undefined): boolean => {
   if (!position) return false;
-  const posInfo = positionInfo[position];
-  return posInfo ? posInfo.canManageTeam : false;
+  return positionLevels[position] >= positionLevels['팀장'];
+};
+
+// Mapping from UserRole to DatabaseRole
+export const mapUserRoleToDatabaseRole = (userRole: UserRole): DatabaseRole => {
+  switch (userRole) {
+    case 'admin':
+      return 'admin';
+    case 'reception':
+    case 'fitness':
+    case 'tennis':
+    case 'golf':
+      return 'staff'; // Assuming these roles map to 'staff' in the database
+    default:
+      return 'staff'; // Fallback
+  }
 }; 

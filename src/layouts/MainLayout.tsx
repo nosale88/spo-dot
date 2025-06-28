@@ -48,9 +48,7 @@ const MainLayout = () => {
 
   const toggleSidebar = () => {
     setSidebarOpen(prev => {
-      console.log(`사이드바 상태 변경 전: ${prev}, isMobile: ${isMobile}`);
       const newState = !prev;
-      console.log(`사이드바 상태 변경 후: ${newState}, isMobile: ${isMobile}`);
       return newState;
     });
   };

@@ -7,10 +7,17 @@ import {
   X,
   Image as ImageIcon,
   FileImage,
-  Trash2
+  Trash2,
+  List,
+  Eye,
+  Calendar,
+  User,
+  FileText
 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import AddReportForm from '../components/forms/AddReportForm';
+import { useNotification } from '../contexts/NotificationContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface UploadedImage {
   id: string;
@@ -20,7 +27,25 @@ interface UploadedImage {
   size: number;
 }
 
+interface DailyReportData {
+  id: string;
+  title: string;
+  completed: string;
+  inProgress: string;
+  planned: string;
+  issues: string;
+  reportDate: string;
+  images: {
+    name: string;
+    size: number;
+    url: string;
+  }[];
+  createdAt: string;
+  status: 'draft' | 'submitted';
+}
+
 const DailyReport = () => {
+  const { showToast } = useNotification();
   const [reportTitle, setReportTitle] = useState('');
   const [completedTasks, setCompletedTasks] = useState('');
   const [inProgressTasks, setInProgressTasks] = useState('');
@@ -28,6 +53,9 @@ const DailyReport = () => {
   const [issuesSuggestions, setIssuesSuggestions] = useState('');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [showReportList, setShowReportList] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<DailyReportData | null>(null);
+  const [savedReports, setSavedReports] = useState<DailyReportData[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const today = new Date();
@@ -48,19 +76,19 @@ const DailyReport = () => {
     Array.from(files).forEach(file => {
       // 파일 타입 검증
       if (!validImageTypes.includes(file.type)) {
-        alert(`${file.name}은 지원하지 않는 파일 형식입니다. JPG, PNG, GIF, WebP 파일만 업로드 가능합니다.`);
+        showToast('error', '파일 형식 오류', `${file.name}은 지원하지 않는 파일 형식입니다. JPG, PNG, GIF, WebP 파일만 업로드 가능합니다.`);
         return;
       }
 
       // 파일 크기 검증
       if (file.size > maxFileSize) {
-        alert(`${file.name}의 크기가 너무 큽니다. 5MB 이하의 파일만 업로드 가능합니다.`);
+        showToast('error', '파일 크기 오류', `${file.name}의 크기가 너무 큽니다. 5MB 이하의 파일만 업로드 가능합니다.`);
         return;
       }
 
       // 중복 파일 검증
       if (uploadedImages.some(img => img.name === file.name && img.size === file.size)) {
-        alert(`${file.name}은 이미 업로드된 파일입니다.`);
+        showToast('warning', '중복 파일', `${file.name}은 이미 업로드된 파일입니다.`);
         return;
       }
 
@@ -116,42 +144,83 @@ const DailyReport = () => {
   };
 
   const handleSubmit = () => {
-    // 실제 제출 로직 (API 호출 등)
-    console.log({
+    if (!reportTitle.trim()) {
+      showToast('error', '입력 오류', '보고서 제목을 입력해주세요.');
+      return;
+    }
+
+    const reportData: DailyReportData = {
+      id: `report-${Date.now()}`,
       title: reportTitle,
       completed: completedTasks,
       inProgress: inProgressTasks,
       planned: plannedTasks,
       issues: issuesSuggestions,
-      reportDate: defaultDateValue,
+      reportDate: selectedDate,
       images: uploadedImages.map(img => ({
         name: img.name,
         size: img.size,
-        file: img.file
-      }))
-    });
-    alert('보고서가 제출되었습니다.');
+        url: img.url
+      })),
+      createdAt: new Date().toISOString(),
+      status: 'submitted'
+    };
+    
+    setSavedReports(prev => [reportData, ...prev]);
+    
+    // 폼 초기화
+    setReportTitle('');
+    setCompletedTasks('');
+    setInProgressTasks('');
+    setPlannedTasks('');
+    setIssuesSuggestions('');
+    setUploadedImages([]);
+    
+    showToast('success', '보고서 제출 완료', '보고서가 성공적으로 제출되었습니다.');
   };
 
   const handleSaveDraft = () => {
-    // 임시 저장 로직
-    console.log('임시 저장:', {
+    if (!reportTitle.trim()) {
+      showToast('error', '입력 오류', '보고서 제목을 입력해주세요.');
+      return;
+    }
+
+    const draftData: DailyReportData = {
+      id: `draft-${Date.now()}`,
       title: reportTitle,
       completed: completedTasks,
       inProgress: inProgressTasks,
       planned: plannedTasks,
       issues: issuesSuggestions,
-      reportDate: defaultDateValue,
-      images: uploadedImages.length
-    });
-    alert('보고서가 임시 저장되었습니다.');
+      reportDate: selectedDate,
+      images: uploadedImages.map(img => ({
+        name: img.name,
+        size: img.size,
+        url: img.url
+      })),
+      createdAt: new Date().toISOString(),
+      status: 'draft'
+    };
+    
+    setSavedReports(prev => [draftData, ...prev]);
+    
+    showToast('info', '임시 저장 완료', '보고서가 임시 저장되었습니다.');
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+  };
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   };
 
   return (
     <div className="p-6 bg-slate-100 min-h-screen">
       {/* Header */}
       <header className="flex justify-between items-center mb-6">
-        {/* 페이지 제목은 이미지에 없지만 일관성을 위해 좌측에 표시 */}
         <h1 className="text-3xl font-bold text-slate-800">일일 업무 보고</h1> 
         <div className="flex items-center space-x-4">
           <button aria-label="Notifications" className="relative">
@@ -183,6 +252,13 @@ const DailyReport = () => {
               />
               <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
             </div>
+            <button 
+              onClick={() => setShowReportList(true)}
+              className="bg-slate-600 hover:bg-slate-700 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center space-x-2 transition-colors"
+            >
+              <List size={18} />
+              <span>목록</span>
+            </button>
             <button 
               onClick={() => setIsAddReportModalOpen(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center space-x-2 transition-colors"
@@ -356,6 +432,228 @@ const DailyReport = () => {
           </div>
         </form>
       </section>
+
+      {/* Report List Modal */}
+      <AnimatePresence>
+        {showReportList && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
+            onClick={() => setShowReportList(false)}
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-slate-200 flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-slate-900 flex items-center">
+                  <FileText className="h-5 w-5 mr-2 text-blue-600" />
+                  업무 보고서 목록
+                </h2>
+                <button
+                  onClick={() => setShowReportList(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+                {savedReports.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                    <p className="text-slate-500 text-lg mb-2">작성된 보고서가 없습니다</p>
+                    <p className="text-slate-400 text-sm">새 보고서를 작성해보세요</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {savedReports.map((report) => (
+                      <div 
+                        key={report.id}
+                        className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+                        onClick={() => {
+                          setSelectedReport(report);
+                          setShowReportList(false);
+                        }}
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-semibold text-slate-900 text-lg hover:text-blue-600 transition-colors">
+                            {report.title}
+                          </h3>
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              report.status === 'submitted' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {report.status === 'submitted' ? '제출됨' : '임시저장'}
+                            </span>
+                            <button className="text-blue-600 hover:text-blue-800 p-1">
+                              <Eye size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-600 mb-3">
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            <span>보고일: {formatDate(report.reportDate)}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <User className="h-4 w-4 mr-1" />
+                            <span>작성일: {formatDateTime(report.createdAt)}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <ImageIcon className="h-4 w-4 mr-1" />
+                            <span>첨부: {report.images.length}개</span>
+                          </div>
+                        </div>
+
+                        <div className="text-sm text-slate-600">
+                          <p className="line-clamp-2">
+                            {report.completed ? 
+                              `완료업무: ${report.completed.substring(0, 100)}${report.completed.length > 100 ? '...' : ''}` : 
+                              '작성된 내용 없음'
+                            }
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Report Detail Modal */}
+      <AnimatePresence>
+        {selectedReport && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
+            onClick={() => setSelectedReport(null)}
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-slate-200 flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">{selectedReport.title}</h2>
+                  <div className="flex items-center space-x-4 mt-2 text-sm text-slate-600">
+                    <span className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      보고일: {formatDate(selectedReport.reportDate)}
+                    </span>
+                    <span className="flex items-center">
+                      <User className="h-4 w-4 mr-1" />
+                      작성일: {formatDateTime(selectedReport.createdAt)}
+                    </span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      selectedReport.status === 'submitted' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {selectedReport.status === 'submitted' ? '제출됨' : '임시저장'}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedReport(null)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] space-y-6">
+                {/* 완료한 업무 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-3">오늘 완료한 업무</h3>
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <p className="text-slate-700 whitespace-pre-wrap">
+                      {selectedReport.completed || '작성된 내용이 없습니다.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 진행 중인 업무 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-3">진행 중인 업무</h3>
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <p className="text-slate-700 whitespace-pre-wrap">
+                      {selectedReport.inProgress || '작성된 내용이 없습니다.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 내일 예정된 업무 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-3">내일 예정된 업무</h3>
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <p className="text-slate-700 whitespace-pre-wrap">
+                      {selectedReport.planned || '작성된 내용이 없습니다.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 특이사항 및 건의사항 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-3">특이사항 및 건의사항</h3>
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <p className="text-slate-700 whitespace-pre-wrap">
+                      {selectedReport.issues || '작성된 내용이 없습니다.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 첨부 이미지 */}
+                {selectedReport.images.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center">
+                      <FileImage className="h-5 w-5 mr-2" />
+                      첨부 이미지 ({selectedReport.images.length}개)
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {selectedReport.images.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <div className="aspect-video bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
+                            <img
+                              src={image.url}
+                              alt={image.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="mt-2 px-1">
+                            <p className="text-xs font-medium text-slate-700 truncate">
+                              {image.name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {(image.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Add Report Modal */}
       {isAddReportModalOpen && (

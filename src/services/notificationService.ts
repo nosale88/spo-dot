@@ -16,7 +16,6 @@ class NotificationService {
   async createNotification(data: NotificationData) {
     try {
       await supabaseApiService.notifications.create(data);
-      console.log(`알림 생성됨: ${data.title} -> ${data.userId}`);
     } catch (error) {
       console.error('알림 생성 실패:', error);
     }
@@ -27,7 +26,6 @@ class NotificationService {
     try {
       const promises = notifications.map(notif => this.createNotification(notif));
       await Promise.all(promises);
-      console.log(`${notifications.length}개의 알림이 생성됨`);
     } catch (error) {
       console.error('일괄 알림 생성 실패:', error);
     }
@@ -256,9 +254,7 @@ class NotificationService {
 
   // 매일 실행할 스케줄러 함수
   async runDailyScheduler() {
-    console.log('일일 알림 스케줄러 실행 중...');
     await this.checkAndNotifyUpcomingDeadlines();
-    console.log('일일 알림 스케줄러 완료');
   }
 }
 

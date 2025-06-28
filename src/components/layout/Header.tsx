@@ -47,7 +47,6 @@ const Header = ({ toggleSidebar }: HeaderProps) => {
 
   // 모바일 메뉴 버튼 클릭 처리 함수
   const handleMenuButtonClick = () => {
-    console.log('메뉴 버튼 클릭');
     toggleSidebar();
   };
 

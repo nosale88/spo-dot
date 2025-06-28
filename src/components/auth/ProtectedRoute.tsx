@@ -37,13 +37,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // 로그인하지 않은 경우 로그인 페이지로 리디렉션
   if (!user) {
-    console.log('❌ ProtectedRoute: 사용자 미인증, 로그인 페이지로 리디렉션');
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
   // 페이지별 권한 검사 (자동)
   if (!hasPageAccess(location.pathname)) {
-    console.log(`❌ ProtectedRoute: 페이지 접근 권한 없음 - ${location.pathname} (역할: ${user.role})`);
     
     if (showUnauthorized) {
       return <UnauthorizedComponent />;
@@ -56,7 +54,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (requiredRole) {
     const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
     if (!roles.includes(user.role)) {
-      console.log(`❌ ProtectedRoute: 역할 권한 없음 - 필요: ${roles.join(', ')}, 현재: ${user.role}`);
       
       if (showUnauthorized) {
         return <UnauthorizedComponent />;
@@ -72,7 +69,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     const hasAnyPermission = permissions.some(permission => hasPermission(permission));
     
     if (!hasAnyPermission) {
-      console.log(`❌ ProtectedRoute: 세부 권한 없음 - 필요: ${permissions.join(', ')}`);
       
       if (showUnauthorized) {
         return <UnauthorizedComponent />;
@@ -82,7 +78,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   }
 
-  console.log(`✅ ProtectedRoute: 접근 허용 - ${location.pathname} (역할: ${user.role})`);
   return <>{children}</>;
 };
 

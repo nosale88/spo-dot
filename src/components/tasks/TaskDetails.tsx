@@ -34,13 +34,13 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
   const getPriorityBadgeStyle = (priority: TaskPriority) => {
     switch (priority) {
       case 'low':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+        return 'bg-green-100 text-green-800';
       case 'medium':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+        return 'bg-blue-100 text-blue-800';
       case 'high':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300';
+        return 'bg-orange-100 text-orange-800';
       case 'urgent':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        return 'bg-red-100 text-red-800';
     }
   };
   
@@ -48,13 +48,13 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
   const getStatusBadgeStyle = (status: TaskStatus) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+        return 'bg-yellow-100 text-yellow-800';
       case 'in-progress':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+        return 'bg-blue-100 text-blue-800';
       case 'completed':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+        return 'bg-green-100 text-green-800';
       case 'cancelled':
-        return 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300';
+        return 'bg-slate-100 text-slate-800';
     }
   };
   
@@ -62,15 +62,15 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
   const getCategoryBadgeStyle = (category: TaskCategory) => {
     switch (category) {
       case 'maintenance':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
+        return 'bg-purple-100 text-purple-800';
       case 'administrative':
-        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300';
+        return 'bg-indigo-100 text-indigo-800';
       case 'client':
-        return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300';
+        return 'bg-cyan-100 text-cyan-800';
       case 'training':
-        return 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300';
+        return 'bg-pink-100 text-pink-800';
       case 'general':
-        return 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300';
+        return 'bg-slate-100 text-slate-800';
     }
   };
   
@@ -106,7 +106,7 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
   };
   
   // 관리자이거나 담당자인 경우만 편집 가능
-  const canEdit = user?.id === task.assignedBy || user?.id === task.assignedTo || user?.role === 'admin';
+  const canEdit = user?.id === task.assignedBy || task.assignedTo.includes(user?.id || '') || user?.role === 'admin';
   
   return (
     <motion.div
@@ -116,24 +116,21 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+        <div className="p-6 border-b border-slate-200 flex justify-between items-center">
           <div className="flex items-center">
             <span className={clsx(
               "h-10 w-10 rounded-full flex items-center justify-center mr-3",
-              task.priority === 'urgent' && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
-              task.priority === 'high' && "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
-              task.priority === 'medium' && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-              task.priority === 'low' && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+              task.priority === 'urgent' && "bg-red-100 text-red-700",
+              task.priority === 'high' && "bg-orange-100 text-orange-700",
+              task.priority === 'medium' && "bg-blue-100 text-blue-700",
+              task.priority === 'low' && "bg-green-100 text-green-700"
             )}>
-              {task.priority === 'urgent' && <AlertTriangle size={24} />}
-              {task.priority === 'high' && <AlertTriangle size={24} />}
-              {task.priority === 'medium' && <AlertTriangle size={24} />}
-              {task.priority === 'low' && <AlertTriangle size={24} />}
+              <AlertTriangle size={24} />
             </span>
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-slate-900">
               업무 상세 정보
             </h2>
           </div>
@@ -146,7 +143,7 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
                     e.stopPropagation();
                     if (onEdit) onEdit();
                   }}
-                  className="text-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
+                  className="text-blue-500 hover:text-blue-600"
                   title="편집"
                 >
                   <Edit size={20} />
@@ -157,7 +154,7 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
                     e.stopPropagation();
                     handleDelete();
                   }}
-                  className="text-red-500 hover:text-red-600 dark:hover:text-red-400"
+                  className="text-red-500 hover:text-red-600"
                   title="삭제"
                 >
                   <Trash size={20} />
@@ -167,7 +164,7 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
             
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              className="text-slate-400 hover:text-slate-600"
             >
               <X size={24} />
             </button>
@@ -198,38 +195,38 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
             </span>
           </div>
           
-          <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">{task.title}</h3>
+          <h3 className="text-2xl font-bold text-slate-900 mb-4">{task.title}</h3>
           
           {task.description && (
-            <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
-              <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{task.description}</p>
+            <div className="mb-6 p-4 bg-slate-50 rounded-lg">
+              <p className="text-slate-700 whitespace-pre-wrap">{task.description}</p>
             </div>
           )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="flex items-center text-slate-700 dark:text-slate-300">
-              <User size={18} className="mr-2 text-primary flex-shrink-0" />
+            <div className="flex items-center text-slate-700">
+              <User size={18} className="mr-2 text-blue-600 flex-shrink-0" />
               <div>
-                <span className="block text-sm font-medium text-slate-500 dark:text-slate-400">담당자</span>
+                <span className="block text-sm font-medium text-slate-500">담당자</span>
                 <span>{Array.isArray(task.assignedToName) ? task.assignedToName.join(', ') : task.assignedToName}</span>
               </div>
             </div>
             
-            <div className="flex items-center text-slate-700 dark:text-slate-300">
-              <User size={18} className="mr-2 text-primary flex-shrink-0" />
+            <div className="flex items-center text-slate-700">
+              <User size={18} className="mr-2 text-blue-600 flex-shrink-0" />
               <div>
-                <span className="block text-sm font-medium text-slate-500 dark:text-slate-400">배정자</span>
+                <span className="block text-sm font-medium text-slate-500">배정자</span>
                 <span>{task.assignedByName}</span>
               </div>
             </div>
             
-            <div className="flex items-center text-slate-700 dark:text-slate-300">
-              <Calendar size={18} className="mr-2 text-primary flex-shrink-0" />
+            <div className="flex items-center text-slate-700">
+              <Calendar size={18} className="mr-2 text-blue-600 flex-shrink-0" />
               <div>
-                <span className="block text-sm font-medium text-slate-500 dark:text-slate-400">마감일</span>
+                <span className="block text-sm font-medium text-slate-500">마감일</span>
                 <span className={clsx(
                   isPast(parseISO(task.dueDate)) && task.status !== 'completed' && task.status !== 'cancelled' 
-                    ? 'text-red-600 dark:text-red-400' 
+                    ? 'text-red-600' 
                     : ''
                 )}>
                   {format(parseISO(task.dueDate), 'yyyy년 M월 d일 (EEEE)', { locale: ko })}
@@ -238,26 +235,26 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
               </div>
             </div>
             
-            <div className="flex items-center text-slate-700 dark:text-slate-300">
-              <Clock size={18} className="mr-2 text-primary flex-shrink-0" />
+            <div className="flex items-center text-slate-700">
+              <Clock size={18} className="mr-2 text-blue-600 flex-shrink-0" />
               <div>
-                <span className="block text-sm font-medium text-slate-500 dark:text-slate-400">생성일</span>
+                <span className="block text-sm font-medium text-slate-500">생성일</span>
                 <span>{format(parseISO(task.createdAt), 'yyyy년 M월 d일', { locale: ko })}</span>
               </div>
             </div>
           </div>
           
           {canEdit && task.status !== 'completed' && task.status !== 'cancelled' && (
-            <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
-              <h4 className="text-sm font-medium text-slate-900 dark:text-white mb-3">업무 상태 변경</h4>
+            <div className="mb-6 p-4 bg-slate-50 rounded-lg">
+              <h4 className="text-sm font-medium text-slate-900 mb-3">업무 상태 변경</h4>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => handleStatusChange('pending')}
                   className={clsx(
                     "px-3 py-1.5 rounded text-sm font-medium",
                     task.status === 'pending' 
-                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300" 
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                      ? "bg-yellow-100 text-yellow-800" 
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                   )}
                 >
                   대기중
@@ -268,8 +265,8 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
                   className={clsx(
                     "px-3 py-1.5 rounded text-sm font-medium",
                     task.status === 'in-progress' 
-                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" 
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                      ? "bg-blue-100 text-blue-800" 
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                   )}
                 >
                   진행중
@@ -277,10 +274,7 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
                 
                 <button
                   onClick={() => handleStatusChange('completed')}
-                  className={clsx(
-                    "px-3 py-1.5 rounded text-sm font-medium flex items-center",
-                    "bg-slate-100 text-slate-700 hover:bg-green-100 hover:text-green-800 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-green-900/30 dark:hover:text-green-300"
-                  )}
+                  className="px-3 py-1.5 rounded text-sm font-medium flex items-center bg-slate-100 text-slate-700 hover:bg-green-100 hover:text-green-800"
                 >
                   <Check size={16} className="mr-1" />
                   완료로 표시
@@ -288,7 +282,7 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
                 
                 <button
                   onClick={() => handleStatusChange('cancelled')}
-                  className="px-3 py-1.5 rounded text-sm font-medium bg-slate-100 text-slate-700 hover:bg-red-100 hover:text-red-800 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-red-900/30 dark:hover:text-red-300"
+                  className="px-3 py-1.5 rounded text-sm font-medium bg-slate-100 text-slate-700 hover:bg-red-100 hover:text-red-800"
                 >
                   취소
                 </button>
@@ -296,7 +290,7 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
             </div>
           )}
           
-          <div className="mt-6 border-t border-slate-200 dark:border-slate-700 pt-6">
+          <div className="mt-6 border-t border-slate-200 pt-6">
             <TaskComments taskId={task.id} comments={task.comments || []} />
           </div>
         </div>

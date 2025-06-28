@@ -9,14 +9,20 @@ export interface Member {
   email: string;
   phone: string;
   join_date: string;
+  expiry_date?: string;
   membership_type: string;
   status: 'active' | 'inactive' | 'pending' | 'expired';
+  notes?: string;
+  emergency_contact?: string;
+  birth_date?: string;
+  address?: string;
   created_at?: string;
   updated_at?: string;
 }
 
 interface MemberContextProps {
   members: Member[];
+  setMembers: React.Dispatch<React.SetStateAction<Member[]>>;
   loading: boolean;
   error: string | null;
   fetchMembers: () => Promise<void>;
@@ -148,7 +154,8 @@ export function MemberProvider({ children }: { children: ReactNode }) {
   return (
     <MemberContext.Provider 
       value={{ 
-        members, 
+        members,
+        setMembers, 
         loading, 
         error, 
         fetchMembers, 

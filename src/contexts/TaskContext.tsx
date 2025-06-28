@@ -98,7 +98,6 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const localTasks: Task[] = JSON.parse(savedTasks);
-      console.log(`📦 로컬 스토리지에서 ${localTasks.length}개의 업무를 발견했습니다.`);
       
       if (localTasks.length === 0) {
         localStorage.removeItem('tasks');
@@ -113,7 +112,6 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
       // 이미 Supabase에 데이터가 있으면 마이그레이션 하지 않음
       if (existingTasks && existingTasks.length > 0) {
-        console.log('✅ Supabase에 이미 데이터가 있어 마이그레이션을 건너뜁니다.');
         localStorage.removeItem('tasks');
         return;
       }
@@ -177,7 +175,6 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         }
       }
 
-      console.log(`✅ ${migratedCount}개의 업무가 성공적으로 마이그레이션되었습니다.`);
       
       // 마이그레이션 완료 후 localStorage 정리
       localStorage.removeItem('tasks');
@@ -189,14 +186,19 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
   // Supabase에서 Task 데이터를 가져와서 내부 인터페이스로 변환
   const convertSupabaseTaskToTask = useCallback(async (supabaseTask: any): Promise<Task> => {
-    // 담당자 정보 조회
-    const assignedToArray = Array.isArray(supabaseTask.assigned_to) 
-      ? supabaseTask.assigned_to 
-      : [supabaseTask.assigned_to].filter(Boolean);
-
+    console.log('🔄 convertSupabaseTaskToTask:', supabaseTask);
+    
+    // 담당자 정보 조회 (assigned_to는 단일 UUID)
+    const assignedToArray = supabaseTask.assigned_to ? [supabaseTask.assigned_to] : [];
     const assignedToNames: string[] = [];
     
-    if (assignedToArray.length > 0) {
+    // tags에서 담당자 이름 가져오기 (임시 저장소)
+    if (supabaseTask.tags && Array.isArray(supabaseTask.tags)) {
+      assignedToNames.push(...supabaseTask.tags);
+    }
+    
+    // 만약 담당자 이름이 없으면 DB에서 조회
+    if (assignedToArray.length > 0 && assignedToNames.length === 0) {
       const { data: assignedUsers } = await supabase
         .from('users')
         .select('id, name')
@@ -341,8 +343,12 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
   // 업무 추가
   const addTask = useCallback(async (newTaskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
-    if (!user) return null;
+    if (!user) {
+      console.error('❌ 사용자가 로그인되지 않음');
+      return null;
+    }
 
+    console.log('📝 TaskContext addTask 시작:', newTaskData);
     setLoading(true);
     setError(null);
 
@@ -353,23 +359,30 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       // 상태 변환 (프론트엔드의 in-progress를 데이터베이스의 in_progress로 변환)
       const convertedStatus = newTaskData.status === 'in-progress' ? 'in_progress' : newTaskData.status;
 
+      const insertPayload = {
+        title: newTaskData.title,
+        description: newTaskData.description,
+        status: convertedStatus,
+        priority: newTaskData.priority,
+        category: newTaskData.category,
+        due_date: newTaskData.dueDate,
+        assigned_to: assignedToId,
+        created_by: user.id,
+        tags: newTaskData.assignedToName // 임시로 태그에 담당자 이름 저장
+      };
+
+      console.log('📤 Supabase insert payload:', insertPayload);
+
       const { data: newSupabaseTask, error: insertError } = await supabase
         .from('tasks')
-        .insert({
-          title: newTaskData.title,
-          description: newTaskData.description,
-          status: convertedStatus,
-          priority: newTaskData.priority,
-          category: newTaskData.category,
-          due_date: newTaskData.dueDate,
-          assigned_to: assignedToId,
-          created_by: user.id,
-          tags: newTaskData.assignedToName // 임시로 태그에 담당자 이름 저장
-        })
+        .insert(insertPayload)
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('❌ Supabase insert error:', insertError);
+        throw insertError;
+      }
 
       if (newSupabaseTask) {
         const convertedTask = await convertSupabaseTaskToTask(newSupabaseTask);

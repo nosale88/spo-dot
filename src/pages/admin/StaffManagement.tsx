@@ -45,7 +45,6 @@ const StaffManagement = () => {
   const handleEditStaff = (staffMember: Staff) => {
     setEditingStaff(staffMember);
     setIsEditModalOpen(true);
-    console.log('Edit staff:', staffMember);
   };
 
   const handleDeleteStaff = (staffId: string) => {
@@ -61,7 +60,6 @@ const StaffManagement = () => {
   const handlePermissions = (staffMember: Staff) => {
     setEditingStaff(staffMember);
     setIsPermissionsModalOpen(true);
-    console.log('Set permissions for staff:', staffMember);
   }
 
   if (!staffList) {
