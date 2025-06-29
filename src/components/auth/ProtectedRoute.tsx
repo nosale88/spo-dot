@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Permission, UserRole } from '../../types/permissions';
 import { showError } from '../../utils/notifications';
+import { ShieldX } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -27,28 +28,6 @@ const ProtectedRoute = ({
 
   // 로그인하지 않은 사용자
   if (!user) {
-<<<<<<< HEAD
-    return <Navigate to="/auth/login" state={{ from: location }} replace />;
-  }
-
-  // 페이지별 권한 검사 (자동)
-  if (!hasPageAccess(location.pathname)) {
-    
-    if (showUnauthorized) {
-      return <UnauthorizedComponent />;
-    }
-    
-    return <Navigate to={fallbackPath} replace />;
-  }
-
-  // 역할 체크 (배열 지원)
-  if (requiredRole) {
-    const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    if (!roles.includes(user.role)) {
-      
-      if (showUnauthorized) {
-        return <UnauthorizedComponent />;
-=======
     return <Navigate to="/auth/login" replace />;
   }
 
@@ -60,7 +39,6 @@ const ProtectedRoute = ({
     if (!hasRequiredRole) {
       if (showAccessDenied) {
         showError(`이 페이지는 ${roles.join(', ')} 권한이 필요합니다.`);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       }
       return <Navigate to={redirectTo} replace />;
     }
@@ -70,16 +48,12 @@ const ProtectedRoute = ({
   if (requiredPermission) {
     const permissions = Array.isArray(requiredPermission) ? requiredPermission : [requiredPermission];
     
-<<<<<<< HEAD
-    if (!hasAnyPermission) {
-=======
     // 하나라도 권한이 있으면 통과
     const hasRequiredPermission = hasAnyPermission(permissions);
     
     if (!hasRequiredPermission) {
       // 상세한 권한 검사로 구체적인 이유 제공
       const permissionCheck = checkPermissionWithDetails(permissions[0]);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       
       if (showAccessDenied) {
         showError(permissionCheck.reason);
