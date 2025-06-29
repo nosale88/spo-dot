@@ -1,33 +1,99 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { X, Save, User, Shield, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { useUser, UserStatus, Staff } from '../../contexts/UserContext';
+<<<<<<< HEAD
 import { useNotification } from '../../contexts/NotificationContext';
 import { UserPosition, UserRole, positionInfo, rolePermissions } from '../../types/permissions';
+=======
+import { UserPosition, positionInfo, departmentNames, UserRole } from '../../types/permissions';
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 import clsx from 'clsx';
+import { logger, showSuccess, showError } from '../../utils/notifications';
 
 export interface AddStaffFormProps {
   onClose: () => void;
 }
 
 const AVAILABLE_PERMISSIONS = [
-  { id: 'view_clients', label: '고객 조회' },
-  { id: 'edit_clients', label: '고객 편집' },
-  { id: 'view_trainers', label: '트레이너 조회' },
-  { id: 'edit_trainers', label: '트레이너 편집' },
-  { id: 'view_schedules', label: '일정 조회' },
-  { id: 'edit_schedules', label: '일정 편집' },
-  { id: 'view_tasks', label: '업무 조회' },
-  { id: 'edit_tasks', label: '업무 편집' },
-  { id: 'view_reports', label: '보고서 조회' },
-  { id: 'edit_reports', label: '보고서 편집' },
-  { id: 'view_equipment', label: '장비 조회' },
-  { id: 'edit_equipment', label: '장비 편집' },
-  { id: 'view_inventory', label: '재고 조회' },
-  { id: 'edit_inventory', label: '재고 편집' },
-  { id: 'view_payments', label: '결제 조회' },
-  { id: 'process_payments', label: '결제 처리' },
+  // 업무 관리
+  { id: 'tasks.view_assigned', label: '내 업무', category: '업무 관리' },
+  { id: 'tasks.view_department', label: '팀 업무 보기', category: '업무 관리' },
+  { id: 'tasks.view_all', label: '전체 업무 조회', category: '업무 관리' },
+  { id: 'tasks.create', label: '업무 생성', category: '업무 관리' },
+  { id: 'tasks.update', label: '업무 편집', category: '업무 관리' },
+  { id: 'tasks.comment', label: '업무 댓글', category: '업무 관리' },
+  
+  // 보고서 관리
+  { id: 'reports.create', label: '일일 업무 보고', category: '보고서 관리' },
+  { id: 'reports.view_own', label: '내 보고서 조회', category: '보고서 관리' },
+  { id: 'reports.view_department', label: '팀 보고서 조회', category: '보고서 관리' },
+  { id: 'reports.view_all', label: '전체 보고서 조회', category: '보고서 관리' },
+  
+  // 일정 관리
+  { id: 'schedules.view_own', label: '내 일정 조회', category: '일정 관리' },
+  { id: 'schedules.view_department', label: '팀 일정 조회', category: '일정 관리' },
+  { id: 'schedules.view_all', label: '일정 관리', category: '일정 관리' },
+  { id: 'schedules.create', label: '일정 생성', category: '일정 관리' },
+  { id: 'schedules.update', label: '일정 편집', category: '일정 관리' },
+  
+  // 공지사항
+  { id: 'announcements.read', label: '공지사항', category: '공지사항' },
+  { id: 'announcements.create', label: '공지사항 작성', category: '공지사항' },
+  
+  // 매뉴얼
+  { id: 'manuals.read', label: '매뉴얼', category: '매뉴얼' },
+  
+  // 건의사항
+  { id: 'suggestions.create', label: '건의사항', category: '건의사항' },
+  { id: 'suggestions.view_own', label: '내 건의사항 조회', category: '건의사항' },
+  { id: 'suggestions.view_all', label: '전체 건의사항 조회', category: '건의사항' },
+  { id: 'suggestions.respond', label: '건의사항 응답', category: '건의사항' },
+  
+  // 매출 관리
+  { id: 'sales.create', label: '매출 등록', category: '매출 관리' },
+  { id: 'sales.view_own', label: '매출 보고서', category: '매출 관리' },
+  { id: 'sales.view_department', label: '매출보고 작성', category: '매출 관리' },
+  { id: 'sales.view_all', label: '전체 매출 조회', category: '매출 관리' },
+  
+  // 자판기 관리
+  { id: 'vending.view_own', label: '자판기 관리', category: '자판기 관리' },
+  { id: 'vending.view_all', label: '전체 자판기 매출', category: '자판기 관리' },
+  
+  // 운영 관리
+  { id: 'members.view_department', label: '회원 관리', category: '운영 관리' },
+  { id: 'members.view_all', label: '전체 회원 조회', category: '운영 관리' },
+  { id: 'members.create', label: '회원 생성', category: '운영 관리' },
+  { id: 'members.update', label: '회원 편집', category: '운영 관리' },
+  
+  { id: 'customers.view_all', label: '고객 관리', category: '운영 관리' },
+  { id: 'customers.create', label: '고객 생성', category: '운영 관리' },
+  { id: 'customers.update', label: '고객 편집', category: '운영 관리' },
+  
+  { id: 'trainers.view_all', label: '트레이너 관리', category: '운영 관리' },
+  { id: 'trainers.create', label: '트레이너 생성', category: '운영 관리' },
+  { id: 'trainers.update', label: '트레이너 편집', category: '운영 관리' },
+  
+  // OT 관리
+  { id: 'ot.view_assigned', label: 'OT 배정', category: 'OT 관리' },
+  { id: 'ot.view_all', label: '전체 OT 조회', category: 'OT 관리' },
+  { id: 'ot.assign', label: 'OT 할당', category: 'OT 관리' },
+  { id: 'ot.progress_update', label: 'OT 진행 업데이트', category: 'OT 관리' },
+  
+  // 이용권 관리
+  { id: 'pass.view_all', label: '이용권 관리', category: '이용권 관리' },
+  { id: 'pass.create', label: '이용권 생성', category: '이용권 관리' },
+  
+  // 시스템 관리
+  { id: 'users.view_all', label: '직원 관리', category: '시스템 관리' },
+  { id: 'users.create', label: '직원 생성', category: '시스템 관리' },
+  { id: 'users.update', label: '직원 편집', category: '시스템 관리' },
+  
+  { id: 'admin.task_management', label: '업무 관리', category: '시스템 관리' },
+  { id: 'admin.announcements', label: '공지사항 관리', category: '시스템 관리' },
+  { id: 'admin.reports', label: '보고서 관리', category: '시스템 관리' },
+  { id: 'admin.suggestions', label: '건의사항 관리', category: '시스템 관리' },
 ];
 
 const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
@@ -41,7 +107,6 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
     password: '',
     confirmPassword: '',
     status: 'active' as UserStatus,
-    department: '',
     position: '' as UserPosition,
     hireDate: format(new Date(), 'yyyy-MM-dd'),
     role: 'reception' as UserRole,
@@ -60,6 +125,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
       setErrors({ ...errors, [name]: '' });
     }
     
+<<<<<<< HEAD
     // 역할이 변경되면 해당 역할의 기본 권한으로 설정
     if (name === 'role') {
       const selectedRole = value as UserRole;
@@ -67,6 +133,57 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
         ...prev,
         role: selectedRole,
         permissions: selectedRole === 'admin' ? ['all'] : (rolePermissions[selectedRole] || []).map(p => p.toString())
+=======
+    // 역할에 따른 기본 권한 설정
+    if (name === 'role') {
+      let defaultPermissions: string[] = [];
+      switch (value) {
+        case 'admin':
+          // 관리자는 모든 권한
+          defaultPermissions = AVAILABLE_PERMISSIONS.map(p => p.id);
+          break;
+        case 'reception':
+          defaultPermissions = [
+            'tasks.view_assigned', 'tasks.view_department', 'tasks.create', 'tasks.update', 'tasks.comment',
+            'schedules.view_all', 'schedules.create', 'schedules.update',
+            'members.view_department', 'members.create', 'members.update',
+            'customers.view_all', 'customers.update',
+            'trainers.view_all',
+            'sales.create', 'sales.view_all',
+            'reports.create', 'reports.view_department',
+            'ot.view_assigned', 'ot.assign', 'ot.progress_update',
+            'pass.view_all', 'pass.create',
+            'vending.view_own',
+            'announcements.read',
+            'suggestions.create', 'suggestions.view_own',
+            'manuals.read'
+          ];
+          break;
+        case 'fitness':
+        case 'tennis':
+        case 'golf':
+          defaultPermissions = [
+            'tasks.view_assigned', 'tasks.create', 'tasks.update', 'tasks.comment',
+            'schedules.view_department', 'schedules.view_own', 'schedules.create', 'schedules.update',
+            'members.view_department', 'members.update',
+            'sales.create', 'sales.view_own',
+            'reports.create', 'reports.view_own',
+            'ot.view_assigned', 'ot.progress_update',
+            'vending.view_own',
+            'announcements.read',
+            'suggestions.create', 'suggestions.view_own',
+            'manuals.read'
+          ];
+          break;
+        default:
+          defaultPermissions = ['tasks.view_assigned', 'announcements.read', 'manuals.read'];
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        role: value as UserRole,
+        permissions: defaultPermissions
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       }));
     }
   };
@@ -117,7 +234,6 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
       newErrors.confirmPassword = '비밀번호가 일치하지 않습니다';
     }
     
-    if (!formData.department) newErrors.department = '부서를 입력해 주세요';
     if (!formData.position) newErrors.position = '직책을 입력해 주세요';
     
     setErrors(newErrors);
@@ -127,7 +243,10 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+<<<<<<< HEAD
     
+=======
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
     if (!validateForm()) {
       return;
     }
@@ -135,7 +254,6 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
     setIsSubmitting(true);
     
     try {
-      // 직원 데이터 준비
       const staffData = {
         name: formData.name,
         email: formData.email,
@@ -143,12 +261,12 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
         password: formData.password,
         status: formData.status,
         role: formData.role,
-        department: formData.department,
         position: formData.position,
         hireDate: formData.hireDate,
         permissions: formData.permissions
       };
       
+<<<<<<< HEAD
       
       // 직원 추가
       if (addStaff) {
@@ -169,6 +287,19 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
     } catch (error) {
       console.error('직원 추가 중 오류 발생:', error);
       showToast('error', '직원 추가 오류', '직원 추가 중 오류가 발생했습니다.');
+=======
+      const newStaffId = await addStaff?.(staffData);
+      
+      if (newStaffId) {
+        showSuccess('직원이 성공적으로 추가되었습니다.');
+        onClose();
+      } else {
+        showError('직원 추가에 실패했습니다.');
+      }
+    } catch (error) {
+      logger.error("AddStaffForm handleSubmit error:", error);
+      showError('직원 추가 중 오류가 발생했습니다.');
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
     } finally {
       setIsSubmitting(false);
     }
@@ -184,16 +315,16 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
       <motion.div 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
+        className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center">
+        <div className="flex items-center justify-between p-4 border-b border-slate-200">
+          <h2 className="text-xl font-bold text-slate-900 flex items-center">
             <User className="w-5 h-5 mr-2" />
             새 직원 추가
           </h2>
           <button 
-            className="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300"
+            className="text-slate-400 hover:text-slate-500"
             onClick={onClose}
           >
             <X className="w-5 h-5" />
@@ -204,12 +335,12 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* 기본 정보 섹션 */}
-              <div className="md:col-span-2 bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
-                <h3 className="font-medium text-slate-900 dark:text-white mb-3">기본 정보</h3>
+              <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
+                <h3 className="font-medium text-slate-900 mb-3">기본 정보</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* 이름 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       이름
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -219,8 +350,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       value={formData.name}
                       onChange={handleChange}
                       className={clsx(
-                        'form-input w-full',
-                        errors.name ? 'border-red-500 dark:border-red-500' : ''
+                        'w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                        errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                       )}
                       placeholder="직원 이름"
                       required
@@ -232,7 +363,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                   
                   {/* 상태 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       상태
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -240,7 +371,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       name="status"
                       value={formData.status}
                       onChange={handleChange}
-                      className="form-input w-full"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       required
                     >
                       <option value="active">활성</option>
@@ -251,7 +382,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                   
                   {/* 이메일 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       이메일
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -261,8 +392,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       value={formData.email}
                       onChange={handleChange}
                       className={clsx(
-                        'form-input w-full',
-                        errors.email ? 'border-red-500 dark:border-red-500' : ''
+                        'w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                        errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                       )}
                       placeholder="example@mail.com"
                       required
@@ -274,7 +405,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                   
                   {/* 전화번호 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       전화번호
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -284,8 +415,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       value={formData.phone}
                       onChange={handleChange}
                       className={clsx(
-                        'form-input w-full',
-                        errors.phone ? 'border-red-500 dark:border-red-500' : ''
+                        'w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                        errors.phone ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                       )}
                       placeholder="010-1234-5678"
                       required
@@ -297,7 +428,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
 
                   {/* 비밀번호 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       비밀번호
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -307,8 +438,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       value={formData.password}
                       onChange={handleChange}
                       className={clsx(
-                        'form-input w-full',
-                        errors.password ? 'border-red-500 dark:border-red-500' : ''
+                        'w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                        errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                       )}
                       placeholder="********"
                       required
@@ -320,7 +451,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                   
                   {/* 비밀번호 확인 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       비밀번호 확인
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -330,8 +461,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       className={clsx(
-                        'form-input w-full',
-                        errors.confirmPassword ? 'border-red-500 dark:border-red-500' : ''
+                        'w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                        errors.confirmPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                       )}
                       placeholder="********"
                       required
@@ -344,39 +475,12 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
               </div>
               
               {/* 직원 정보 섹션 */}
-              <div className="md:col-span-2 bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
-                <h3 className="font-medium text-slate-900 dark:text-white mb-3">직원 정보</h3>
+              <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
+                <h3 className="font-medium text-slate-900 mb-3">직원 정보</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* 부서 */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      부서
-                      <span className="text-red-500 ml-1">*</span>
-                    </label>
-                    <select
-                      name="department"
-                      value={formData.department}
-                      onChange={handleChange}
-                      className={clsx(
-                        'form-input w-full',
-                        errors.department ? 'border-red-500 dark:border-red-500' : ''
-                      )}
-                      required
-                    >
-                      <option value="">부서 선택</option>
-                      <option value="임원">임원</option>
-                      <option value="헬스">헬스</option>
-                      <option value="테니스">테니스</option>
-                      <option value="골프">골프</option>
-                    </select>
-                    {errors.department && (
-                      <p className="mt-1 text-sm text-red-500">{errors.department}</p>
-                    )}
-                  </div>
-                  
                   {/* 직책 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       직책
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -385,8 +489,8 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       value={formData.position}
                       onChange={handleChange}
                       className={clsx(
-                        'form-input w-full',
-                        errors.position ? 'border-red-500 dark:border-red-500' : ''
+                        'w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                        errors.position ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                       )}
                       required
                     >
@@ -404,7 +508,7 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                   
                   {/* 입사일 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       입사일
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -413,24 +517,25 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       name="hireDate"
                       value={formData.hireDate}
                       onChange={handleChange}
-                      className="form-input w-full"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       required
                     />
                   </div>
                   
                   {/* 역할 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      역할
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      시스템 역할
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <select
                       name="role"
                       value={formData.role}
                       onChange={handleChange}
-                      className="form-input w-full"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       required
                     >
+<<<<<<< HEAD
                       {Object.keys(rolePermissions).map((roleKey) => (
                         <option key={roleKey} value={roleKey}>
                           {roleKey === 'admin' ? '관리자' :
@@ -441,80 +546,119 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                            roleKey}
                         </option>
                       ))}
+=======
+                      <option value="reception">리셉션</option>
+                      <option value="fitness">헬스</option>
+                      <option value="tennis">테니스</option>
+                      <option value="golf">골프</option>
+                      <option value="admin">관리자</option>
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
                     </select>
+                    <p className="mt-1 text-xs text-slate-500">
+                      • 리셉션: 회원관리, 일정관리, 매출관리 등 프론트 업무 권한<br/>
+                      • 헬스: 회원관리, 일정관리, OT 진행 권한<br/>
+                      • 테니스: 회원관리, 일정관리, OT 진행 권한<br/>
+                      • 골프: 회원관리, 일정관리, OT 진행 권한<br/>
+                      • 관리자: 모든 기능 접근 가능
+                    </p>
                   </div>
                 </div>
               </div>
               
               {/* 권한 섹션 */}
               {formData.role !== 'admin' && (
-                <div className="md:col-span-2 bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
-                  <div className="flex items-center mb-3">
-                    <h3 className="font-medium text-slate-900 dark:text-white">권한 설정</h3>
-                    <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
-                      (직원이 접근할 수 있는 기능을 선택하세요)
-                    </span>
+                <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
+                  <div className="mb-3">
+                    <h3 className="font-medium text-slate-900 mb-1">접근 권한 설정</h3>
+                    <p className="text-sm text-slate-600">
+                      시스템 메뉴별로 접근 권한을 설정합니다. 
+                      <span className="text-blue-600 font-medium">조회</span>는 보기만, 
+                      <span className="text-blue-600 font-medium">생성/편집</span>은 추가·수정이 가능합니다.
+                    </p>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {AVAILABLE_PERMISSIONS.map(permission => (
-                      <div key={permission.id} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id={permission.id}
-                          value={permission.id}
-                          checked={formData.permissions.includes(permission.id)}
-                          onChange={handlePermissionChange}
-                          className="rounded text-primary focus:ring-primary"
-                        />
-                        <label
-                          htmlFor={permission.id}
-                          className="ml-2 block text-sm text-slate-700 dark:text-slate-300"
-                        >
-                          {permission.label}
-                        </label>
+                  <div className="space-y-4">
+                    {Object.entries(
+                      AVAILABLE_PERMISSIONS.reduce((acc, permission) => {
+                        const category = permission.category;
+                        if (!acc[category]) acc[category] = [];
+                        acc[category].push(permission);
+                        return acc;
+                      }, {} as Record<string, typeof AVAILABLE_PERMISSIONS>)
+                    ).map(([category, permissions]) => (
+                      <div key={category} className="border border-slate-200 rounded-lg p-3">
+                        <h4 className="font-medium text-slate-800 mb-2 text-sm">{category}</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {permissions.map(permission => (
+                            <div key={permission.id} className="flex items-center">
+                              <input
+                                type="checkbox"
+                                id={permission.id}
+                                value={permission.id}
+                                checked={formData.permissions.includes(permission.id)}
+                                onChange={handlePermissionChange}
+                                className="rounded text-blue-600 focus:ring-blue-500"
+                              />
+                              <label
+                                htmlFor={permission.id}
+                                className="ml-2 block text-sm text-slate-700"
+                              >
+                                {permission.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
               
-              {/* 관리자 경고 */}
-              {formData.role === 'admin' && (
-                <div className="md:col-span-2 bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+              {/* 역할별 권한 안내 */}
+              {formData.role && (
+                <div className="md:col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-200">
                   <div className="flex items-start">
-                    <Shield className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5" />
+                    <Settings className="w-5 h-5 text-blue-600 mr-2 mt-0.5" />
                     <div>
-                      <h3 className="font-medium text-yellow-800 dark:text-yellow-300">관리자 권한 안내</h3>
-                      <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
-                        관리자는 모든 기능에 대한 접근 권한을 가집니다. 시스템 전체 설정을 변경하고 모든 데이터에 접근할 수 있습니다. 
-                        관리자 권한은 꼭 필요한 직원에게만 부여해야 합니다.
+                      <h3 className="font-medium text-blue-800">
+                        {formData.role === 'admin' ? '관리자' : 
+                         formData.role === 'reception' ? '리셉션' :
+                         formData.role === 'fitness' ? '피트니스' :
+                         formData.role === 'tennis' ? '테니스' :
+                         formData.role === 'golf' ? '골프' : '직원'} 권한
+                      </h3>
+                      <p className="text-sm text-blue-700 mt-1">
+                        {formData.role === 'admin' && '관리자는 모든 시스템 권한을 가집니다.'}
+                        {formData.role === 'reception' && '리셉션은 회원관리, 일정관리, 매출관리, OT배정 등 프론트 업무 권한을 가집니다.'}
+                        {formData.role === 'fitness' && '피트니스 부서는 회원관리, 일정관리, OT 진행 권한을 가집니다.'}
+                        {formData.role === 'tennis' && '테니스 부서는 회원관리, 일정관리, OT 진행 권한을 가집니다.'}
+                        {formData.role === 'golf' && '골프 부서는 회원관리, 일정관리, OT 진행 권한을 가집니다.'}
+                        <br />필요에 따라 추가 권한을 선택하거나 제거할 수 있습니다.
                       </p>
                     </div>
                   </div>
                 </div>
               )}
             </div>
+            
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
+              <button 
+                type="button" 
+                className="px-4 py-2 text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                onClick={onClose}
+              >
+                취소
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
+                disabled={isSubmitting}
+              >
+                <Save size={16} className="mr-2" />
+                {isSubmitting ? '저장 중...' : '직원 저장'}
+              </button>
+            </div>
           </form>
-        </div>
-        
-        <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-2">
-          <button 
-            type="button" 
-            className="btn btn-outline"
-            onClick={onClose}
-          >
-            취소
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary inline-flex items-center"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            <Save size={16} className="mr-2" />
-            {isSubmitting ? '저장 중...' : '직원 저장'}
-          </button>
         </div>
       </motion.div>
     </motion.div>

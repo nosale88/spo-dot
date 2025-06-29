@@ -234,3 +234,189 @@
 
 /* Ensure Tailwind processes @apply directives */
 /* This file should be processed by PostCSS with Tailwind CSS plugin */
+
+/* 커스텀 월간 캘린더 스타일 - 겹침 문제 해결 */
+.schedule-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-left: 1px solid #e2e8f0;
+  border-top: 1px solid #e2e8f0;
+}
+
+.schedule-month-cell {
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  min-height: 120px;
+  max-height: 120px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  position: relative;
+}
+
+.schedule-month-cell.today {
+  background-color: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.schedule-month-cell.other-month {
+  background-color: #f8fafc;
+  color: #94a3b8;
+}
+
+.schedule-event-compact {
+  display: block;
+  padding: 1px 4px;
+  margin-bottom: 1px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.2;
+  height: 16px;
+}
+
+.schedule-event-compact:hover {
+  opacity: 0.8;
+  transform: scale(1.02);
+}
+
+.schedule-event-compact.pt {
+  background-color: #3b82f6;
+}
+
+.schedule-event-compact.ot {
+  background-color: #10b981;
+}
+
+.schedule-event-compact.group {
+  background-color: #8b5cf6;
+}
+
+.schedule-event-compact.consult {
+  background-color: #f59e0b;
+}
+
+.schedule-event-compact.completed {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.schedule-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.schedule-day-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.schedule-day-number.today {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.schedule-day-number.current-month {
+  color: #1f2937;
+}
+
+.schedule-day-number.other-month {
+  color: #9ca3af;
+}
+
+.schedule-day-number:hover {
+  background-color: #f3f4f6;
+}
+
+.schedule-day-number.today:hover {
+  background-color: #2563eb;
+}
+
+.schedule-event-list {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.schedule-more-indicator {
+  font-size: 10px;
+  color: #6b7280;
+  text-align: center;
+  padding: 1px;
+  cursor: pointer;
+  background-color: #f9fafb;
+  border-radius: 2px;
+  border: 1px solid #e5e7eb;
+  margin-top: 1px;
+}
+
+.schedule-more-indicator:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+/* 일정 추가 버튼 스타일 */
+.schedule-add-button {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border: 1px solid #bfdbfe;
+  background-color: transparent;
+}
+
+.schedule-add-button:hover {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+  transform: scale(1.1);
+}
+
+/* 스크롤바 스타일링 */
+.schedule-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.schedule-scrollbar::-webkit-scrollbar {
+  width: 3px;
+}
+
+.schedule-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 2px;
+}
+
+.schedule-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.schedule-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

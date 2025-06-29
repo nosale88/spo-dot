@@ -61,10 +61,10 @@ const PasswordChangeModal = ({ isOpen, onClose, onSubmit }: {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md p-6">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">비밀번호 변경</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <h3 className="text-lg font-semibold text-slate-900">비밀번호 변경</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600:text-slate-200">
             <X size={20} />
           </button>
         </div>
@@ -74,7 +74,7 @@ const PasswordChangeModal = ({ isOpen, onClose, onSubmit }: {
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 text-green-500 mb-4">
               <Check size={24} />
             </div>
-            <p className="text-lg font-medium text-slate-900 dark:text-white">비밀번호가 성공적으로 변경되었습니다.</p>
+            <p className="text-lg font-medium text-slate-900">비밀번호가 성공적으로 변경되었습니다.</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
@@ -86,7 +86,7 @@ const PasswordChangeModal = ({ isOpen, onClose, onSubmit }: {
             )}
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">현재 비밀번호</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">현재 비밀번호</label>
               <input
                 type="password"
                 value={currentPassword}
@@ -97,7 +97,7 @@ const PasswordChangeModal = ({ isOpen, onClose, onSubmit }: {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">새 비밀번호</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">새 비밀번호</label>
               <input
                 type="password"
                 value={newPassword}
@@ -108,7 +108,7 @@ const PasswordChangeModal = ({ isOpen, onClose, onSubmit }: {
             </div>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">새 비밀번호 확인</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">새 비밀번호 확인</label>
               <input
                 type="password"
                 value={confirmPassword}
@@ -181,19 +181,19 @@ const NotificationSettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClo
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md p-6">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">알림 설정</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <h3 className="text-lg font-semibold text-slate-900">알림 설정</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600:text-slate-200">
             <X size={20} />
           </button>
         </div>
 
         <div className="mb-6">
-          <h4 className="text-md font-medium text-slate-800 dark:text-slate-200 mb-3">이메일 알림</h4>
+          <h4 className="text-md font-medium text-slate-800 mb-3">이메일 알림</h4>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-sm text-slate-700 dark:text-slate-300">업무 할당 알림</label>
+              <label className="text-sm text-slate-700">업무 할당 알림</label>
               <div className="relative inline-block w-10 mr-2 align-middle select-none">
                 <input 
                   type="checkbox" 
@@ -207,7 +207,7 @@ const NotificationSettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClo
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <label className="text-sm text-slate-700 dark:text-slate-300">업무 업데이트 알림</label>
+              <label className="text-sm text-slate-700">업무 업데이트 알림</label>
               <div className="relative inline-block w-10 mr-2 align-middle select-none">
                 <input 
                   type="checkbox" 
@@ -221,7 +221,7 @@ const NotificationSettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClo
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <label className="text-sm text-slate-700 dark:text-slate-300">공지사항 알림</label>
+              <label className="text-sm text-slate-700">공지사항 알림</label>
               <div className="relative inline-block w-10 mr-2 align-middle select-none">
                 <input 
                   type="checkbox" 
@@ -235,7 +235,7 @@ const NotificationSettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClo
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <label className="text-sm text-slate-700 dark:text-slate-300">주간 리포트</label>
+              <label className="text-sm text-slate-700">주간 리포트</label>
               <div className="relative inline-block w-10 mr-2 align-middle select-none">
                 <input 
                   type="checkbox" 
@@ -252,10 +252,10 @@ const NotificationSettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClo
         </div>
 
         <div className="mb-6">
-          <h4 className="text-md font-medium text-slate-800 dark:text-slate-200 mb-3">앱 알림</h4>
+          <h4 className="text-md font-medium text-slate-800 mb-3">앱 알림</h4>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-sm text-slate-700 dark:text-slate-300">업무 할당 알림</label>
+              <label className="text-sm text-slate-700">업무 할당 알림</label>
               <div className="relative inline-block w-10 mr-2 align-middle select-none">
                 <input 
                   type="checkbox" 
@@ -269,7 +269,7 @@ const NotificationSettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClo
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <label className="text-sm text-slate-700 dark:text-slate-300">업무 업데이트 알림</label>
+              <label className="text-sm text-slate-700">업무 업데이트 알림</label>
               <div className="relative inline-block w-10 mr-2 align-middle select-none">
                 <input 
                   type="checkbox" 
@@ -283,7 +283,7 @@ const NotificationSettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClo
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <label className="text-sm text-slate-700 dark:text-slate-300">공지사항 알림</label>
+              <label className="text-sm text-slate-700">공지사항 알림</label>
               <div className="relative inline-block w-10 mr-2 align-middle select-none">
                 <input 
                   type="checkbox" 
@@ -297,7 +297,7 @@ const NotificationSettingsModal = ({ isOpen, onClose }: { isOpen: boolean; onClo
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <label className="text-sm text-slate-700 dark:text-slate-300">메시지 알림</label>
+              <label className="text-sm text-slate-700">메시지 알림</label>
               <div className="relative inline-block w-10 mr-2 align-middle select-none">
                 <input 
                   type="checkbox" 
@@ -428,7 +428,7 @@ const Profile = () => {
       className="space-y-6"
     >
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">내 프로필</h1>
+        <h1 className="text-2xl font-bold text-slate-900">내 프로필</h1>
         {!isEditing ? (
           <button 
             onClick={handleEdit}
@@ -468,13 +468,13 @@ const Profile = () => {
                 className="form-input text-center text-xl font-bold mb-1"
               />
             ) : (
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">{profileData.name}</h2>
+              <h2 className="text-xl font-bold text-slate-900 mb-1">{profileData.name}</h2>
             )}
             <p className="text-sm text-primary font-medium">{profileData.position}</p>
             <div className="w-full mt-6 space-y-3">
               <div className="flex items-center">
                 <Calendar size={18} className="text-slate-400 mr-3" />
-                <span className="text-sm text-slate-600 dark:text-slate-300">{profileData.joinDate} 입사</span>
+                <span className="text-sm text-slate-600">{profileData.joinDate} 입사</span>
               </div>
             </div>
           </div>
@@ -482,11 +482,11 @@ const Profile = () => {
 
         {/* 상세 정보 */}
         <div className="card p-6 md:col-span-2">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">개인 정보</h3>
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">개인 정보</h3>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">이메일</label>
+                <label className="block text-sm font-medium text-slate-500 mb-1">이메일</label>
                 <div className="flex items-center">
                   <Mail size={18} className="text-slate-400 mr-2" />
                   {isEditing ? (
@@ -498,12 +498,12 @@ const Profile = () => {
                       className="form-input"
                     />
                   ) : (
-                    <p className="text-slate-900 dark:text-white">{profileData.email}</p>
+                    <p className="text-slate-900">{profileData.email}</p>
                   )}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">전화번호</label>
+                <label className="block text-sm font-medium text-slate-500 mb-1">전화번호</label>
                 <div className="flex items-center">
                   <Phone size={18} className="text-slate-400 mr-2" />
                   {isEditing ? (
@@ -515,13 +515,13 @@ const Profile = () => {
                       className="form-input"
                     />
                   ) : (
-                    <p className="text-slate-900 dark:text-white">{profileData.phone}</p>
+                    <p className="text-slate-900">{profileData.phone}</p>
                   )}
                 </div>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">주소</label>
+              <label className="block text-sm font-medium text-slate-500 mb-1">주소</label>
               <div className="flex items-center">
                 <MapPin size={18} className="text-slate-400 mr-2" />
                 {isEditing ? (
@@ -533,12 +533,12 @@ const Profile = () => {
                     className="form-input w-full"
                   />
                 ) : (
-                  <p className="text-slate-900 dark:text-white">{profileData.address}</p>
+                  <p className="text-slate-900">{profileData.address}</p>
                 )}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">자기소개</label>
+              <label className="block text-sm font-medium text-slate-500 mb-1">자기소개</label>
               {isEditing ? (
                 <textarea
                   name="bio"
@@ -547,7 +547,7 @@ const Profile = () => {
                   className="form-input w-full h-24"
                 />
               ) : (
-                <p className="text-slate-900 dark:text-white">{profileData.bio}</p>
+                <p className="text-slate-900">{profileData.bio}</p>
               )}
             </div>
           </div>
@@ -555,12 +555,12 @@ const Profile = () => {
 
         {/* 설정 */}
         <div className="card p-6 md:col-span-3">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">계정 설정</h3>
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">계정 설정</h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between p-3 border-b border-slate-200">
               <div>
-                <p className="font-medium text-slate-900 dark:text-white">알림 설정</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">이메일 및 앱 알림 설정</p>
+                <p className="font-medium text-slate-900">알림 설정</p>
+                <p className="text-sm text-slate-500">이메일 및 앱 알림 설정</p>
               </div>
               <button 
                 onClick={() => setIsNotificationModalOpen(true)}
@@ -570,10 +570,10 @@ const Profile = () => {
                 설정
               </button>
             </div>
-            <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between p-3 border-b border-slate-200">
               <div>
-                <p className="font-medium text-slate-900 dark:text-white">비밀번호 변경</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">계정 비밀번호 변경</p>
+                <p className="font-medium text-slate-900">비밀번호 변경</p>
+                <p className="text-sm text-slate-500">계정 비밀번호 변경</p>
               </div>
               <button 
                 onClick={() => setIsPasswordModalOpen(true)}
@@ -585,8 +585,8 @@ const Profile = () => {
             </div>
             <div className="flex items-center justify-between p-3">
               <div>
-                <p className="font-medium text-slate-900 dark:text-white">다중 인증(MFA)</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">계정 보안 강화</p>
+                <p className="font-medium text-slate-900">다중 인증(MFA)</p>
+                <p className="text-sm text-slate-500">계정 보안 강화</p>
               </div>
               <button className="btn btn-sm btn-outline inline-flex items-center">
                 <User size={14} className="mr-1" />

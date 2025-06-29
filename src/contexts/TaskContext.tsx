@@ -4,6 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { notificationService } from '../services/notificationService';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import { logger, showSuccess } from '../utils/notifications';
+import { withRetry, handleError, handleApiError, handleValidationError } from '../utils/errorHandler';
+import { supabaseApiService } from '../services/supabaseApi';
 
 // 업무 우선순위
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -23,6 +26,8 @@ export interface Task {
   priority: TaskPriority;
   category: TaskCategory;
   dueDate: string; // ISO 문자열
+  startTime?: string; // 시작 시간 (HH:MM 형식)
+  endTime?: string; // 종료 시간 (HH:MM 형식)
   createdAt: string; // ISO 문자열
   updatedAt: string; // ISO 문자열
   assignedTo: string[]; // 유저 ID 배열
@@ -98,6 +103,10 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const localTasks: Task[] = JSON.parse(savedTasks);
+<<<<<<< HEAD
+=======
+      logger.debug(`📦 로컬 스토리지에서 ${localTasks.length}개의 업무를 발견했습니다.`);
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       
       if (localTasks.length === 0) {
         localStorage.removeItem('tasks');
@@ -112,6 +121,10 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
       // 이미 Supabase에 데이터가 있으면 마이그레이션 하지 않음
       if (existingTasks && existingTasks.length > 0) {
+<<<<<<< HEAD
+=======
+        logger.debug('✅ Supabase에 이미 데이터가 있어 마이그레이션을 건너뜁니다.');
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
         localStorage.removeItem('tasks');
         return;
       }
@@ -143,6 +156,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
               priority: localTask.priority,
               category: localTask.category,
               due_date: localTask.dueDate,
+              start_time: localTask.startTime,
+              end_time: localTask.endTime,
               assigned_to: assignedToId,
               created_by: user.id,
               tags: localTask.assignedToName
@@ -151,7 +166,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
             .single();
 
           if (insertError) {
-            console.error(`업무 마이그레이션 실패: ${localTask.title}`, insertError);
+            logger.error(`업무 마이그레이션 실패: ${localTask.title}`, insertError);
             continue;
           }
 
@@ -171,16 +186,20 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
           migratedCount++;
         } catch (err) {
-          console.error(`업무 "${localTask.title}" 마이그레이션 중 오류:`, err);
+          logger.error(`업무 "${localTask.title}" 마이그레이션 중 오류:`, err);
         }
       }
 
+<<<<<<< HEAD
+=======
+      logger.debug(`✅ ${migratedCount}개의 업무가 성공적으로 마이그레이션되었습니다.`);
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       
       // 마이그레이션 완료 후 localStorage 정리
       localStorage.removeItem('tasks');
       
     } catch (err) {
-      console.error('마이그레이션 실패:', err);
+      logger.error('마이그레이션 실패:', err);
     }
   }, [user]);
 
@@ -249,6 +268,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       priority: supabaseTask.priority,
       category: supabaseTask.category || 'general',
       dueDate: supabaseTask.due_date,
+      startTime: supabaseTask.start_time,
+      endTime: supabaseTask.end_time,
       createdAt: supabaseTask.created_at,
       updatedAt: supabaseTask.updated_at,
       assignedTo: assignedToArray,
@@ -284,7 +305,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         setFilteredTasks(convertedTasks);
       }
     } catch (err) {
-      console.error('업무 조회 실패:', err);
+      logger.error('업무 조회 실패:', err);
       setError('업무 목록을 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
@@ -344,7 +365,15 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   // 업무 추가
   const addTask = useCallback(async (newTaskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
     if (!user) {
+<<<<<<< HEAD
       console.error('❌ 사용자가 로그인되지 않음');
+=======
+      handleError(new Error('로그인이 필요합니다'), { 
+        action: 'add_task', 
+        userId: undefined,
+        userRole: undefined 
+      });
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       return null;
     }
 
@@ -353,12 +382,15 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
 
     try {
+      logger.debug('새 태스크 추가 시작:', newTaskData);
+
       // 담당자가 여러 명일 경우 첫 번째만 assigned_to에 저장 (DB 제약 조건)
       const assignedToId = newTaskData.assignedTo.length > 0 ? newTaskData.assignedTo[0] : null;
 
       // 상태 변환 (프론트엔드의 in-progress를 데이터베이스의 in_progress로 변환)
       const convertedStatus = newTaskData.status === 'in-progress' ? 'in_progress' : newTaskData.status;
 
+<<<<<<< HEAD
       const insertPayload = {
         title: newTaskData.title,
         description: newTaskData.description,
@@ -383,248 +415,154 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         console.error('❌ Supabase insert error:', insertError);
         throw insertError;
       }
+=======
+      const { data: newSupabaseTask, error: insertError } = await withRetry(
+        async () => {
+          const response = await supabase
+            .from('tasks')
+            .insert({
+              title: newTaskData.title,
+              description: newTaskData.description,
+              status: convertedStatus,
+              priority: newTaskData.priority,
+              category: newTaskData.category,
+              due_date: newTaskData.dueDate,
+              start_time: newTaskData.startTime,
+              end_time: newTaskData.endTime,
+              assigned_to: assignedToId,
+              created_by: user.id,
+              tags: newTaskData.assignedToName // 임시로 태그에 담당자 이름 저장
+            })
+            .select()
+            .single();
+          
+          if (response.error) throw response.error;
+          return response;
+        },
+        3,
+        1000,
+        { action: 'add_task', userId: user.id, userRole: user.role }
+      );
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 
       if (newSupabaseTask) {
         const convertedTask = await convertSupabaseTaskToTask(newSupabaseTask);
+        
+        // 상태 업데이트를 즉시 반영
         setTasks(prevTasks => [convertedTask, ...prevTasks]);
         setFilteredTasks(prevTasks => [convertedTask, ...prevTasks]);
 
-        // 🚀 자동 알림: 업무 배정 알림 발송
-        if (newTaskData.assignedTo.length > 0) {
-          try {
-            for (let i = 0; i < newTaskData.assignedTo.length; i++) {
-              const assigneeId = newTaskData.assignedTo[i];
-              const assigneeName = newTaskData.assignedToName[i] || 'Unknown';
-
-              await notificationService.notifyTaskAssignment({
-                id: convertedTask.id,
-                title: convertedTask.title,
-                assigneeId: assigneeId,
-                assigneeName: assigneeName,
-                assignerName: newTaskData.assignedByName,
-                dueDate: convertedTask.dueDate
-              });
-            }
-          } catch (error) {
-            console.error('업무 배정 알림 실패:', error);
-          }
-        }
-
+        // 전체 목록 새로고침
+        await fetchTasks();
+        showSuccess('새로운 업무가 성공적으로 추가되었습니다.');
+        
         return convertedTask.id;
       }
-    } catch (err) {
-      console.error('업무 추가 실패:', err);
-      setError('업무 추가 중 오류가 발생했습니다.');
+    } catch (error) {
+      handleApiError(error, 'add_task', user.id, user.role);
     } finally {
       setLoading(false);
     }
 
     return null;
-  }, [user, convertSupabaseTaskToTask]);
+  }, [user, convertSupabaseTaskToTask, fetchTasks]);
 
   // 업무 수정
-  const updateTask = useCallback(async (id: string, updatedData: Partial<Task>): Promise<boolean> => {
-    if (!user) return false;
-
-    setLoading(true);
-    setError(null);
+  const updateTask = async (id: string, updates: Partial<TaskFormData>): Promise<void> => {
+    if (!user) {
+      handleError(new Error('로그인이 필요합니다'), {
+        action: 'update_task',
+        userId: undefined,
+        userRole: undefined
+      });
+      return;
+    }
 
     try {
-      const updatePayload: any = {};
-      
-      if (updatedData.title !== undefined) updatePayload.title = updatedData.title;
-      if (updatedData.description !== undefined) updatePayload.description = updatedData.description;
-      if (updatedData.status !== undefined) {
-        // 상태 변환 (프론트엔드의 in-progress를 데이터베이스의 in_progress로 변환)
-        updatePayload.status = updatedData.status === 'in-progress' ? 'in_progress' : updatedData.status;
-      }
-      if (updatedData.priority !== undefined) updatePayload.priority = updatedData.priority;
-      if (updatedData.category !== undefined) updatePayload.category = updatedData.category;
-      if (updatedData.dueDate !== undefined) updatePayload.due_date = updatedData.dueDate;
-      if (updatedData.assignedTo !== undefined && updatedData.assignedTo.length > 0) {
-        updatePayload.assigned_to = updatedData.assignedTo[0];
-      }
+      logger.debug('태스크 업데이트 시작:', { id, updates });
+      setLoading(true);
 
-      const { error: updateError } = await supabase
-        .from('tasks')
-        .update(updatePayload)
-        .eq('id', id);
-
-      if (updateError) throw updateError;
-
-      // 로컬 상태 업데이트
-      setTasks(prevTasks => 
-        prevTasks.map(task => 
-          task.id === id 
-            ? { 
-                ...task, 
-                ...updatedData, 
-                updatedAt: new Date().toISOString(),
-                completedAt: 
-                  updatedData.status === 'completed' && task.status !== 'completed'
-                    ? new Date().toISOString()
-                    : task.completedAt
-              } 
-            : task
-        )
+      const result = await withRetry(
+        () => supabaseApiService.tasks.update(id, updates),
+        3,
+        1000,
+        { action: 'update_task', userId: user.id, userRole: user.role }
       );
 
-      setFilteredTasks(prevTasks => 
-        prevTasks.map(task => 
-          task.id === id 
-            ? { 
-                ...task, 
-                ...updatedData, 
-                updatedAt: new Date().toISOString(),
-                completedAt: 
-                  updatedData.status === 'completed' && task.status !== 'completed'
-                    ? new Date().toISOString()
-                    : task.completedAt
-              } 
-            : task
-        )
-      );
-
-      // 🚀 자동 알림: 업무 완료시 배정자에게 알림
-      if (updatedData.status === 'completed') {
-        const task = tasks.find(t => t.id === id);
-        if (task && task.assignedBy) {
-          try {
-            await notificationService.notifyTaskCompletion({
-              id: task.id,
-              title: task.title,
-              assignerId: task.assignedBy,
-              assigneeName: user.name
-            });
-          } catch (error) {
-            console.error('업무 완료 알림 실패:', error);
-          }
-        }
+      if (result) {
+        await fetchTasks();
+        showSuccess('업무가 성공적으로 업데이트되었습니다.');
       }
-
-      return true;
-    } catch (err) {
-      console.error('업무 수정 실패:', err);
-      setError('업무 수정 중 오류가 발생했습니다.');
-      return false;
+    } catch (error) {
+      handleApiError(error, 'update_task', user.id, user.role);
     } finally {
       setLoading(false);
     }
-  }, [user, tasks]);
+  };
 
   // 업무 삭제
-  const deleteTask = useCallback(async (id: string): Promise<boolean> => {
-    if (!user) return false;
-
-    setLoading(true);
-    setError(null);
+  const deleteTask = async (id: string): Promise<void> => {
+    if (!user) {
+      handleError(new Error('로그인이 필요합니다'), {
+        action: 'delete_task',
+        userId: undefined,
+        userRole: undefined
+      });
+      return;
+    }
 
     try {
-      // 관련 댓글 먼저 삭제
-      await supabase
-        .from('task_comments')
-        .delete()
-        .eq('task_id', id);
+      logger.debug('태스크 삭제 시작:', id);
+      setLoading(true);
 
-      // 업무 삭제
-      const { error: deleteError } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', id);
+      await withRetry(
+        () => supabaseApiService.tasks.delete(id),
+        2,
+        1000,
+        { action: 'delete_task', userId: user.id, userRole: user.role }
+      );
 
-      if (deleteError) throw deleteError;
-
-      setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
-      setFilteredTasks(prevTasks => prevTasks.filter(task => task.id !== id));
-
-      return true;
-    } catch (err) {
-      console.error('업무 삭제 실패:', err);
-      setError('업무 삭제 중 오류가 발생했습니다.');
-      return false;
+      await fetchTasks();
+      showSuccess('업무가 성공적으로 삭제되었습니다.');
+    } catch (error) {
+      handleApiError(error, 'delete_task', user.id, user.role);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  };
 
   // 댓글 추가
-  const addComment = useCallback(async (taskId: string, comment: Omit<TaskComment, 'id' | 'createdAt'>): Promise<boolean> => {
-    if (!user) return false;
-
-    try {
-      const { data: newComment, error: insertError } = await supabase
-        .from('task_comments')
-        .insert({
-          task_id: taskId,
-          author_id: comment.authorId,
-          author_name: comment.authorName,
-          content: comment.content
-        })
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
-
-      if (newComment) {
-        const convertedComment: TaskComment = {
-          id: newComment.id,
-          content: newComment.content,
-          createdAt: newComment.created_at,
-          authorId: newComment.author_id,
-          authorName: newComment.author_name
-        };
-
-        // 로컬 상태 업데이트
-        setTasks(prevTasks => 
-          prevTasks.map(task => 
-            task.id === taskId 
-              ? { 
-                  ...task, 
-                  comments: [...(task.comments || []), convertedComment],
-                  updatedAt: new Date().toISOString()
-                } 
-              : task
-          )
-        );
-
-        setFilteredTasks(prevTasks => 
-          prevTasks.map(task => 
-            task.id === taskId 
-              ? { 
-                  ...task, 
-                  comments: [...(task.comments || []), convertedComment],
-                  updatedAt: new Date().toISOString()
-                } 
-              : task
-          )
-        );
-
-        // 🚀 자동 알림: 댓글 추가시 관련자들에게 알림
-        const task = tasks.find(t => t.id === taskId);
-        if (task && (task.assignedTo.length > 0 || task.assignedBy)) {
-          try {
-            await notificationService.notifyTaskComment({
-              taskId: task.id,
-              taskTitle: task.title,
-              authorName: comment.authorName,
-              assigneeId: task.assignedTo[0] || '',
-              assignerId: task.assignedBy || '',
-              authorId: comment.authorId
-            });
-          } catch (error) {
-            console.error('댓글 알림 실패:', error);
-          }
-        }
-
-        return true;
-      }
-    } catch (err) {
-      console.error('댓글 추가 실패:', err);
-      setError('댓글 추가 중 오류가 발생했습니다.');
+  const addComment = async (taskId: string, content: string): Promise<void> => {
+    if (!user) {
+      handleError(new Error('로그인이 필요합니다'), {
+        action: 'add_comment',
+        userId: undefined,
+        userRole: undefined
+      });
+      return;
     }
 
-    return false;
-  }, [user, tasks]);
+    if (!content.trim()) {
+      handleValidationError('댓글 내용', 'required');
+      return;
+    }
+
+    try {
+      logger.debug('댓글 추가 시작:', { taskId, content });
+
+      await withRetry(
+        () => supabaseApiService.tasks.addComment(taskId, content),
+        2,
+        500,
+        { action: 'add_comment', userId: user.id, userRole: user.role }
+      );
+
+      await fetchTaskComments(taskId);
+      showSuccess('댓글이 추가되었습니다.');
+    } catch (error) {
+      handleApiError(error, 'add_comment', user.id, user.role);
+    }
+  };
 
   // 첨부 파일 추가 (임시 구현)
   const addAttachment = useCallback((taskId: string, attachment: Omit<TaskAttachment, 'id'>) => {

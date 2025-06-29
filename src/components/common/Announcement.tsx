@@ -43,33 +43,33 @@ const Announcement = ({ announcements, onDismiss }: AnnouncementProps) => {
   const getBgColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'bg-red-100 dark:bg-red-900/30';
+        return 'bg-red-100';
       case 'medium':
-        return 'bg-amber-100 dark:bg-amber-900/30';
+        return 'bg-amber-100';
       default:
-        return 'bg-blue-100 dark:bg-blue-900/30';
+        return 'bg-blue-100';
     }
   };
 
   const getTextColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'text-red-800 dark:text-red-300';
+        return 'text-red-800';
       case 'medium':
-        return 'text-amber-800 dark:text-amber-300';
+        return 'text-amber-800';
       default:
-        return 'text-blue-800 dark:text-blue-300';
+        return 'text-blue-800';
     }
   };
 
   const getIconColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'text-red-500 dark:text-red-400';
+        return 'text-red-500';
       case 'medium':
-        return 'text-amber-500 dark:text-amber-400';
+        return 'text-amber-500';
       default:
-        return 'text-blue-500 dark:text-blue-400';
+        return 'text-blue-500';
     }
   };
 

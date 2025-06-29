@@ -74,13 +74,23 @@ class SupabaseApiService {
 
       if (error) throw new Error(error.message);
 
+      console.log('🔍 getCurrentUser 조회 결과:', {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        permissions: user.permissions
+      });
+
       return {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
         department: user.department,
+        position: user.position,
         avatar: user.profile_image,
+        permissions: user.permissions || [], // 권한 정보 추가
         createdAt: user.created_at
       } as User;
     }

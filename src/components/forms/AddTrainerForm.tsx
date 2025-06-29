@@ -243,16 +243,16 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
       <motion.div 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
+        className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center">
+        <div className="flex items-center justify-between p-4 border-b border-slate-200">
+          <h2 className="text-xl font-bold text-slate-900 flex items-center">
             <User className="w-5 h-5 mr-2" />
             새 트레이너 추가
           </h2>
           <button 
-            className="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300"
+            className="text-slate-400 hover:text-slate-500:text-slate-300"
             onClick={onClose}
           >
             <X className="w-5 h-5" />
@@ -263,12 +263,12 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 gap-6">
               {/* 기본 정보 섹션 */}
-              <div className="bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
-                <h3 className="font-medium text-slate-900 dark:text-white mb-3">기본 정보</h3>
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <h3 className="font-medium text-slate-900 mb-3">기본 정보</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* 이름 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       이름
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -279,7 +279,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                       onChange={handleChange}
                       className={clsx(
                         'form-input w-full',
-                        errors.name ? 'border-red-500 dark:border-red-500' : ''
+                        errors.name ? 'border-red-500' : ''
                       )}
                       placeholder="트레이너 이름"
                       required
@@ -291,7 +291,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                   
                   {/* 상태 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       상태
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -310,7 +310,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                   
                   {/* 이메일 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       이메일
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -321,7 +321,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                       onChange={handleChange}
                       className={clsx(
                         'form-input w-full',
-                        errors.email ? 'border-red-500 dark:border-red-500' : ''
+                        errors.email ? 'border-red-500' : ''
                       )}
                       placeholder="example@mail.com"
                       required
@@ -333,7 +333,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                   
                   {/* 전화번호 */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       전화번호
                       <span className="text-red-500 ml-1">*</span>
                     </label>
@@ -344,7 +344,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                       onChange={handleChange}
                       className={clsx(
                         'form-input w-full',
-                        errors.phone ? 'border-red-500 dark:border-red-500' : ''
+                        errors.phone ? 'border-red-500' : ''
                       )}
                       placeholder="010-1234-5678"
                       required
@@ -357,14 +357,14 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
               </div>
               
               {/* 전문 분야 선택 */}
-              <div className="bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
+              <div className="bg-slate-50 p-4 rounded-lg">
                 <div className="flex items-center mb-3">
-                  <h3 className="font-medium text-slate-900 dark:text-white">
+                  <h3 className="font-medium text-slate-900">
                     <Star className="w-4 h-4 inline mr-1" /> 
                     전문 분야
                   </h3>
                   <span className="text-red-500 ml-1">*</span>
-                  <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="ml-2 text-xs text-slate-500">
                     (트레이너의 전문 분야를 선택하세요)
                   </span>
                 </div>
@@ -382,7 +382,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                       />
                       <label
                         htmlFor={`specialty-${category}`}
-                        className="ml-2 block text-sm text-slate-700 dark:text-slate-300"
+                        className="ml-2 block text-sm text-slate-700"
                       >
                         {category}
                       </label>
@@ -395,8 +395,8 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
               </div>
               
               {/* 자격증 정보 */}
-              <div className="bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
-                <h3 className="font-medium text-slate-900 dark:text-white mb-3">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <h3 className="font-medium text-slate-900 mb-3">
                   <Award className="w-4 h-4 inline mr-1" /> 
                   자격증 정보
                 </h3>
@@ -404,16 +404,16 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                 {/* 추가된 자격증 목록 */}
                 {formData.certifications.length > 0 && (
                   <div className="mb-4">
-                    <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">등록된 자격증</h4>
+                    <h4 className="text-sm font-medium text-slate-700 mb-2">등록된 자격증</h4>
                     <div className="space-y-2">
                       {formData.certifications.map((cert, index) => (
                         <div 
                           key={index} 
-                          className="flex justify-between items-center p-2 bg-white dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600"
+                          className="flex justify-between items-center p-2 bg-white rounded border border-slate-200"
                         >
                           <div>
-                            <div className="font-medium text-slate-800 dark:text-white">{cert.name}</div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400">
+                            <div className="font-medium text-slate-800">{cert.name}</div>
+                            <div className="text-xs text-slate-500">
                               {cert.certId && <span className="mr-2">번호: {cert.certId}</span>}
                               <span>발급일: {cert.issueDate}</span>
                             </div>
@@ -421,7 +421,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                           <button
                             type="button"
                             onClick={() => removeCertification(index)}
-                            className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                            className="text-red-500 hover:text-red-700:text-red-400"
                           >
                             <X size={16} />
                           </button>
@@ -432,11 +432,11 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                 )}
                 
                 {/* 자격증 추가 폼 */}
-                <div className="bg-white dark:bg-slate-700 p-3 rounded border border-slate-200 dark:border-slate-600">
-                  <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">자격증 추가</h4>
+                <div className="bg-white p-3 rounded border border-slate-200">
+                  <h4 className="text-sm font-medium text-slate-700 mb-2">자격증 추가</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
                         자격증 종류
                       </label>
                       <select
@@ -445,7 +445,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                         onChange={handleCertificationChange}
                         className={clsx(
                           'form-input w-full',
-                          errors.certName ? 'border-red-500 dark:border-red-500' : ''
+                          errors.certName ? 'border-red-500' : ''
                         )}
                       >
                         <option value="">자격증 선택...</option>
@@ -458,7 +458,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
                         발급일
                       </label>
                       <input
@@ -470,7 +470,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
                         자격증 번호 (선택)
                       </label>
                       <input
@@ -494,11 +494,11 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
               </div>
               
               {/* 경력 및 소개 */}
-              <div className="bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
-                <h3 className="font-medium text-slate-900 dark:text-white mb-3">경력 및 소개</h3>
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <h3 className="font-medium text-slate-900 mb-3">경력 및 소개</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       경력 (년 단위)
                     </label>
                     <input
@@ -511,7 +511,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       소개
                     </label>
                     <textarea
@@ -526,9 +526,9 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
               </div>
               
               {/* 스케줄 선호도 */}
-              <div className="bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
+              <div className="bg-slate-50 p-4 rounded-lg">
                 <div className="flex items-center mb-3">
-                  <h3 className="font-medium text-slate-900 dark:text-white">
+                  <h3 className="font-medium text-slate-900">
                     <Clock className="w-4 h-4 inline mr-1" /> 
                     근무 가능 시간
                   </h3>
@@ -537,7 +537,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                 
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">가능 요일</h4>
+                    <h4 className="text-sm font-medium text-slate-700 mb-2">가능 요일</h4>
                     <div className="flex flex-wrap gap-2">
                       {['월', '화', '수', '목', '금', '토', '일'].map(day => (
                         <label key={day} className="inline-flex items-center">
@@ -548,7 +548,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                             onChange={handleDayChange}
                             className="rounded text-primary focus:ring-primary mr-1"
                           />
-                          <span className="text-sm text-slate-700 dark:text-slate-300">{day}</span>
+                          <span className="text-sm text-slate-700">{day}</span>
                         </label>
                       ))}
                     </div>
@@ -559,7 +559,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
                         선호 시작 시간
                       </label>
                       <input
@@ -571,7 +571,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
                         선호 종료 시간
                       </label>
                       <input
@@ -587,10 +587,10 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
               </div>
               
               {/* 시급 정보 */}
-              <div className="bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
-                <h3 className="font-medium text-slate-900 dark:text-white mb-3">시급 정보</h3>
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <h3 className="font-medium text-slate-900 mb-3">시급 정보</h3>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     시급 (원)
                   </label>
                   <div className="relative">
@@ -601,11 +601,11 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
                       onChange={handleChange}
                       className={clsx(
                         'form-input w-full',
-                        errors.hourlyRate ? 'border-red-500 dark:border-red-500' : ''
+                        errors.hourlyRate ? 'border-red-500' : ''
                       )}
                       placeholder="시급 (숫자만 입력)"
                     />
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm text-slate-500 dark:text-slate-400">
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm text-slate-500">
                       원/시간
                     </div>
                   </div>
@@ -618,7 +618,7 @@ const AddTrainerForm = ({ onClose }: AddTrainerFormProps) => {
           </form>
         </div>
         
-        <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-2">
+        <div className="p-4 border-t border-slate-200 flex justify-end gap-2">
           <button 
             type="button" 
             className="btn btn-outline"

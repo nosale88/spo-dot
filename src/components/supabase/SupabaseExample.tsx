@@ -43,7 +43,7 @@ export default function SupabaseExample() {
   }, [])
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md dark:bg-slate-800">
+    <div className="p-4 bg-white rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-4">Supabase 데이터 예제</h2>
       
       {loading ? (

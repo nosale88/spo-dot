@@ -73,6 +73,22 @@ export type Permission =
   | 'members.view_department'
   | 'members.view_assigned'
   
+  // 고객 관리
+  | 'customers.create'
+  | 'customers.read'
+  | 'customers.update'
+  | 'customers.delete'
+  | 'customers.view_all'
+  | 'customers.view_department'
+  
+  // 트레이너 관리
+  | 'trainers.create'
+  | 'trainers.read'
+  | 'trainers.update'
+  | 'trainers.delete'
+  | 'trainers.view_all'
+  | 'trainers.view_department'
+  
   // 일정 관리
   | 'schedules.create'
   | 'schedules.read'
@@ -99,7 +115,7 @@ export type Permission =
   | 'pass.delete'
   | 'pass.view_all'
   
-  // 자판기 매출
+  // 자판기 관리
   | 'vending.create'
   | 'vending.read'
   | 'vending.update'
@@ -126,6 +142,10 @@ export type Permission =
   | 'admin.settings'
   | 'admin.logs'
   | 'admin.backup'
+  | 'admin.task_management'
+  | 'admin.announcements'
+  | 'admin.reports'
+  | 'admin.suggestions'
   
   // 알림 관리
   | 'notifications.send'
@@ -141,13 +161,15 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'reports.create', 'reports.read', 'reports.update', 'reports.delete', 'reports.view_all', 'reports.approve',
     'sales.create', 'sales.read', 'sales.update', 'sales.delete', 'sales.view_all', 'sales.view_own',
     'members.create', 'members.read', 'members.update', 'members.delete', 'members.view_all',
+    'customers.create', 'customers.read', 'customers.update', 'customers.delete', 'customers.view_all',
+    'trainers.create', 'trainers.read', 'trainers.update', 'trainers.delete', 'trainers.view_all',
     'schedules.create', 'schedules.read', 'schedules.update', 'schedules.delete', 'schedules.view_all',
     'ot.create', 'ot.read', 'ot.update', 'ot.delete', 'ot.assign', 'ot.view_all', 'ot.view_assigned', 'ot.progress_update',
     'pass.create', 'pass.read', 'pass.update', 'pass.delete', 'pass.view_all',
     'vending.create', 'vending.read', 'vending.update', 'vending.view_all', 'vending.view_own',
     'suggestions.create', 'suggestions.read', 'suggestions.update', 'suggestions.delete', 'suggestions.respond', 'suggestions.view_all', 'suggestions.view_own',
     'manuals.read', 'manuals.create', 'manuals.update', 'manuals.delete',
-    'admin.dashboard', 'admin.settings', 'admin.logs', 'admin.backup',
+    'admin.dashboard', 'admin.settings', 'admin.logs', 'admin.backup', 'admin.task_management', 'admin.announcements', 'admin.reports', 'admin.suggestions',
     'notifications.send', 'notifications.manage'
   ],
   
@@ -159,6 +181,8 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'reports.create', 'reports.read', 'reports.view_department', 'reports.view_own',
     'sales.create', 'sales.read', 'sales.update', 'sales.view_all',
     'members.create', 'members.read', 'members.update', 'members.view_all',
+    'customers.read', 'customers.update', 'customers.view_all',
+    'trainers.read', 'trainers.view_all',
     'schedules.create', 'schedules.read', 'schedules.update', 'schedules.view_all',
     'ot.create', 'ot.read', 'ot.update', 'ot.assign', 'ot.view_all', 'ot.view_assigned', 'ot.progress_update',
     'pass.create', 'pass.read', 'pass.update', 'pass.view_all',
@@ -341,21 +365,50 @@ export const getDataAccessLevel = (userRole: UserRole, dataType: string): DataAc
 };
 
 // 데이터 수정 권한 확인
-export const canModifyData = (userRole: UserRole, dataType: string, dataOwnerId?: string, currentUserId?: string): boolean => {
+export const canModifyData = (userRole: UserRole, dataType: string, dataOwnerId?: string, currentUserId?: string, userDepartment?: string, itemDepartment?: string, assignedUsers?: string[]): boolean => {
   const accessLevel = getDataAccessLevel(userRole, dataType);
 
   if (userRole === 'admin') return true; // 관리자는 모든 데이터 수정 가능
 
   switch (accessLevel) {
-    case 'all': return true;
+    case 'all':
+      return true;
+      
     case 'department':
-      // 이 부분은 department 정보를 기반으로 추가 로직 필요
-      return true; // 임시: department 개념이 현재 이 함수에 전달되지 않음
+      // 부서 정보를 활용한 엄격한 검사
+      if (!userDepartment) return false;
+      
+      // 관리자는 모든 부서 데이터 접근 가능
+      if (userRole === 'admin') return true;
+      
+      // 같은 부서만 접근 가능
+      if (itemDepartment) {
+        return userDepartment === itemDepartment;
+      }
+      
+      // 부서 정보가 없는 경우 소유자 기반 검사
+      return dataOwnerId === currentUserId;
+      
     case 'assigned':
-      // 이 부분은 assigned 정보를 기반으로 추가 로직 필요
-      return true; // 임시: assigned 개념이 현재 이 함수에 전달되지 않음
-    case 'own': return dataOwnerId === currentUserId;
-    default: return false;
+      // 배정된 데이터인지 엄격한 검사
+      if (!currentUserId) return false;
+      
+      // 배정된 사용자 목록이 있는 경우
+      if (assignedUsers && Array.isArray(assignedUsers)) {
+        return assignedUsers.includes(currentUserId);
+      }
+      
+      // 배정 정보가 없으면 소유자인지 확인
+      return dataOwnerId === currentUserId;
+      
+    case 'own':
+      // 본인 소유 데이터만 접근 가능
+      if (!currentUserId || !dataOwnerId) return false;
+      return dataOwnerId === currentUserId;
+      
+    case 'none':
+    default:
+      return false;
   }
 };
 
@@ -369,7 +422,7 @@ export const positionLevels: Record<UserPosition, number> = {
   '트레이너': 2,
   '퍼스널 트레이너': 2,
   '인턴 트레이너': 1,
-  '리셉션 매니저': 3,
+  '리셉션 매니저': 4,
   '리셉션 직원': 2,
   '코치': 2,
   '테니스 코치': 2,
@@ -377,14 +430,172 @@ export const positionLevels: Record<UserPosition, number> = {
   '프로': 3,
   '골프 프로': 3,
   '어시스턴트 프로': 2,
-  '사원': 1,
-  '인턴': 0
+  '사원': 2,
+  '인턴': 1
+};
+
+// 🔐 보안 강화된 데이터 필터링 함수
+export const filterDataByPermission = <T extends { 
+  created_by?: string; 
+  assigned_to?: string | string[]; 
+  department?: string; 
+  id?: string 
+}>(
+  data: T[], 
+  userRole: UserRole, 
+  dataType: string, 
+  currentUserId: string, 
+  userDepartment?: string
+): T[] => {
+  const accessLevel = getDataAccessLevel(userRole, dataType);
+  
+  switch (accessLevel) {
+    case 'all':
+      return data;
+      
+    case 'department':
+      if (userRole === 'admin') return data;
+      if (!userDepartment) return [];
+      
+      return data.filter(item => {
+        // 부서 정보가 있으면 부서로 필터링
+        if (item.department) {
+          return item.department === userDepartment;
+        }
+        // 부서 정보가 없으면 생성자 기준
+        return item.created_by === currentUserId;
+      });
+      
+    case 'assigned':
+      return data.filter(item => {
+        // 배정된 사용자 확인
+        if (item.assigned_to) {
+          if (Array.isArray(item.assigned_to)) {
+            return item.assigned_to.includes(currentUserId);
+          }
+          return item.assigned_to === currentUserId;
+        }
+        // 배정 정보가 없으면 생성자 확인
+        return item.created_by === currentUserId;
+      });
+      
+    case 'own':
+      return data.filter(item => item.created_by === currentUserId);
+      
+    case 'none':
+    default:
+      return [];
+  }
+};
+
+// 🛡️ 특별 권한 검사 (관리자, 팀장 등)
+export const hasElevatedPermission = (
+  userRole: UserRole, 
+  userPosition: UserPosition | undefined, 
+  requiredLevel: 'team_lead' | 'manager' | 'admin'
+): boolean => {
+  // 관리자는 모든 권한 보유
+  if (userRole === 'admin') return true;
+  
+  switch (requiredLevel) {
+    case 'admin':
+      return userRole === 'admin';
+      
+    case 'manager':
+      if (userRole === 'admin') return true;
+      return userPosition !== undefined && ['팀장', '부팀장', '매니저', '리셉션 매니저'].includes(userPosition);
+             
+    case 'team_lead':
+      if (userRole === 'admin') return true;
+      return userPosition !== undefined && canManageTeam(userPosition);
+             
+    default:
+      return false;
+  }
+};
+
+// 🔍 권한 검사 결과와 이유를 반환하는 상세 함수
+export const checkPermissionWithReason = (
+  userRole: UserRole, 
+  permission: Permission, 
+  userPosition?: UserPosition
+): { allowed: boolean; reason: string } => {
+  // 기본 권한 검사
+  const hasBasicPermission = hasPermission(userRole, permission);
+  
+  if (!hasBasicPermission) {
+    return {
+      allowed: false,
+      reason: `${departmentNames[userRole]} 부서에서는 '${permission}' 권한이 없습니다.`
+    };
+  }
+  
+  // 특별 권한이 필요한 경우 추가 검사
+  const adminOnlyPermissions: Permission[] = [
+    'users.create', 'users.delete', 'announcements.delete', 
+    'reports.approve', 'admin.settings', 'admin.logs', 'admin.backup'
+  ];
+  
+  if (adminOnlyPermissions.includes(permission) && userRole !== 'admin') {
+    return {
+      allowed: false,
+      reason: `'${permission}' 권한은 관리자만 사용할 수 있습니다.`
+    };
+  }
+  
+  // 팀장급 권한이 필요한 경우
+  const managerPermissions: Permission[] = [
+    'users.update', 'tasks.assign', 'ot.assign', 'notifications.send'
+  ];
+  
+  if (managerPermissions.includes(permission)) {
+    const hasManagerLevel = hasElevatedPermission(userRole, userPosition, 'manager');
+    if (!hasManagerLevel) {
+      return {
+        allowed: false,
+        reason: `'${permission}' 권한은 팀장 이상만 사용할 수 있습니다.`
+      };
+    }
+  }
+  
+  return {
+    allowed: true,
+    reason: '권한이 확인되었습니다.'
+  };
+};
+
+// 🔒 보안 감사를 위한 권한 로깅 함수
+export const logPermissionCheck = (
+  userId: string,
+  userRole: UserRole,
+  action: string,
+  resource: string,
+  result: 'allowed' | 'denied',
+  reason?: string
+): void => {
+  // 프로덕션 환경에서는 보안 로그 시스템으로 전송
+  if (import.meta.env.PROD) {
+    // TODO: 실제 보안 로그 시스템 연동
+    console.warn(`[SECURITY] ${result.toUpperCase()}: User ${userId} (${userRole}) attempted ${action} on ${resource}. Reason: ${reason || 'N/A'}`);
+  } else {
+    // 개발 환경에서는 디버그 로그
+    console.log(`[PERMISSION] ${result}: ${userId} (${userRole}) -> ${action} on ${resource}`);
+  }
+};
+
+// 부서별 한글 이름 매핑
+export const departmentNames: Record<UserRole, string> = {
+  admin: '관리자',
+  reception: '리셉션',
+  fitness: '피트니스',
+  tennis: '테니스',
+  golf: '골프'
 };
 
 export const positionInfo: Record<UserPosition, { name: string; description: string; departments: UserRole[] }> = {
   '팀장': { name: '팀장', description: '각 팀의 리더로, 팀 운영 및 성과 관리 책임을 가집니다.', departments: ['reception', 'fitness', 'tennis', 'golf'] },
   '부팀장': { name: '부팀장', description: '팀장을 보좌하며, 팀 운영의 실무를 담당합니다.', departments: ['reception', 'fitness', 'tennis', 'golf'] },
-  '매니저': { name: '매니저', description: '운영 전반을 관리하고 감독합니다.', departments: ['admin'] }, // admin role에만 매니저 직책이 있다고 가정
+  '매니저': { name: '매니저', description: '운영 전반을 관리하고 감독합니다.', departments: ['admin'] },
   '과장': { name: '과장', description: '특정 업무 분야를 총괄합니다.', departments: ['admin', 'reception', 'fitness', 'tennis', 'golf'] },
   '시니어 트레이너': { name: '시니어 트레이너', description: '경험 많은 트레이너로, 주니어 트레이너를 지도합니다.', departments: ['fitness'] },
   '트레이너': { name: '트레이너', description: '회원들에게 운동 지도를 제공합니다.', departments: ['fitness'] },
@@ -422,8 +633,8 @@ export const mapUserRoleToDatabaseRole = (userRole: UserRole): DatabaseRole => {
     case 'fitness':
     case 'tennis':
     case 'golf':
-      return 'staff'; // Assuming these roles map to 'staff' in the database
+      return 'staff';
     default:
-      return 'staff'; // Fallback
+      return 'staff';
   }
 }; 

@@ -1,10 +1,14 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useAnnouncement } from '../../contexts/AnnouncementContext';
 import { useAuth } from '../../contexts/AuthContext';
+<<<<<<< HEAD
 import { useNotification } from '../../contexts/NotificationContext';
 import { Announcement } from '../../types'; 
+=======
+import { Announcement } from '../../types/index'; 
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 import { format, parseISO } from 'date-fns';
-import { Edit3, Trash2, PlusCircle, CheckSquare, Square } from 'lucide-react';
+import { Edit3, Trash2, PlusCircle, CheckSquare, Square, Upload, X, Image as ImageIcon } from 'lucide-react';
 
 
 
@@ -32,6 +36,12 @@ const AnnouncementsManagement: React.FC = () => {
   // 카테고리/태그 입력 상태
   const [categoryInput, setCategoryInput] = useState('');
   const [tagsInput, setTagsInput] = useState('');
+  
+  // 이미지 첨부 상태
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 성능 최적화: useMemo로 필터링
   const filteredAnnouncements = useMemo(() => announcements.filter((a) => {
@@ -74,6 +84,142 @@ const AnnouncementsManagement: React.FC = () => {
     setIsModalOpen(false);
     setCurrentAnnouncement(null);
     setIsEditMode(false);
+    // 이미지 관련 상태 초기화
+    setSelectedImages([]);
+    setImagePreviewUrls([]);
+  };
+
+  // 이미지를 Base64로 변환 (실제 업로드 대신 localStorage에 저장)
+  const convertImageToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // 이미지 압축 함수 추가
+  const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.8): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // 비율 유지하면서 크기 조정
+        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        
+        // 이미지 그리기
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // 압축된 이미지를 Blob으로 변환
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, {
+              type: file.type,
+              lastModified: Date.now()
+            });
+            resolve(compressedFile);
+          } else {
+            resolve(file); // 압축 실패시 원본 반환
+          }
+        }, file.type, quality);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  // 이미지 선택 처리 (압축 기능 추가)
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length !== files.length) {
+      alert('이미지 파일만 선택할 수 있습니다.');
+    }
+    
+    // 파일 크기 검증 (5MB 제한)
+    const oversizedFiles = imageFiles.filter(file => file.size > 5 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      alert(`다음 파일들이 5MB를 초과합니다: ${oversizedFiles.map(f => f.name).join(', ')}`);
+      return;
+    }
+    
+    // 최대 5개까지만 허용
+    const maxImages = 5;
+    const totalImages = selectedImages.length + imageFiles.length;
+    
+    if (totalImages > maxImages) {
+      alert(`최대 ${maxImages}개의 이미지만 첨부할 수 있습니다.`);
+      return;
+    }
+    
+    try {
+      // 이미지 압축 처리
+      const compressedFiles = await Promise.all(
+        imageFiles.map(file => compressImage(file))
+      );
+      
+      setSelectedImages(prev => [...prev, ...compressedFiles]);
+      
+      // 미리보기 URL 생성
+      const newPreviewUrls = compressedFiles.map(file => URL.createObjectURL(file));
+      setImagePreviewUrls(prev => [...prev, ...newPreviewUrls]);
+      
+      // 압축 완료 알림
+      const originalSize = imageFiles.reduce((sum, file) => sum + file.size, 0);
+      const compressedSize = compressedFiles.reduce((sum, file) => sum + file.size, 0);
+      const savedPercent = Math.round((1 - compressedSize / originalSize) * 100);
+      
+      if (savedPercent > 10) {
+        console.log(`🗜️ 이미지 압축 완료: ${savedPercent}% 용량 절약`);
+      }
+    } catch (error) {
+      console.error('이미지 압축 실패:', error);
+      alert('이미지 처리 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 이미지 제거
+  const handleImageRemove = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviewUrls(prev => {
+      const newUrls = prev.filter((_, i) => i !== index);
+      // 메모리 누수 방지를 위해 URL 해제
+      URL.revokeObjectURL(prev[index]);
+      return newUrls;
+    });
+  };
+
+  // 드래그 앤 드롭 처리
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length > 0) {
+      // 기존 handleImageSelect 로직 재사용
+      const fakeEvent = {
+        target: { files: imageFiles }
+      } as any;
+      await handleImageSelect(fakeEvent);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -92,9 +238,34 @@ const AnnouncementsManagement: React.FC = () => {
     try {
       const category = categoryInput.trim();
       const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean);
+      
+      // 이미지 처리
+      const imageData = await Promise.all(
+        selectedImages.map(async (file, index) => {
+          const base64 = await convertImageToBase64(file);
+          return {
+            id: `img-${Date.now()}-${index}`,
+            name: file.name,
+            url: base64, // Base64 데이터 URL
+            size: file.size,
+            uploadedAt: new Date().toISOString()
+          };
+        })
+      );
+      
       if (isEditMode && currentAnnouncement.id) {
+<<<<<<< HEAD
         await updateAnnouncement({ ...currentAnnouncement, category, tags } as Partial<Announcement> & { id: string });
         showToast('success', '공지사항 수정 완료', '공지사항이 성공적으로 수정되었습니다.');
+=======
+        const existingImages = currentAnnouncement.images || [];
+        await updateAnnouncement({ 
+          ...currentAnnouncement, 
+          category, 
+          tags,
+          images: [...existingImages, ...imageData]
+        } as Partial<Announcement> & { id: string });
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       } else {
         const newAnnouncementData: Omit<Announcement, 'id' | 'createdAt' | 'updatedAt'> = {
           title: currentAnnouncement.title,
@@ -105,7 +276,10 @@ const AnnouncementsManagement: React.FC = () => {
           isPinned: currentAnnouncement.isPinned || false,
           isActive: currentAnnouncement.isActive || true,
           authorId: currentAnnouncement.authorId || user?.id || '',
-          authorName: currentAnnouncement.authorName || user?.name || ''
+          authorName: currentAnnouncement.authorName || user?.name || '',
+          readBy: [],
+          attachments: currentAnnouncement.attachments || [],
+          images: imageData
         };
         await addAnnouncement(newAnnouncementData);
         showToast('success', '공지사항 추가 완료', '새로운 공지사항이 성공적으로 추가되었습니다.');
@@ -398,6 +572,98 @@ const AnnouncementsManagement: React.FC = () => {
                   className="mt-1 block w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm placeholder-slate-400 transition-all"
                   placeholder="예: 점검,중요,긴급"
                 />
+              </div>
+
+              {/* 이미지 첨부 섹션 */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  이미지 첨부 (최대 5개)
+                </label>
+                
+                {/* 드래그 앤 드롭 영역 */}
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-all ${
+                    isDragOver 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-slate-300 hover:border-slate-400'
+                  }`}
+                >
+                  <div className="flex flex-col items-center space-y-2">
+                    <Upload className={`w-8 h-8 ${isDragOver ? 'text-blue-500' : 'text-slate-400'}`} />
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        이미지 선택
+                      </button>
+                      <span className="text-slate-500"> 또는 여기에 드래그하세요</span>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      JPG, PNG, GIF 파일만 가능 (각 파일 최대 5MB, 최대 5개)
+                    </p>
+                  </div>
+                </div>
+
+                {/* 숨겨진 파일 입력 */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+
+                {/* 이미지 미리보기 */}
+                {imagePreviewUrls.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {imagePreviewUrls.map((url, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={url}
+                          alt={`미리보기 ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg border border-slate-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleImageRemove(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                        <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+                          {selectedImages[index]?.name.substring(0, 10)}...
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 기존 이미지 표시 (수정 모드일 때) */}
+                {isEditMode && currentAnnouncement.images && currentAnnouncement.images.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-slate-700 mb-2">기존 이미지</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {currentAnnouncement.images.map((image, index) => (
+                        <div key={image.id} className="relative group">
+                          <img
+                            src={image.url}
+                            alt={image.name}
+                            className="w-full h-24 object-cover rounded-lg border border-slate-200"
+                          />
+                          <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+                            {image.name.substring(0, 10)}...
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="mt-8 pt-6 border-t border-slate-200 flex justify-end space-x-3">

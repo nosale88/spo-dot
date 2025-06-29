@@ -52,7 +52,7 @@ const Reports = () => {
       className="space-y-6"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">나의 보고서</h1>
+        <h1 className="text-2xl font-bold text-slate-900">나의 보고서</h1>
         
         <button
           onClick={handleCreateReport}

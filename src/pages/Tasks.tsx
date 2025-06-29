@@ -6,11 +6,13 @@ import { ko } from 'date-fns/locale';
 import clsx from 'clsx';
 import { useTask, Task, TaskPriority, TaskStatus, TaskCategory } from '../contexts/TaskContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useUser } from '../contexts/UserContext';
 import AddTaskForm from '../components/forms/AddTaskForm';
 import TaskDetails from '../components/tasks/TaskDetails';
 
 const Tasks = () => {
   const { user } = useAuth();
+  const { staff, loadingStaff } = useUser();
   const { tasks, filteredTasks, filterTasks, updateTask } = useTask();
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,6 +22,7 @@ const Tasks = () => {
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
   const [filterPriority, setFilterPriority] = useState<TaskPriority | 'all'>('all');
   const [filterCategory, setFilterCategory] = useState<TaskCategory | 'all'>('all');
+  const [filterAssignedTo, setFilterAssignedTo] = useState<string | 'all'>('all');
   const [showFilters, setShowFilters] = useState(false);
   
   // 필터링 적용
@@ -29,9 +32,9 @@ const Tasks = () => {
       priority: filterPriority,
       category: filterCategory,
       searchQuery,
-      assignedTo: user?.role !== 'admin' ? user?.id : undefined
+      assignedTo: filterAssignedTo === 'all' ? undefined : filterAssignedTo
     });
-  }, [tasks, searchQuery, filterStatus, filterPriority, filterCategory, user]);
+  }, [tasks, searchQuery, filterStatus, filterPriority, filterCategory, filterAssignedTo, filterTasks]);
   
   // 우선순위에 따른 배지 스타일
   const getPriorityBadgeStyle = (priority: TaskPriority) => {
@@ -133,7 +136,7 @@ const Tasks = () => {
       return 'bg-slate-50 border-slate-200';
     }
     
-    if (isPast(parseISO(task.dueDate)) && task.status !== 'completed' && task.status !== 'cancelled') {
+    if (isPast(parseISO(task.dueDate)) && !['completed', 'cancelled'].includes(task.status)) {
       return 'bg-red-50 border-red-200';
     }
     
@@ -199,7 +202,7 @@ const Tasks = () => {
             exit={{ opacity: 0, height: 0 }}
             className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   상태
@@ -249,6 +252,29 @@ const Tasks = () => {
                   <option value="administrative">행정</option>
                   <option value="client">고객</option>
                   <option value="training">교육</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  담당자
+                </label>
+                <select
+                  value={filterAssignedTo}
+                  onChange={(e) => setFilterAssignedTo(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">모든 직원</option>
+                  {loadingStaff ? (
+                    <option disabled>로딩중...</option>
+                  ) : (
+                    staff?.map(member => (
+                      <option key={member.id} value={member.id}>
+                        {member.name}
+                        {member.position && ` (${member.position})`}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
             </div>
@@ -369,7 +395,7 @@ const Tasks = () => {
               </div>
               <h3 className="text-lg font-medium text-slate-900 mb-2">업무가 없습니다</h3>
               <p className="text-slate-500 mb-6">
-                {searchQuery || filterStatus !== 'all' || filterPriority !== 'all' || filterCategory !== 'all'
+                {searchQuery || filterStatus !== 'all' || filterPriority !== 'all' || filterCategory !== 'all' || filterAssignedTo !== 'all'
                   ? '필터 조건에 맞는 업무가 없습니다. 필터를 변경해보세요.'
                   : '새 업무를 추가하여 시작해보세요.'}
               </p>

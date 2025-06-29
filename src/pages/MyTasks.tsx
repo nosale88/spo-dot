@@ -11,13 +11,17 @@ import {
   Check,
   X,
   Edit,
+<<<<<<< HEAD
   Plus,
+=======
+  Clock,
+  User,
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { useTask, Task, TaskStatus, TaskPriority } from '../contexts/TaskContext';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../supabaseClient';
-import type { Database } from '../types/database.types';
+import { useHandover } from '../contexts/HandoverContext';
 import AddTaskModal from '../components/tasks/AddTaskModal';
 import TaskDetails from '../components/tasks/TaskDetails';
 import { format, parseISO, isSameDay, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth } from 'date-fns';
@@ -28,10 +32,14 @@ import { getDay } from 'date-fns';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import '../styles/calendar.css'; // Import custom calendar styles
 import clsx from 'clsx';
+<<<<<<< HEAD
 import { motion, AnimatePresence } from 'framer-motion';
 
 type Handover = Database['public']['Tables']['handovers']['Row'];
 type HandoverInput = Database['public']['Tables']['handovers']['Insert'];
+=======
+import { logger, showSuccess, showError, confirmDelete } from '../utils/notifications';
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 
 const locales = {
   'ko': ko,
@@ -82,20 +90,20 @@ type MyTaskView = 'list' | 'month' | 'week' | 'day';
 const MyTasks = () => {
   const { tasks: contextTasks, updateTask, deleteTask } = useTask();
   const { user, hasPermission } = useAuth();
+  const { handovers, loading: handoversLoading, error: handoversError, addHandover } = useHandover();
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState<MyTaskView>('list');
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [selectedDateForNewTask, setSelectedDateForNewTask] = useState<string | undefined>(undefined); // For storing date from calendar click
 
   const [currentHandover, setCurrentHandover] = useState('');
-  const [handovers, setHandovers] = useState<Handover[]>([]);
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
+<<<<<<< HEAD
   // 업무 상세보기 상태 추가
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isTaskDetailsOpen, setIsTaskDetailsOpen] = useState(false);
@@ -110,6 +118,12 @@ const MyTasks = () => {
     setIsTaskDetailsOpen(false);
     setSelectedTask(null);
   };
+=======
+  // 디버깅을 위한 로그
+  useEffect(() => {
+    logger.debug('editingTask 상태 변경:', editingTask);
+  }, [editingTask]);
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 
   // 현재 사용자에게 배정된 업무만 필터링
   const myTasks = useMemo(() => {
@@ -133,75 +147,27 @@ const MyTasks = () => {
     originalTask: task,
   })), [myTasks]);
 
-  // 인계사항 데이터 가져오기
-  useEffect(() => {
-    fetchHandovers();
-  }, []);
-
-  const fetchHandovers = async () => {
-    try {
-      setLoading(true);
-      
-      // 로컬 저장소에서 인계사항 가져오기
-      const storedHandovers = localStorage.getItem('handovers');
-      if (storedHandovers) {
-        const parsedHandovers = JSON.parse(storedHandovers);
-        // 최근 7일간의 데이터만 필터링
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        
-        const filteredHandovers = parsedHandovers.filter((h: Handover) => {
-          const handoverDate = new Date(h.date);
-          return handoverDate >= sevenDaysAgo;
-        });
-        
-        setHandovers(filteredHandovers);
-      } else {
-        setHandovers([]);
-      }
-    } catch (err) {
-      console.error('인계사항 불러오기 오류:', err);
-      setError('인계사항을 불러오는데 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSaveHandover = async () => {
     if (!currentHandover.trim() || !user) return;
     
     try {
       setSaving(true);
       
-      const handoverData: Handover = {
-        id: `handover-${Date.now()}`,
-        content: currentHandover.trim(),
-        date: new Date().toISOString().split('T')[0],
-        author_id: user.id,
-        author_name: user.name || '알 수 없음',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      const result = await addHandover(currentHandover.trim());
       
-      // 기존 인계사항 가져오기
-      const storedHandovers = localStorage.getItem('handovers');
-      const existingHandovers = storedHandovers ? JSON.parse(storedHandovers) : [];
-      
-      // 새 인계사항 추가
-      const updatedHandovers = [handoverData, ...existingHandovers];
-      
-      // 로컬 저장소에 저장
-      localStorage.setItem('handovers', JSON.stringify(updatedHandovers));
-      
-      // 성공 시 폼 초기화 및 데이터 새로고침
+      if (result) {
+        // 성공 시 폼 초기화
       setCurrentHandover('');
-      await fetchHandovers();
       setSuccess('인계사항이 성공적으로 저장되었습니다.');
       
       // 성공 메시지 자동 제거
       setTimeout(() => setSuccess(null), 3000);
+      } else {
+        setError('인계사항 저장에 실패했습니다.');
+        setTimeout(() => setError(null), 5000);
+      }
     } catch (err) {
-      console.error('인계사항 저장 오류:', err);
+      logger.error('인계사항 저장 오류', err);
       setError('인계사항 저장에 실패했습니다.');
       
       // 에러 메시지 자동 제거
@@ -246,11 +212,12 @@ const MyTasks = () => {
       return;
     }
     
-    if (window.confirm('정말로 이 업무를 삭제하시겠습니까?')) {
-      deleteTask(taskId);
-      setSuccess('업무가 삭제되었습니다.');
-      setTimeout(() => setSuccess(null), 3000);
-    }
+    confirmDelete('업무').then((confirmed) => {
+      if (confirmed) {
+        deleteTask(taskId);
+        showSuccess('업무가 삭제되었습니다.');
+      }
+    });
   };
 
   const handleSelectSlot = (slotInfo: SlotInfo) => {
@@ -367,6 +334,35 @@ const MyTasks = () => {
     return undefined;
   }, [currentView, calendarEvents]);
 
+  // 일간 보기용 타임테이블 데이터 생성
+  const getDailyTimetable = () => {
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+    const selectedDate = format(calendarDate, 'yyyy-MM-dd');
+    
+    // 선택된 날짜의 업무만 필터링
+    const dayTasks = myTasks.filter(task => {
+      const taskDate = format(parseISO(task.dueDate), 'yyyy-MM-dd');
+      return taskDate === selectedDate;
+    });
+
+    return hours.map(hour => {
+      const hourString = hour.toString().padStart(2, '0');
+      const hourTasks = dayTasks.filter(task => {
+        if (!task.startTime) return false;
+        const taskHour = parseInt(task.startTime.split(':')[0]);
+        return taskHour === hour;
+      });
+
+      return {
+        hour,
+        hourString: `${hourString}:00`,
+        tasks: hourTasks
+      };
+    });
+  };
+
+  const timetableData = getDailyTimetable();
+
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -460,6 +456,7 @@ const MyTasks = () => {
                 </button>
               )}
             </div>
+<<<<<<< HEAD
           </div>
         </div>
 
@@ -896,10 +893,41 @@ const MyTasks = () => {
                   className="rbc-calendar-main"
                 />
               </div>
+=======
+            {currentView !== 'list' && (
+              <button 
+                onClick={() => setCalendarDate(new Date())} 
+                className="px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-slate-600 hover:bg-slate-300 border border-slate-300">
+                오늘
+              </button>
+            )}
+            {/* 업무 추가 버튼 - 권한 체크 완화 */}
+            {(hasPermission('tasks.create') || !user) && (
+              <button 
+                onClick={() => {
+                  logger.debug('업무추가 버튼 클릭됨');
+                  logger.debug('현재 사용자:', user);
+                  logger.debug('tasks.create 권한:', hasPermission('tasks.create'));
+                  setSelectedDateForNewTask(undefined); // Clear any previously selected date for general add
+                  setIsAddTaskModalOpen(true);
+                }} 
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center space-x-2 transition-colors">
+                <PlusSquare size={18} />
+                <span>업무 추가</span>
+              </button>
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
+            )}
+            
+            {/* 권한이 없는 경우 안내 메시지 */}
+            {user && !hasPermission('tasks.create') && (
+              <div className="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-lg">
+                업무 추가 권한이 없습니다 (현재 역할: {user.role})
+              </div>
             )}
           </div>
         </div>
 
+<<<<<<< HEAD
         {/* 에러 및 성공 메시지 */}
         <AnimatePresence>
           {error && (
@@ -908,6 +936,244 @@ const MyTasks = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center"
+=======
+        {currentView === 'list' ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px]">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider w-[35%]">업무</th>
+                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">담당자</th>
+                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">상태</th>
+                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">마감일</th>
+                  <th className="pb-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider">중요도</th>
+                  <th className="pb-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider">카테고리</th>
+                  <th className="pb-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider">작업</th>
+                </tr>
+              </thead>
+              <tbody>
+                {myTasks.length === 0 ? (
+                  <tr><td colSpan={7} className="text-center py-10 text-slate-500">표시할 업무가 없습니다.</td></tr>
+                ) : (
+                  myTasks.map((task) => (
+                    <tr key={task.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors group">
+                      <td className="py-3 pr-3">
+                        <div className="flex items-center">
+                          <GripVertical className="w-5 h-5 text-slate-400 mr-2 opacity-0 group-hover:opacity-100 cursor-grab" />
+                          <div className="flex-1">
+                            <p 
+                              className="font-semibold text-slate-800 hover:text-blue-600 cursor-pointer transition-colors"
+                              onClick={() => {
+                                logger.debug('업무 클릭됨:', task.title, task);
+                                setEditingTask(task);
+                              }}
+                              title="클릭하여 상세 보기"
+                            >
+                              {task.title}
+                            </p>
+                            {task.description && <p className="text-xs text-slate-500 mt-1">{task.description}</p>}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-3 text-sm text-slate-700">{Array.isArray(task.assignedToName) ? task.assignedToName.join(', ') : task.assignedToName}</td>
+                      <td className="py-3 pr-3">
+                        <select 
+                          value={task.status}
+                          onChange={(e) => handleTaskStatusChange(task.id, e.target.value as TaskStatus)}
+                          disabled={!hasPermission('tasks.update')}
+                          className={`text-sm p-1.5 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 ${
+                            !hasPermission('tasks.update') ? 'bg-gray-100 cursor-not-allowed text-gray-500' : 'bg-white'
+                          }`}
+                          title={!hasPermission('tasks.update') ? '업무 수정 권한이 없습니다' : ''}
+                        >
+                          {taskStatusOptions.map(statusValue => (
+                              <option key={statusValue} value={statusValue}>{getStatusDisplayName(statusValue)}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="py-3 pr-3 text-sm text-slate-700">
+                        {format(parseISO(task.dueDate), 'yyyy-MM-dd')}
+                      </td>
+                      <td className="py-3 text-center">
+                        <span className={`inline-block h-3 w-3 rounded-full ${getPriorityClass(task.priority)}`} title={task.priority}></span>
+                      </td>
+                      <td className="py-3 pr-3 text-sm text-slate-700 text-center">{task.category}</td>
+                      <td className="py-3 text-center">
+                        {hasPermission('tasks.update') || hasPermission('tasks.delete') ? (
+                          <div className="flex justify-center space-x-2">
+                            {hasPermission('tasks.update') && (
+                              <button 
+                                onClick={() => {
+                                  setEditingTask(task);
+                                }} 
+                                className="text-slate-500 hover:text-blue-600 transition-colors" 
+                                title="수정"
+                              >
+                                <Edit size={14} />
+                              </button>
+                            )}
+                            {hasPermission('tasks.delete') && (
+                              <button 
+                                onClick={() => {
+                                  confirmDelete('업무').then((confirmed) => {
+                                    if (confirmed) {
+                                      handleTaskDelete(task.id);
+                                    }
+                                  });
+                                }} 
+                                className="text-slate-500 hover:text-red-600 transition-colors" 
+                                title="삭제"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex justify-center">
+                            <span className="text-xs text-gray-400 px-2 py-1 bg-gray-100 rounded">
+                              읽기 전용
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : currentView === 'day' ? (
+          // 일간 타임테이블 보기
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="p-4 border-b border-slate-200 bg-slate-50">
+              <h3 className="text-lg font-semibold text-slate-800">
+                {format(calendarDate, 'yyyy년 M월 d일 (EEEE)', { locale: ko })} 업무 일정
+              </h3>
+            </div>
+            <div className="max-h-[600px] overflow-y-auto">
+              {timetableData.map(({ hour, hourString, tasks }) => (
+                <div key={hour} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  <div className="flex">
+                    {/* 시간 표시 */}
+                    <div className="w-20 p-4 bg-slate-50 border-r border-slate-200 text-center">
+                      <span className="text-sm font-medium text-slate-600">{hourString}</span>
+                    </div>
+                    
+                    {/* 업무 표시 */}
+                    <div className="flex-1 p-4">
+                      {tasks.length === 0 ? (
+                        <div className="text-slate-400 text-sm italic">업무 없음</div>
+                      ) : (
+                        <div className="space-y-2">
+                          {tasks.map(task => (
+                            <div 
+                              key={task.id} 
+                              className={`p-3 rounded-lg border-l-4 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer ${
+                                task.priority === 'urgent' ? 'border-red-500 bg-red-50' :
+                                task.priority === 'high' ? 'border-orange-500 bg-orange-50' :
+                                task.priority === 'medium' ? 'border-blue-500 bg-blue-50' :
+                                'border-green-500 bg-green-50'
+                              }`}
+                              onClick={() => setEditingTask(task)}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-slate-800 mb-1">{task.title}</h4>
+                                  {task.description && (
+                                    <p className="text-sm text-slate-600 mb-2">{task.description}</p>
+                                  )}
+                                  <div className="flex items-center space-x-4 text-xs text-slate-500">
+                                    {task.startTime && task.endTime && (
+                                      <span className="flex items-center">
+                                        <Clock size={12} className="mr-1" />
+                                        {task.startTime} - {task.endTime}
+                                      </span>
+                                    )}
+                                    <span className="flex items-center">
+                                      <User size={12} className="mr-1" />
+                                      {Array.isArray(task.assignedToName) ? task.assignedToName.join(', ') : task.assignedToName}
+                                    </span>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                      task.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                      task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                                      task.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-gray-100 text-gray-800'
+                                    }`}>
+                                      {getStatusDisplayName(task.status)}
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                {/* 우선순위 표시 */}
+                                <div className="ml-3">
+                                  <span className={`inline-block h-3 w-3 rounded-full ${getPriorityClass(task.priority)}`} title={task.priority}></span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl shadow-lg" style={{ height: 'calc(100vh - 280px)' }}>
+            <Calendar<CalendarEvent>
+              localizer={localizer}
+              events={calendarEvents}
+              startAccessor="start"
+              endAccessor="end"
+              titleAccessor="title"
+              style={{ height: '100%' }}
+              date={calendarDate}
+              onNavigate={(newDate) => setCalendarDate(newDate)}
+              onView={(newView) => setCurrentView(newView as MyTaskView)}
+              view={currentView as Exclude<MyTaskView, 'list'>}
+              messages={{
+                allDay: '하루 종일',
+                previous: '이전',
+                next: '다음',
+                today: '오늘',
+                month: '월',
+                week: '주',
+                day: '일',
+                agenda: '목록',
+                date: '날짜',
+                time: '시간',
+                event: '이벤트',
+                noEventsInRange: '이 범위에는 업무가 없습니다.',
+                showMore: total => `+${total} 더보기`,
+              }}
+              selectable 
+              onSelectSlot={handleSelectSlot} 
+              components={calendarComponents} 
+              className="rbc-calendar-main"
+            />
+          </div>
+        )}
+      </section>
+
+      {/* 에러 및 성공 메시지 */}
+      <AnimatePresence>
+        {(error || handoversError) && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center"
+          >
+            <AlertCircle className="text-red-500 mr-3" size={20} />
+            <span className="text-red-700">{error || handoversError}</span>
+            <button
+              onClick={() => {
+                setError(null);
+                // handoversError는 HandoverContext에서 관리되므로 여기서는 초기화할 수 없음
+              }}
+              className="ml-auto text-red-500 hover:text-red-700"
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
             >
               <AlertCircle className="text-red-500 mr-3" size={20} />
               <span className="text-red-700">{error}</span>
@@ -1039,7 +1305,7 @@ const MyTasks = () => {
             이전 인계사항
           </h2>
           
-          {loading ? (
+          {handoversLoading ? (
             <div className="flex justify-center items-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
             </div>
@@ -1090,8 +1356,12 @@ const MyTasks = () => {
         <EditTaskModal 
           task={editingTask}
           isOpen={!!editingTask} 
-          onClose={() => setEditingTask(null)}
+          onClose={() => {
+            logger.debug('모달 닫기 클릭됨');
+            setEditingTask(null);
+          }}
           onSave={(updates: Partial<Task>) => {
+            logger.debug('업무 저장:', updates);
             updateTask(editingTask.id, updates);
             setEditingTask(null);
           }}
@@ -1109,69 +1379,283 @@ const MyTasks = () => {
   );
 };
 
-// Simple edit modal component to avoid import issues
+// 업무 상세보기/수정 모달 컴포넌트
 const EditTaskModal = ({ task, isOpen, onClose, onSave }: {
   task: Task;
   isOpen: boolean;
   onClose: () => void;
   onSave: (updates: Partial<Task>) => void;
 }) => {
+  const [isEditMode, setIsEditMode] = useState(false);
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || '');
+  const [startTime, setStartTime] = useState(task.startTime || '');
+  const [endTime, setEndTime] = useState(task.endTime || '');
+  const { hasPermission } = useAuth();
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    logger.debug('EditTaskModal: isOpen이 false라서 렌더링하지 않음');
+    return null;
+  }
+  
+  logger.debug('EditTaskModal: 렌더링 중, task:', task.title);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
       title,
       description,
+      startTime: startTime || undefined,
+      endTime: endTime || undefined,
       updatedAt: new Date().toISOString()
     });
+    setIsEditMode(false);
+  };
+
+  const handleEditClick = () => {
+    setIsEditMode(true);
+    // 현재 task 값들로 form 필드 초기화
+    setTitle(task.title);
+    setDescription(task.description || '');
+    setStartTime(task.startTime || '');
+    setEndTime(task.endTime || '');
+  };
+
+  const getPriorityText = (priority: TaskPriority) => {
+    switch (priority) {
+      case 'urgent': return '긴급';
+      case 'high': return '높음';
+      case 'medium': return '보통';
+      case 'low': return '낮음';
+      default: return priority;
+    }
+  };
+
+  const getPriorityColor = (priority: TaskPriority) => {
+    switch (priority) {
+      case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
+      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'medium': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-        <h2 className="text-lg font-bold mb-4">업무 수정</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      style={{ zIndex: 9999 }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <motion.div 
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {isEditMode ? (
+          // 수정 모드
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center">
+                <Edit size={24} className="mr-2 text-blue-600" />
+                업무 수정
+              </h2>
+              <button
+                onClick={onClose}
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-1">제목</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">제목</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               required
             />
           </div>
+              
           <div>
-            <label className="block text-sm font-medium mb-1">설명</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">설명</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md"
-              rows={3}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+                  rows={4}
+                  placeholder="업무에 대한 상세 설명을 입력하세요"
             />
           </div>
-          <div className="flex justify-end space-x-2 pt-4">
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">시작 시간</label>
+                  <input
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">종료 시간</label>
+                  <input
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 pt-6 border-t border-slate-200">
             <button
               type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
+                  onClick={() => setIsEditMode(false)}
+                  className="px-6 py-2.5 text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors font-medium"
             >
               취소
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center space-x-2"
             >
-              저장
+                  <Save size={18} />
+                  <span>저장</span>
             </button>
           </div>
         </form>
       </div>
+        ) : (
+          // 상세보기 모드
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center">
+                <AlertCircle size={24} className="mr-2 text-blue-600" />
+                업무 상세정보
+              </h2>
+              <div className="flex items-center space-x-2">
+                {hasPermission('tasks.update') && (
+                  <button
+                    onClick={handleEditClick}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center space-x-2"
+                  >
+                    <Edit size={16} />
+                    <span>수정</span>
+                  </button>
+                )}
+                <button
+                  onClick={onClose}
+                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <X size={24} />
+                </button>
     </div>
+            </div>
+
+            <div className="space-y-6">
+              {/* 기본 정보 */}
+              <div className="bg-slate-50 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-slate-800 mb-4">{task.title}</h3>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-slate-500 font-medium">상태:</span>
+                    <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${
+                      task.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                      task.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {getStatusDisplayName(task.status)}
+                    </span>
+                  </div>
+                  
+                  <div>
+                    <span className="text-slate-500 font-medium">우선순위:</span>
+                    <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
+                      {getPriorityText(task.priority)}
+                    </span>
+                  </div>
+                  
+                  <div>
+                    <span className="text-slate-500 font-medium">마감일:</span>
+                    <span className="ml-2 text-slate-800">{format(parseISO(task.dueDate), 'yyyy년 MM월 dd일')}</span>
+                  </div>
+                  
+                  <div>
+                    <span className="text-slate-500 font-medium">카테고리:</span>
+                    <span className="ml-2 text-slate-800">{task.category}</span>
+                  </div>
+                  
+                  <div className="col-span-2">
+                    <span className="text-slate-500 font-medium">담당자:</span>
+                    <span className="ml-2 text-slate-800">
+                      {Array.isArray(task.assignedToName) ? task.assignedToName.join(', ') : task.assignedToName}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 시간 정보 */}
+              {(task.startTime || task.endTime) && (
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h4 className="text-md font-semibold text-slate-800 mb-3 flex items-center">
+                    <Clock size={18} className="mr-2 text-blue-600" />
+                    시간 정보
+                  </h4>
+                  <div className="flex items-center space-x-4 text-sm">
+                    {task.startTime && (
+                      <div>
+                        <span className="text-slate-500 font-medium">시작:</span>
+                        <span className="ml-2 text-slate-800">{task.startTime}</span>
+                      </div>
+                    )}
+                    {task.endTime && (
+                      <div>
+                        <span className="text-slate-500 font-medium">종료:</span>
+                        <span className="ml-2 text-slate-800">{task.endTime}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 설명 */}
+              {task.description && (
+                <div className="bg-green-50 rounded-lg p-4">
+                  <h4 className="text-md font-semibold text-slate-800 mb-3">상세 설명</h4>
+                  <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{task.description}</p>
+                </div>
+              )}
+
+              {/* 생성/수정 정보 */}
+              <div className="bg-slate-100 rounded-lg p-4 text-xs text-slate-500">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="font-medium">생성일:</span>
+                    <span className="ml-2">{format(parseISO(task.createdAt), 'yyyy-MM-dd HH:mm')}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">수정일:</span>
+                    <span className="ml-2">{format(parseISO(task.updatedAt), 'yyyy-MM-dd HH:mm')}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    </motion.div>
   );
 };
 

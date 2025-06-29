@@ -112,7 +112,7 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
       onClick={onClose}
     >
       <div 
@@ -143,7 +143,11 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
                     e.stopPropagation();
                     if (onEdit) onEdit();
                   }}
+<<<<<<< HEAD
                   className="text-blue-500 hover:text-blue-600"
+=======
+                  className="text-blue-500 hover:text-blue-600:text-blue-400"
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
                   title="편집"
                 >
                   <Edit size={20} />
@@ -154,7 +158,11 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
                     e.stopPropagation();
                     handleDelete();
                   }}
+<<<<<<< HEAD
                   className="text-red-500 hover:text-red-600"
+=======
+                  className="text-red-500 hover:text-red-600:text-red-400"
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
                   title="삭제"
                 >
                   <Trash size={20} />
@@ -164,7 +172,11 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
             
             <button
               onClick={onClose}
+<<<<<<< HEAD
               className="text-slate-400 hover:text-slate-600"
+=======
+              className="text-slate-400 hover:text-slate-600:text-slate-200"
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
             >
               <X size={24} />
             </button>
@@ -205,7 +217,11 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="flex items-center text-slate-700">
+<<<<<<< HEAD
               <User size={18} className="mr-2 text-blue-600 flex-shrink-0" />
+=======
+              <User size={18} className="mr-2 text-primary flex-shrink-0" />
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
               <div>
                 <span className="block text-sm font-medium text-slate-500">담당자</span>
                 <span>{Array.isArray(task.assignedToName) ? task.assignedToName.join(', ') : task.assignedToName}</span>
@@ -213,7 +229,11 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
             </div>
             
             <div className="flex items-center text-slate-700">
+<<<<<<< HEAD
               <User size={18} className="mr-2 text-blue-600 flex-shrink-0" />
+=======
+              <User size={18} className="mr-2 text-primary flex-shrink-0" />
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
               <div>
                 <span className="block text-sm font-medium text-slate-500">배정자</span>
                 <span>{task.assignedByName}</span>
@@ -221,7 +241,11 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
             </div>
             
             <div className="flex items-center text-slate-700">
+<<<<<<< HEAD
               <Calendar size={18} className="mr-2 text-blue-600 flex-shrink-0" />
+=======
+              <Calendar size={18} className="mr-2 text-primary flex-shrink-0" />
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
               <div>
                 <span className="block text-sm font-medium text-slate-500">마감일</span>
                 <span className={clsx(
@@ -236,7 +260,11 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
             </div>
             
             <div className="flex items-center text-slate-700">
+<<<<<<< HEAD
               <Clock size={18} className="mr-2 text-blue-600 flex-shrink-0" />
+=======
+              <Clock size={18} className="mr-2 text-primary flex-shrink-0" />
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
               <div>
                 <span className="block text-sm font-medium text-slate-500">생성일</span>
                 <span>{format(parseISO(task.createdAt), 'yyyy년 M월 d일', { locale: ko })}</span>
@@ -254,7 +282,11 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
                     "px-3 py-1.5 rounded text-sm font-medium",
                     task.status === 'pending' 
                       ? "bg-yellow-100 text-yellow-800" 
+<<<<<<< HEAD
                       : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+=======
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200:bg-slate-600"
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
                   )}
                 >
                   대기중
@@ -266,7 +298,11 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
                     "px-3 py-1.5 rounded text-sm font-medium",
                     task.status === 'in-progress' 
                       ? "bg-blue-100 text-blue-800" 
+<<<<<<< HEAD
                       : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+=======
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200:bg-slate-600"
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
                   )}
                 >
                   진행중
@@ -274,7 +310,14 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
                 
                 <button
                   onClick={() => handleStatusChange('completed')}
+<<<<<<< HEAD
                   className="px-3 py-1.5 rounded text-sm font-medium flex items-center bg-slate-100 text-slate-700 hover:bg-green-100 hover:text-green-800"
+=======
+                  className={clsx(
+                    "px-3 py-1.5 rounded text-sm font-medium flex items-center",
+                    "bg-slate-100 text-slate-700 hover:bg-green-100 hover:text-green-800:bg-green-900/30:text-green-300"
+                  )}
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
                 >
                   <Check size={16} className="mr-1" />
                   완료로 표시
@@ -282,7 +325,11 @@ const TaskDetails = ({ task, onClose, onEdit }: TaskDetailsProps) => {
                 
                 <button
                   onClick={() => handleStatusChange('cancelled')}
+<<<<<<< HEAD
                   className="px-3 py-1.5 rounded text-sm font-medium bg-slate-100 text-slate-700 hover:bg-red-100 hover:text-red-800"
+=======
+                  className="px-3 py-1.5 rounded text-sm font-medium bg-slate-100 text-slate-700 hover:bg-red-100 hover:text-red-800:bg-red-900/30:text-red-300"
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
                 >
                   취소
                 </button>

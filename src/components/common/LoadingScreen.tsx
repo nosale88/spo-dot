@@ -3,7 +3,7 @@ import { Dumbbell } from 'lucide-react';
 
 const LoadingScreen = () => {
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 z-50">
+    <div className="fixed inset-0 flex flex-col items-center justify-center bg-slate-50 z-50">
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -15,7 +15,7 @@ const LoadingScreen = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="text-xl font-semibold text-slate-800 dark:text-slate-100"
+        className="text-xl font-semibold text-slate-800"
       >
         로딩 중...
       </motion.h2>

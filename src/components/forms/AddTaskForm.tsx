@@ -63,13 +63,13 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
   const getPriorityBadgeStyle = (priority: TaskPriority) => {
     switch (priority) {
       case 'low':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+        return 'bg-green-100 text-green-800';
       case 'medium':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+        return 'bg-blue-100 text-blue-800';
       case 'high':
-        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300';
+        return 'bg-orange-100 text-orange-800';
       case 'urgent':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        return 'bg-red-100 text-red-800';
     }
   };
 
@@ -88,21 +88,21 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center">
+        <div className="p-6 border-b border-slate-200 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-slate-900 flex items-center">
             <FileText className="h-5 w-5 mr-2 text-primary" />
             업무 추가
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="text-slate-400 hover:text-slate-600:text-slate-200"
           >
             <X size={24} />
           </button>
@@ -110,7 +110,7 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               업무 제목
             </label>
             <input
@@ -124,7 +124,7 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               업무 설명
             </label>
             <textarea
@@ -137,7 +137,7 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 우선순위
               </label>
               <select
@@ -153,7 +153,7 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 카테고리
               </label>
               <select
@@ -171,7 +171,7 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               마감일
             </label>
             <div className="relative">
@@ -187,7 +187,7 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               담당자
             </label>
             <div className="flex flex-wrap gap-2">
@@ -222,7 +222,7 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
           </div>
 
           {/* 공지사항 설정 */}
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
             <div className="flex items-center mb-3">
               <input
                 type="checkbox"
@@ -231,7 +231,7 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
                 onChange={(e) => setIsAnnouncement(e.target.checked)}
                 className="form-checkbox h-4 w-4 text-blue-500"
               />
-              <label htmlFor="isAnnouncement" className="ml-2 text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center">
+              <label htmlFor="isAnnouncement" className="ml-2 text-sm font-medium text-slate-700 flex items-center">
                 <Bell size={16} className="mr-1 text-blue-500" />
                 공지사항으로 등록
               </label>
@@ -240,7 +240,7 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
             {isAnnouncement && (
               <div className="space-y-3 pl-6">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     중요도
                   </label>
                   <select
@@ -255,7 +255,7 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
                 </div>
                 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     만료일
                   </label>
                   <input
@@ -270,7 +270,7 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
           </div>
 
           <div className="flex items-center space-x-4 mt-6">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">미리보기:</span>
+            <span className="text-sm font-medium text-slate-700">미리보기:</span>
             <div className="flex space-x-2">
               <span className={clsx(
                 "px-2 py-1 rounded-full text-xs font-medium",
@@ -282,12 +282,12 @@ const AddTaskForm = ({ onClose }: AddTaskFormProps) => {
                 {formData.priority === 'urgent' && '긴급'}
               </span>
               
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                 {getCategoryText(formData.category)}
               </span>
               
               {isAnnouncement && (
-                <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 flex items-center">
+                <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 flex items-center">
                   <Bell size={12} className="mr-1" />
                   공지사항
                 </span>

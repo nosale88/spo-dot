@@ -56,7 +56,7 @@ const SalesReportCreate: React.FC = () => {
     { id: '1', name: '회원권 판매', amount: 0, description: '헬스, 테니스, 골프 회원권' },
     { id: '2', name: 'PT 판매', amount: 0, description: '개인 트레이닝 레슨' },
     { id: '3', name: '용품 판매', amount: 0, description: '운동용품, 보충제 등' },
-    { id: '4', name: '자판기 매출', amount: 0, description: '음료, 간식류' },
+    { id: '4', name: '자판기 관리', amount: 0, description: '음료, 간식류' },
     { id: '5', name: '기타 매출', amount: 0, description: '락커 대여, 부대시설 등' },
   ]);
 
@@ -163,7 +163,7 @@ const SalesReportCreate: React.FC = () => {
         { id: '1', name: '회원권 판매', amount: 0, description: '헬스, 테니스, 골프 회원권' },
         { id: '2', name: 'PT 판매', amount: 0, description: '개인 트레이닝 레슨' },
         { id: '3', name: '용품 판매', amount: 0, description: '운동용품, 보충제 등' },
-        { id: '4', name: '자판기 매출', amount: 0, description: '음료, 간식류' },
+        { id: '4', name: '자판기 관리', amount: 0, description: '음료, 간식류' },
         { id: '5', name: '기타 매출', amount: 0, description: '락커 대여, 부대시설 등' },
       ]);
 

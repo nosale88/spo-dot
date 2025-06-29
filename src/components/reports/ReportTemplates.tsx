@@ -46,21 +46,21 @@ const ReportTemplates = ({ onClose, onSelectTemplate }: ReportTemplatesProps) =>
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center">
+        <div className="p-6 border-b border-slate-200 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-slate-900 flex items-center">
             <FileText className="h-5 w-5 mr-2 text-primary" />
             보고서 템플릿
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="text-slate-400 hover:text-slate-600"
           >
             <X size={24} />
           </button>
@@ -76,7 +76,7 @@ const ReportTemplates = ({ onClose, onSelectTemplate }: ReportTemplatesProps) =>
         ) : (
           <div className="p-6">
             <div className="flex justify-between mb-6">
-              <p className="text-slate-600 dark:text-slate-300">
+              <p className="text-slate-600">
                 보고서 작성 시 사용할 템플릿을 관리합니다.
               </p>
               <button
@@ -88,75 +88,57 @@ const ReportTemplates = ({ onClose, onSelectTemplate }: ReportTemplatesProps) =>
               </button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {templates.map(template => (
                 <div
                   key={template.id}
-                  className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg p-4 shadow-sm"
+                  className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
                 >
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-medium text-slate-900 dark:text-white">
-                      {template.title}
-                    </h3>
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-lg font-semibold text-slate-900">{template.title}</h3>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleEditTemplate(template)}
-                        className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                        title="템플릿 수정"
+                        className="text-slate-400 hover:text-slate-600"
                       >
                         <Edit size={16} />
                       </button>
                       <button
-                        onClick={() => handleDuplicateTemplate(template)}
-                        className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                        title="템플릿 복제"
-                      >
-                        <Copy size={16} />
-                      </button>
-                      <button
                         onClick={() => handleDeleteTemplate(template)}
-                        className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                        title="템플릿 삭제"
+                        className="text-red-400 hover:text-red-600"
                       >
                         <Trash2 size={16} />
                       </button>
                     </div>
                   </div>
                   
-                  <div className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                    <p>{template.description}</p>
-                  </div>
+                  <p className="text-slate-600 text-sm mb-3 line-clamp-2">
+                    {template.description}
+                  </p>
                   
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-0.5 rounded-full text-xs">
-                      {template.type === 'daily' ? '일일 보고서' :
-                        template.type === 'weekly' ? '주간 보고서' :
-                        template.type === 'monthly' ? '월간 보고서' :
-                        template.type === 'performance' ? '성과 보고서' :
-                        template.type === 'incident' ? '사건 보고서' : '커스텀 보고서'}
-                    </span>
-                    <span className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 px-2 py-0.5 rounded-full text-xs">
-                      {template.category === 'trainer' ? '트레이너' :
-                        template.category === 'facility' ? '시설' :
-                        template.category === 'client' ? '고객' :
-                        template.category === 'financial' ? '재정' : '운영'}
-                    </span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex space-x-2">
+                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                        {getTypeText(template.type)}
+                      </span>
+                      <span className="bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded-full">
+                        {getCategoryText(template.category)}
+                      </span>
+                    </div>
+                    
+                    <button
+                      onClick={() => onSelectTemplate(template)}
+                      className="btn btn-outline btn-sm"
+                    >
+                      사용하기
+                    </button>
                   </div>
-                  
-                  <button
-                    onClick={() => onSelectTemplate(template)}
-                    className="mt-4 w-full btn btn-outline btn-sm"
-                  >
-                    이 템플릿으로 보고서 작성
-                  </button>
                 </div>
               ))}
               
               {templates.length === 0 && (
-                <div className="col-span-full bg-slate-50 dark:bg-slate-700/50 rounded-lg p-6 text-center">
-                  <p className="text-slate-500 dark:text-slate-400">
-                    아직 템플릿이 없습니다. 새 템플릿을 추가해보세요.
-                  </p>
+                <div className="col-span-3 text-center py-8 text-slate-500">
+                  생성된 템플릿이 없습니다.
                 </div>
               )}
             </div>
@@ -297,7 +279,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
     <form onSubmit={handleSubmit} className="p-6 space-y-6">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             템플릿 제목
           </label>
           <input
@@ -311,7 +293,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             설명
           </label>
           <textarea
@@ -325,7 +307,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               보고서 종류
             </label>
             <select
@@ -343,7 +325,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               카테고리
             </label>
             <select
@@ -362,7 +344,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
         
         {/* Sections */}
         <div>
-          <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
             보고서 섹션
           </h3>
           
@@ -370,14 +352,14 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
           {formData.structure.sections.map((section, index) => (
             <div 
               key={index}
-              className="mb-2 bg-slate-50 dark:bg-slate-700 rounded-lg p-3 border border-slate-200 dark:border-slate-600"
+              className="mb-2 bg-slate-50 rounded-lg p-3 border border-slate-200"
             >
               <div className="flex justify-between items-start">
                 <div>
                   <h4 className="font-medium">{section.title}</h4>
-                  {section.description && <p className="text-sm text-slate-500 dark:text-slate-400">{section.description}</p>}
+                  {section.description && <p className="text-sm text-slate-500">{section.description}</p>}
                   <div className="flex mt-1 space-x-2">
-                    <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-0.5 rounded-full text-xs">
+                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">
                       {section.type === 'text' ? '텍스트' :
                        section.type === 'metrics' ? '메트릭' :
                        section.type === 'list' ? '리스트' : '테이블'}
@@ -385,8 +367,8 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
                     <span className={clsx(
                       "px-2 py-0.5 rounded-full text-xs",
                       section.required 
-                        ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
-                        : "bg-slate-100 text-slate-800 dark:bg-slate-600 dark:text-slate-300"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-slate-100 text-slate-700"
                     )}>
                       {section.required ? '필수' : '선택'}
                     </span>
@@ -395,7 +377,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
                 <button
                   type="button"
                   onClick={() => removeSection(index)}
-                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                  className="text-red-400 hover:text-red-600"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -404,12 +386,12 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
           ))}
           
           {/* Add section form */}
-          <div className="mt-3 bg-slate-50 dark:bg-slate-700 rounded-lg p-4">
-            <h4 className="font-medium text-slate-900 dark:text-white mb-2">새 섹션 추가</h4>
+          <div className="mt-3 bg-slate-50 rounded-lg p-4">
+            <h4 className="font-medium text-slate-900 mb-2">새 섹션 추가</h4>
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     섹션 제목
                   </label>
                   <input
@@ -422,7 +404,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
                 </div>
                 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     섹션 타입
                   </label>
                   <select
@@ -439,7 +421,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
               </div>
               
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-slate-700 mb-1">
                   설명 (선택)
                 </label>
                 <input
@@ -459,7 +441,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
                   onChange={(e) => setNewSection({ ...newSection, required: e.target.checked })}
                   className="form-checkbox h-4 w-4"
                 />
-                <label htmlFor="sectionRequired" className="ml-2 text-sm text-slate-700 dark:text-slate-300">
+                <label htmlFor="sectionRequired" className="ml-2 text-sm text-slate-700">
                   필수 항목
                 </label>
               </div>
@@ -481,16 +463,16 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
         
         {/* Metrics */}
         <div>
-          <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+          <h3 className="text-lg font-medium text-slate-900 mb-2">
             메트릭
           </h3>
           
           {/* Existing metrics */}
           {formData.structure.metrics && formData.structure.metrics.length > 0 ? (
-            <div className="mb-3 bg-slate-50 dark:bg-slate-700 rounded-lg p-3 border border-slate-200 dark:border-slate-600">
+            <div className="mb-3 bg-slate-50 rounded-lg p-3 border border-slate-200">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-600">
+                  <tr className="border-b border-slate-200">
                     <th className="text-left py-2 px-4 font-medium">명칭</th>
                     <th className="text-left py-2 px-4 font-medium">라벨</th>
                     <th className="text-left py-2 px-4 font-medium">단위</th>
@@ -501,7 +483,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
                 </thead>
                 <tbody>
                   {formData.structure.metrics.map((metric, index) => (
-                    <tr key={index} className="border-b border-slate-200 dark:border-slate-600">
+                    <tr key={index} className="border-b border-slate-200">
                       <td className="py-2 px-4">{metric.name}</td>
                       <td className="py-2 px-4">{metric.label}</td>
                       <td className="py-2 px-4">{metric.unit || '-'}</td>
@@ -517,7 +499,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
                         <button
                           type="button"
                           onClick={() => removeMetric(index)}
-                          className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                          className="text-red-400 hover:text-red-600"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -528,18 +510,18 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
               </table>
             </div>
           ) : (
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
+            <p className="text-sm text-slate-500 mb-3">
               아직 메트릭이 없습니다. 아래에서 추가해보세요.
             </p>
           )}
           
           {/* Add metric form */}
-          <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-4">
-            <h4 className="font-medium text-slate-900 dark:text-white mb-2">새 메트릭 추가</h4>
+          <div className="bg-slate-50 rounded-lg p-4">
+            <h4 className="font-medium text-slate-900 mb-2">새 메트릭 추가</h4>
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     식별자 (영문)
                   </label>
                   <input
@@ -552,7 +534,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
                 </div>
                 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     라벨 (한글)
                   </label>
                   <input
@@ -567,7 +549,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     단위 (선택)
                   </label>
                   <input
@@ -580,7 +562,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
                 </div>
                 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     데이터 타입
                   </label>
                   <select
@@ -604,7 +586,7 @@ const TemplateForm = ({ template, isEditing, onSave, onCancel }: TemplateFormPro
                   onChange={(e) => setNewMetric({ ...newMetric, required: e.target.checked })}
                   className="form-checkbox h-4 w-4"
                 />
-                <label htmlFor="metricRequired" className="ml-2 text-sm text-slate-700 dark:text-slate-300">
+                <label htmlFor="metricRequired" className="ml-2 text-sm text-slate-700">
                   필수 항목
                 </label>
               </div>

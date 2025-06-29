@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Loader2 } from 'lucide-react';
 import { Task, TaskStatus, TaskPriority, TaskCategory } from '../../contexts/TaskContext';
-import { useUser, User } from '../../contexts/UserContext';
+import { useUser } from '../../contexts/UserContext'; // Staff 타입 사용
 import clsx from 'clsx';
 
 interface EditTaskModalProps {
@@ -12,7 +12,7 @@ interface EditTaskModalProps {
 }
 
 const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, onSave }) => {
-  const { users } = useUser();
+  const { staff: staffList, loadingStaff } = useUser(); // 실제 직원 목록 사용
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -22,6 +22,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
     priority: task.priority,
     category: task.category,
     dueDate: task.dueDate.split('T')[0], // YYYY-MM-DD 형식으로 변환
+    startTime: task.startTime || '',
+    endTime: task.endTime || '',
     assignedTo: task.assignedTo
   });
 
@@ -34,6 +36,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
       priority: task.priority,
       category: task.category,
       dueDate: task.dueDate.split('T')[0],
+      startTime: task.startTime || '',
+      endTime: task.endTime || '',
       assignedTo: task.assignedTo
     });
   }, [task]);
@@ -46,13 +50,13 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
     }));
   };
 
-  const handleAssigneeChange = (userId: string) => {
-    const isAssigned = formData.assignedTo.includes(userId);
+  const handleAssigneeChange = (staffId: string) => {
+    const isAssigned = formData.assignedTo.includes(staffId);
     setFormData(prev => ({
       ...prev,
       assignedTo: isAssigned 
-        ? prev.assignedTo.filter(id => id !== userId)
-        : [...prev.assignedTo, userId]
+        ? prev.assignedTo.filter(id => id !== staffId)
+        : [...prev.assignedTo, staffId]
     }));
   };
 
@@ -62,9 +66,9 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
 
     try {
       // 담당자 이름 배열 생성
-      const assignedToNames = formData.assignedTo.map(userId => {
-        const user = users?.find(u => u.id === userId);
-        return user?.name || userId;
+      const assignedToNames = formData.assignedTo.map(staffId => {
+        const staff = staffList?.find(s => s.id === staffId);
+        return staff?.name || staffId;
       });
 
       const updates: Partial<Task> = {
@@ -74,6 +78,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
         priority: formData.priority,
         category: formData.category,
         dueDate: new Date(formData.dueDate).toISOString(),
+        startTime: formData.startTime || undefined,
+        endTime: formData.endTime || undefined,
         assignedTo: formData.assignedTo,
         assignedToName: assignedToNames,
         updatedAt: new Date().toISOString()
@@ -95,11 +101,16 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
       priority: task.priority,
       category: task.category,
       dueDate: task.dueDate.split('T')[0],
+      startTime: task.startTime || '',
+      endTime: task.endTime || '',
       assignedTo: task.assignedTo
     });
   };
 
   if (!isOpen) return null;
+
+  // 활성 상태인 직원만 필터링
+  const activeStaff = staffList?.filter(staff => staff.status === 'active') || [];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -218,26 +229,66 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* 시작 시간 */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                시작 시간
+              </label>
+              <input
+                type="time"
+                name="startTime"
+                value={formData.startTime}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* 종료 시간 */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                종료 시간
+              </label>
+              <input
+                type="time"
+                name="endTime"
+                value={formData.endTime}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
           {/* 담당자 */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               담당자
             </label>
+            {loadingStaff ? (
+              <div className="w-full p-3 border border-slate-300 rounded-md text-slate-500">
+                직원 목록을 불러오는 중...
+              </div>
+            ) : (
             <div className="space-y-2 max-h-40 overflow-y-auto border border-slate-300 rounded-md p-3">
-              {users?.map(user => (
-                <label key={user.id} className="flex items-center space-x-2">
+                {activeStaff.length === 0 ? (
+                  <div className="text-slate-500 text-sm">등록된 직원이 없습니다.</div>
+                ) : (
+                  activeStaff.map(staff => (
+                    <label key={staff.id} className="flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    checked={formData.assignedTo.includes(user.id)}
-                    onChange={() => handleAssigneeChange(user.id)}
+                        checked={formData.assignedTo.includes(staff.id)}
+                        onChange={() => handleAssigneeChange(staff.id)}
                     className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="text-sm text-slate-700">
-                    {user.name} ({user.email})
+                        {staff.name} {staff.department && `(${staff.department})`}
                   </span>
                 </label>
-              ))}
+                  ))
+                )}
             </div>
+            )}
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
@@ -252,7 +303,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, isOpen, onClose, on
             <button
               type="submit"
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isSubmitting}
+              disabled={isSubmitting || loadingStaff}
             >
               {isSubmitting ? (
                 <>

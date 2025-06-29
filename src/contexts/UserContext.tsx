@@ -3,7 +3,12 @@ import { Team } from '../types';
 // Supabase 클라이언트 임포트
 import { supabase } from '../supabaseClient';
 import type { Database } from '../types/database.types';
+<<<<<<< HEAD
 import { UserRole, UserPosition, DatabaseRole, mapUserRoleToDatabaseRole } from '../types/permissions';
+=======
+// 권한 시스템 import
+import { UserRole } from '../types/permissions';
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 
 // 사용자 성별 타입
 export type Gender = 'male' | 'female' | 'other';
@@ -29,9 +34,15 @@ export interface User {
   password?: string;
 }
 
-// 고객 인터페이스
-export interface Client extends User {
-  role: 'client';
+// 고객 인터페이스 (별도 관리)
+export interface Client {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: UserStatus;
+  createdAt: string;
+  updatedAt: string;
   dateOfBirth?: string;
   gender?: Gender;
   address?: string;
@@ -47,9 +58,15 @@ export interface Client extends User {
   assignedTrainerName?: string;
 }
 
-// 트레이너 인터페이스
-export interface Trainer extends User {
-  role: 'trainer';
+// 트레이너 인터페이스 (별도 관리)
+export interface Trainer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: UserStatus;
+  createdAt: string;
+  updatedAt: string;
   dateOfBirth?: string;
   gender?: Gender;
   address?: string;
@@ -77,7 +94,7 @@ export interface Trainer extends User {
   experience?: string;
 }
 
-// 직원 인터페이스
+// 직원 인터페이스 - 새로운 권한 시스템 사용
 export interface Staff extends User {
   id: string;
   employeeId?: string;
@@ -85,7 +102,7 @@ export interface Staff extends User {
   position?: UserPosition;
   hireDate?: string;
   department?: string;
-  permissions?: string[];
+  permissions?: string[]; // 개별 설정된 권한 배열
   name: string;
   email: string;
   phone: string;
@@ -163,40 +180,8 @@ interface UserContextProps {
 const UserContext = createContext<UserContextProps | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  // 초기 일반 사용자 목록 (기존 유지 또는 필요시 동적 관리)
-  const initialUsers: User[] = [
-    {
-      id: 'user-admin-01', // ID 고유성 확보
-      name: '관리자 (컨텍스트)',
-      email: 'admin@example.com',
-      role: 'admin',
-      phone: '010-0000-0000',
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 'user-trainer-01',
-      name: '트레이너 (컨텍스트)',
-      email: 'trainer@example.com',
-      role: 'trainer',
-      phone: '010-1111-1111',
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    // StaffManagement의 initialStaff와 유사한 초기 직원 데이터 추가
-    {
-      id: 'user-staff-01',
-      name: '홍길동 (컨텍스트)',
-      email: 'hong-context@example.com',
-      role: 'staff',
-      phone: '010-1234-5678',
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-  ];
+  // 초기 사용자 목록 - 빈 배열로 시작
+  const initialUsers: User[] = [];
   const [users, setUsers] = useState<User[]>(initialUsers);
 
   // 직원(Staff) 목록 상태 관리
@@ -213,11 +198,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setLoadingStaff(true);
     setStaffError(null);
     try {
-      // Supabase에서 users 테이블 조회
+      // Supabase에서 users 테이블 조회 - 모든 역할의 활성 사용자 조회
       const { data, error } = await supabase
         .from('users')
         .select('*')
+<<<<<<< HEAD
         .in('role', ['admin', 'trainer', 'staff', 'user', 'client']);  // 모든 허용된 DatabaseRole 조회
+=======
+        .eq('status', 'active');  // 활성 상태인 사용자만 조회 (역할 필터링 제거)
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 
       if (error) {
         console.error('Error fetching staff:', error);
@@ -225,6 +214,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setLoadingStaff(false);
         return;
       }
+
+      console.log('📋 데이터베이스에서 조회된 사용자들:', data);
 
       // 데이터 형식 변환 - 이제 모든 필드 사용 가능
       const transformedStaff = data.map(user => ({
@@ -235,15 +226,24 @@ export function UserProvider({ children }: { children: ReactNode }) {
         role: user.role as DatabaseRole,
         status: (user.status as UserStatus) || 'active',
         department: user.department || '',
+<<<<<<< HEAD
         position: user.position as UserPosition || '',
         permissions: user.permissions as string[] || [],
         createdAt: user.created_at || new Date().toISOString(),
         updatedAt: user.updated_at || new Date().toISOString(),
         lastLogin: user.last_login as string | null,
+=======
+        position: user.position || '',
+        permissions: Array.isArray(user.permissions) ? user.permissions.filter(p => typeof p === 'string') as string[] : [],
+        createdAt: user.created_at || new Date().toISOString(),
+        updatedAt: user.updated_at || new Date().toISOString(),
+        lastLogin: user.last_login || undefined,
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
         profileImage: user.profile_image
       }));
 
-      setStaffList(transformedStaff);
+      console.log('🔄 변환된 직원 데이터:', transformedStaff);
+      setStaffList(transformedStaff as Staff[]);
     } catch (err) {
       console.error('직원 데이터 가져오기 오류:', err);
       setStaffError(err as Error);
@@ -255,6 +255,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const addStaffMember = async (staffData: Omit<Staff, 'id' | 'createdAt' | 'updatedAt' | 'role'> & { role: UserRole }): Promise<string | null> => {
     setIsSubmitting(true);
     try {
+<<<<<<< HEAD
       // UserRole을 DatabaseRole로 변환
       const databaseRole = mapUserRoleToDatabaseRole(staffData.role);
 
@@ -289,6 +290,64 @@ export function UserProvider({ children }: { children: ReactNode }) {
       return data.user.id;
     } catch (error) {
       console.error('직원 추가 중 오류 발생:', error);
+=======
+      console.log('직원 추가 시도:', staffData);
+      
+      // 기본 사용자 데이터 추가 - role을 그대로 사용
+      const { data, error } = await supabase
+        .from('users')
+        .insert([
+          {
+            name: staffData.name,
+            email: staffData.email,
+            password: staffData.password || '123456', // 기본 비밀번호
+            role: staffData.role, // UserRole 그대로 사용
+            phone: staffData.phone || '',
+            department: staffData.department || '',
+            position: staffData.position || '',
+            status: staffData.status || 'active',
+            permissions: staffData.permissions || []
+          }
+        ])
+        .select();
+
+      if (error) {
+        console.error('직원 추가 중 오류:', error);
+        const errorMessage = error.message || '알 수 없는 오류가 발생했습니다.';
+        alert('직원 추가 오류: ' + errorMessage);
+        return null;
+      }
+
+      if (!data || data.length === 0) {
+        console.error('직원 추가 실패: 데이터가 반환되지 않음');
+        alert('직원 추가 실패: 데이터가 반환되지 않았습니다.');
+        return null;
+      }
+
+      console.log('직원 추가 성공:', data[0]);
+      
+      // 반환된 데이터로 새 직원 정보 구성
+      const newStaff = {
+        ...staffData,
+        id: data[0].id,
+        role: data[0].role as UserRole,
+        createdAt: data[0].created_at || new Date().toISOString(),
+        updatedAt: data[0].updated_at || new Date().toISOString(),
+      };
+
+      // 상태 업데이트
+      setStaffList(prevStaff => [...prevStaff, newStaff as Staff]);
+
+      // 직원 목록 새로고침
+      await fetchStaff();
+
+      // 성공 시 ID 반환
+      return data[0].id;
+    } catch (err) {
+      console.error('직원 추가 오류:', err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      alert('직원 추가 오류: ' + errorMessage);
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       return null;
     } finally {
       setIsSubmitting(false);
@@ -297,11 +356,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const updateStaffMember = async (id: string, staffData: Partial<Staff>): Promise<boolean> => {
     try {
+<<<<<<< HEAD
+=======
+      // Supabase에 업데이트
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       const { error } = await supabase
         .from('users')
         .update({
           name: staffData.name,
           phone: staffData.phone,
+<<<<<<< HEAD
+=======
+          role: staffData.role,
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
           status: staffData.status,
           department: staffData.department,
           position: staffData.position,
@@ -311,23 +378,87 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('직원 업데이트 오류:', error);
+<<<<<<< HEAD
         throw new Error(error.message);
       }
       await fetchStaff();
       return true;
     } catch (error) {
       console.error('직원 업데이트 중 오류 발생:', error);
+=======
+        const errorMessage = error.message || '알 수 없는 오류가 발생했습니다.';
+        alert('직원 업데이트 오류: ' + errorMessage);
+        return false;
+      }
+
+      // 로컬 상태 업데이트
+      setStaffList(prevStaff => prevStaff.map(staff => 
+        staff.id === id 
+          ? { ...staff, ...staffData, updatedAt: new Date().toISOString() } 
+          : staff
+      ));
+
+      // 직원 목록 새로고침
+      await fetchStaff();
+
+      return true;
+    } catch (err) {
+      console.error('직원 수정 오류:', err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      alert('직원 수정 오류: ' + errorMessage);
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       return false;
     }
   };
 
   const deleteStaffMember = async (id: string): Promise<boolean> => {
     try {
+<<<<<<< HEAD
       const { error } = await supabase
+=======
+      console.log('직원 삭제 시도:', id);
+      
+      // 1. 먼저 해당 직원에게 할당된 모든 tasks의 assigned_to를 null로 설정
+      const { error: tasksError } = await supabase
+        .from('tasks')
+        .update({ assigned_to: null })
+        .eq('assigned_to', id);
+
+      if (tasksError) {
+        console.error('업무 재할당 오류:', tasksError);
+        const errorMessage = tasksError.message || '업무 재할당 중 오류가 발생했습니다.';
+        alert('직원 삭제 오류 (업무 재할당): ' + errorMessage);
+        return false;
+      }
+
+      console.log('해당 직원의 업무 재할당 완료');
+
+      // 2. 직원의 상태를 먼저 inactive로 변경 (soft delete 방식)
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ 
+          status: 'inactive',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (updateError) {
+        console.error('직원 상태 업데이트 오류:', updateError);
+        const errorMessage = updateError.message || '직원 상태 업데이트 중 오류가 발생했습니다.';
+        alert('직원 삭제 오류 (상태 업데이트): ' + errorMessage);
+        return false;
+      }
+
+      console.log('직원 상태 비활성화 완료');
+
+      // 3. 실제 데이터베이스에서 삭제 시도
+      const { error: deleteError } = await supabase
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
         .from('users')
         .delete()
         .eq('id', id);
 
+<<<<<<< HEAD
       if (error) {
         console.error('직원 삭제 오류:', error);
         throw new Error(error.message);
@@ -336,6 +467,29 @@ export function UserProvider({ children }: { children: ReactNode }) {
       return true;
     } catch (error) {
       console.error('직원 삭제 중 오류 발생:', error);
+=======
+      if (deleteError) {
+        console.error('직원 삭제 오류:', deleteError);
+        // 삭제에 실패하면 상태만 비활성화된 상태로 유지
+        console.log('데이터베이스 삭제 실패, 상태만 비활성화로 유지');
+        alert('직원이 비활성화되었습니다. (데이터베이스 제약조건으로 인해 완전 삭제는 불가)');
+      } else {
+        console.log('직원 삭제 성공:', id);
+        alert('직원이 성공적으로 삭제되었습니다.');
+      }
+
+      // 4. 로컬 상태에서 제거
+      setStaffList(prevStaff => prevStaff.filter(staff => staff.id !== id));
+      
+      // 5. 직원 목록 새로고침
+      await fetchStaff();
+      
+      return true;
+    } catch (err) {
+      console.error('직원 삭제 오류:', err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      alert('직원 삭제 오류: ' + errorMessage);
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       return false;
     }
   };

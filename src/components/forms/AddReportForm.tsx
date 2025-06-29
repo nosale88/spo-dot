@@ -69,21 +69,21 @@ const AddReportForm = ({ onClose, defaultType = 'daily', initialDate }: AddRepor
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white flex items-center">
+        <div className="p-6 border-b border-slate-200 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-slate-900 flex items-center">
             <FileText className="h-5 w-5 mr-2 text-primary" />
             업무 보고서 작성
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="text-slate-400 hover:text-slate-600:text-slate-200"
           >
             <X size={24} />
           </button>
@@ -92,7 +92,7 @@ const AddReportForm = ({ onClose, defaultType = 'daily', initialDate }: AddRepor
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 보고서 종류
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -102,7 +102,7 @@ const AddReportForm = ({ onClose, defaultType = 'daily', initialDate }: AddRepor
                   className={`p-3 rounded-lg flex items-center justify-center text-sm font-medium ${
                     formData.type === 'daily'
                       ? 'bg-primary text-white'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200:bg-slate-600'
                   }`}
                 >
                   일일 보고서
@@ -113,7 +113,7 @@ const AddReportForm = ({ onClose, defaultType = 'daily', initialDate }: AddRepor
                   className={`p-3 rounded-lg flex items-center justify-center text-sm font-medium ${
                     formData.type === 'weekly'
                       ? 'bg-primary text-white'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200:bg-slate-600'
                   }`}
                 >
                   주간 보고서
@@ -124,7 +124,7 @@ const AddReportForm = ({ onClose, defaultType = 'daily', initialDate }: AddRepor
                   className={`p-3 rounded-lg flex items-center justify-center text-sm font-medium ${
                     formData.type === 'monthly'
                       ? 'bg-primary text-white'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200:bg-slate-600'
                   }`}
                 >
                   월간 보고서
@@ -133,7 +133,7 @@ const AddReportForm = ({ onClose, defaultType = 'daily', initialDate }: AddRepor
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 보고서 제목
               </label>
               <input
@@ -147,7 +147,7 @@ const AddReportForm = ({ onClose, defaultType = 'daily', initialDate }: AddRepor
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 보고서 내용
               </label>
               <textarea

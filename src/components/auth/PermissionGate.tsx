@@ -48,9 +48,21 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
     );
   }
 
+<<<<<<< HEAD
   let hasAccess = true;
 
   // 권한 체크
+=======
+  // 권한과 역할이 모두 지정되지 않은 경우 항상 표시
+  if (!permission && !role) {
+    return <>{children}</>;
+  }
+
+  let hasRequiredPermission = true;
+  let hasRequiredRole = true;
+
+  // 권한 검사 (권한이 지정된 경우만)
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
   if (permission) {
     const permissions = Array.isArray(permission) ? permission : [permission];
     
@@ -61,6 +73,7 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
     }
   }
 
+<<<<<<< HEAD
   // 역할 체크 (권한 체크와 AND 조건)
   if (hasAccess && role) {
     hasAccess = checkRole(role, false);
@@ -69,6 +82,31 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   // 권한이 있는 경우 children 렌더링
   if (hasAccess) {
     return <>{children}</>;
+=======
+  // 역할 검사 (역할이 지정된 경우만)
+  if (role) {
+    const roles = Array.isArray(role) ? role : [role];
+    
+    if (showIf === 'all') {
+      hasRequiredRole = roles.every(r => user.role === r);
+    } else {
+      hasRequiredRole = roles.some(r => user.role === r);
+    }
+  }
+
+  // 조건 결합: 권한과 역할이 모두 지정된 경우 둘 다 만족해야 함
+  let shouldShow = true;
+  
+  if (permission && role) {
+    // 권한과 역할이 모두 지정된 경우: 둘 다 만족해야 함
+    shouldShow = hasRequiredPermission && hasRequiredRole;
+  } else if (permission) {
+    // 권한만 지정된 경우: 권한만 확인
+    shouldShow = hasRequiredPermission;
+  } else if (role) {
+    // 역할만 지정된 경우: 역할만 확인
+    shouldShow = hasRequiredRole;
+>>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
   }
 
   // 권한이 없는 경우 처리

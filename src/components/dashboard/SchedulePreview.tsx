@@ -54,34 +54,34 @@ const SchedulePreview = () => {
           onClick={() => setExpandedItem(expandedItem === session.id ? null : session.id)}
           className={`relative p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
             session.status === 'current'
-              ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/30'
-              : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+              ? 'border-green-200 bg-green-50'
+              : 'border-slate-200 hover:bg-slate-50:bg-slate-700/50'
           }`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0">
-                <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-medium text-slate-600 dark:text-slate-300">
+                <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center font-medium text-slate-600">
                   {session.clientName.charAt(0)}
                 </div>
               </div>
               <div>
-                <p className="font-medium text-slate-900 dark:text-white">
+                <p className="font-medium text-slate-900">
                   {session.clientName}
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-slate-500">
                   {session.type} 세션
                 </p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm font-medium text-slate-900 dark:text-white">
+              <p className="text-sm font-medium text-slate-900">
                 {session.time}
               </p>
               <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
                 session.status === 'current'
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                  : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-slate-100 text-slate-700'
               }`}>
                 {session.status === 'current' ? '진행 중' : '예정됨'}
               </span>
@@ -93,24 +93,24 @@ const SchedulePreview = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               transition={{ duration: 0.3 }}
-              className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700"
+              className="mt-3 pt-3 border-t border-slate-200"
             >
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <p className="text-slate-500 dark:text-slate-400">마지막 세션:</p>
-                  <p className="font-medium text-slate-900 dark:text-white">3일 전</p>
+                  <p className="text-slate-500">마지막 세션:</p>
+                  <p className="font-medium text-slate-900">3일 전</p>
                 </div>
                 <div>
-                  <p className="text-slate-500 dark:text-slate-400">남은 세션:</p>
-                  <p className="font-medium text-slate-900 dark:text-white">12 회</p>
+                  <p className="text-slate-500">남은 세션:</p>
+                  <p className="font-medium text-slate-900">12 회</p>
                 </div>
                 <div>
-                  <p className="text-slate-500 dark:text-slate-400">중점 영역:</p>
-                  <p className="font-medium text-slate-900 dark:text-white">상체 및 코어</p>
+                  <p className="text-slate-500">중점 영역:</p>
+                  <p className="font-medium text-slate-900">상체 및 코어</p>
                 </div>
                 <div>
-                  <p className="text-slate-500 dark:text-slate-400">담당 트레이너:</p>
-                  <p className="font-medium text-slate-900 dark:text-white">김철수</p>
+                  <p className="text-slate-500">담당 트레이너:</p>
+                  <p className="font-medium text-slate-900">김철수</p>
                 </div>
               </div>
               <div className="mt-3 flex space-x-2">

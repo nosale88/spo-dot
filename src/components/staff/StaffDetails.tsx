@@ -99,13 +99,13 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
   const getStatusStyle = (status: UserStatus) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+        return 'bg-green-100 text-green-800';
       case 'inactive':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        return 'bg-red-100 text-red-800';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+        return 'bg-yellow-100 text-yellow-800';
       case 'suspended':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
+        return 'bg-purple-100 text-purple-800';
     }
   };
   
@@ -123,7 +123,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
   const renderPermissionLevel = () => {
     if (formData.role === 'admin' || formData.permissions?.includes('all')) {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
           <Shield className="w-3 h-3 mr-1" />
           관리자
         </span>
@@ -133,21 +133,21 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
     const permCount = formData.permissions?.length || 0;
     if (permCount > 5) {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
           <Settings className="w-3 h-3 mr-1" />
           고급 권한
         </span>
       );
     } else if (permCount > 2) {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
           <Settings className="w-3 h-3 mr-1" />
           일반 권한
         </span>
       );
     } else if (permCount > 0) {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300">
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800">
           <Settings className="w-3 h-3 mr-1" />
           제한 권한
         </span>
@@ -155,7 +155,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
     }
     
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
         <Settings className="w-3 h-3 mr-1" />
         권한 없음
       </span>
@@ -172,12 +172,12 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
       <motion.div 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
+        className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center">
+        <div className="flex items-center justify-between p-4 border-b border-slate-200">
+          <h2 className="text-xl font-bold text-slate-900 flex items-center">
             <User className="w-5 h-5 mr-2" />
             {isEditing ? '직원 정보 수정' : '직원 정보'}
           </h2>
@@ -185,13 +185,13 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
             {!isEditing && (
               <>
                 <button 
-                  className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                  className="p-1 text-blue-600 hover:text-blue-800:text-blue-300"
                   onClick={() => setIsEditing(true)}
                 >
                   <Edit size={18} />
                 </button>
                 <button 
-                  className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                  className="p-1 text-red-600 hover:text-red-800:text-red-300"
                   onClick={() => setIsDeleting(true)}
                 >
                   <Trash size={18} />
@@ -199,7 +199,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
               </>
             )}
             <button 
-              className="p-1 text-slate-400 hover:text-slate-500 dark:hover:text-slate-300"
+              className="p-1 text-slate-400 hover:text-slate-500:text-slate-300"
               onClick={onClose}
             >
               <X size={20} />
@@ -209,17 +209,17 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
         
         {/* 확인 메시지 */}
         {isDeleting && (
-          <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-red-50 dark:bg-red-900/20">
+          <div className="p-4 border-b border-slate-200 bg-red-50">
             <div className="flex items-start">
               <AlertCircle className="w-5 h-5 text-red-500 mr-2 mt-0.5" />
               <div>
-                <h3 className="font-medium text-red-800 dark:text-red-300">직원 삭제 확인</h3>
-                <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                <h3 className="font-medium text-red-800">직원 삭제 확인</h3>
+                <p className="text-sm text-red-600 mt-1">
                   정말로 '{staff.name}' 직원을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
                 </p>
                 <div className="mt-3 flex space-x-2">
                   <button
-                    className="btn btn-sm btn-outline text-red-600 border-red-600 hover:bg-red-50 dark:text-red-400 dark:border-red-400 dark:hover:bg-red-900/30"
+                    className="btn btn-sm btn-outline text-red-600 border-red-600 hover:bg-red-50:bg-red-900/30"
                     onClick={handleDelete}
                   >
                     삭제
@@ -240,12 +240,12 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
         <div className="p-4 overflow-y-auto max-h-[calc(90vh-10rem)]">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 기본 정보 섹션 */}
-            <div className="md:col-span-2 bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
-              <h3 className="font-medium text-slate-900 dark:text-white mb-3">기본 정보</h3>
+            <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
+              <h3 className="font-medium text-slate-900 mb-3">기본 정보</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* 이름 */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  <label className="block text-sm font-medium text-slate-500 mb-1">
                     이름
                   </label>
                   {isEditing ? (
@@ -258,7 +258,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                       required
                     />
                   ) : (
-                    <div className="text-slate-900 dark:text-white">
+                    <div className="text-slate-900">
                       {formData.name}
                     </div>
                   )}
@@ -266,7 +266,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                 
                 {/* 상태 */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  <label className="block text-sm font-medium text-slate-500 mb-1">
                     상태
                   </label>
                   {isEditing ? (
@@ -293,7 +293,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                 
                 {/* 이메일 */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  <label className="block text-sm font-medium text-slate-500 mb-1">
                     이메일
                   </label>
                   {isEditing ? (
@@ -306,7 +306,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                       required
                     />
                   ) : (
-                    <div className="flex items-center text-slate-900 dark:text-white">
+                    <div className="flex items-center text-slate-900">
                       <Mail className="w-4 h-4 mr-1.5 text-slate-400" />
                       <a href={`mailto:${formData.email}`} className="hover:underline">
                         {formData.email}
@@ -317,7 +317,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                 
                 {/* 전화번호 */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  <label className="block text-sm font-medium text-slate-500 mb-1">
                     전화번호
                   </label>
                   {isEditing ? (
@@ -330,7 +330,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                       required
                     />
                   ) : (
-                    <div className="flex items-center text-slate-900 dark:text-white">
+                    <div className="flex items-center text-slate-900">
                       <Phone className="w-4 h-4 mr-1.5 text-slate-400" />
                       <a href={`tel:${formData.phone}`} className="hover:underline">
                         {formData.phone}
@@ -342,12 +342,12 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
             </div>
             
             {/* 직원 정보 섹션 */}
-            <div className="md:col-span-2 bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
-              <h3 className="font-medium text-slate-900 dark:text-white mb-3">직원 정보</h3>
+            <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
+              <h3 className="font-medium text-slate-900 mb-3">직원 정보</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* 부서 */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  <label className="block text-sm font-medium text-slate-500 mb-1">
                     부서
                   </label>
                   {isEditing ? (
@@ -360,7 +360,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                       placeholder="부서명 (예: 회원관리, 운영)"
                     />
                   ) : (
-                    <div className="text-slate-900 dark:text-white">
+                    <div className="text-slate-900">
                       {formData.department || '미지정'}
                     </div>
                   )}
@@ -368,7 +368,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                 
                 {/* 직책 */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  <label className="block text-sm font-medium text-slate-500 mb-1">
                     직책
                   </label>
                   {isEditing ? (
@@ -381,7 +381,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                       placeholder="직책 (예: 매니저, 사원)"
                     />
                   ) : (
-                    <div className="text-slate-900 dark:text-white">
+                    <div className="text-slate-900">
                       {formData.position || '미지정'}
                     </div>
                   )}
@@ -389,7 +389,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                 
                 {/* 입사일 */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  <label className="block text-sm font-medium text-slate-500 mb-1">
                     입사일
                   </label>
                   {isEditing ? (
@@ -401,7 +401,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                       className="form-input w-full"
                     />
                   ) : (
-                    <div className="flex items-center text-slate-900 dark:text-white">
+                    <div className="flex items-center text-slate-900">
                       <Calendar className="w-4 h-4 mr-1.5 text-slate-400" />
                       {formData.hireDate || '미지정'}
                     </div>
@@ -410,7 +410,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                 
                 {/* 역할 */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  <label className="block text-sm font-medium text-slate-500 mb-1">
                     역할
                   </label>
                   {isEditing ? (
@@ -424,7 +424,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                       <option value="admin">관리자</option>
                     </select>
                   ) : (
-                    <div className="flex items-center text-slate-900 dark:text-white">
+                    <div className="flex items-center text-slate-900">
                       {formData.role === 'admin' ? (
                         <Shield className="w-4 h-4 mr-1.5 text-red-500" />
                       ) : (
@@ -437,7 +437,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                 
                 {/* 권한 레벨 */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  <label className="block text-sm font-medium text-slate-500 mb-1">
                     권한 레벨
                   </label>
                   <div>
@@ -449,10 +449,10 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
             
             {/* 권한 설정 섹션 */}
             {isEditing && formData.role !== 'admin' && (
-              <div className="md:col-span-2 bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
+              <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
                 <div className="flex items-center mb-3">
-                  <h3 className="font-medium text-slate-900 dark:text-white">권한 설정</h3>
-                  <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
+                  <h3 className="font-medium text-slate-900">권한 설정</h3>
+                  <span className="ml-2 text-xs text-slate-500">
                     (직원이 접근할 수 있는 기능을 선택하세요)
                   </span>
                 </div>
@@ -470,7 +470,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
                       />
                       <label
                         htmlFor={`permission-${permission.id}`}
-                        className="ml-2 block text-sm text-slate-700 dark:text-slate-300"
+                        className="ml-2 block text-sm text-slate-700"
                       >
                         {permission.label}
                       </label>
@@ -482,15 +482,15 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
             
             {/* 권한 목록 - 보기 모드 */}
             {!isEditing && formData.role !== 'admin' && formData.permissions && formData.permissions.length > 0 && (
-              <div className="md:col-span-2 bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
-                <h3 className="font-medium text-slate-900 dark:text-white mb-3">권한 목록</h3>
+              <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
+                <h3 className="font-medium text-slate-900 mb-3">권한 목록</h3>
                 <div className="flex flex-wrap gap-2">
                   {formData.permissions.map(perm => {
                     const permission = AVAILABLE_PERMISSIONS.find(p => p.id === perm);
                     return (
                       <span 
                         key={perm} 
-                        className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                        className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800"
                       >
                         <Settings className="w-3 h-3 mr-1" />
                         {permission?.label || perm}
@@ -503,12 +503,12 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
             
             {/* 관리자 경고 */}
             {isEditing && formData.role === 'admin' && (
-              <div className="md:col-span-2 bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+              <div className="md:col-span-2 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
                 <div className="flex items-start">
-                  <Shield className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5" />
+                  <Shield className="w-5 h-5 text-yellow-600 mr-2 mt-0.5" />
                   <div>
-                    <h3 className="font-medium text-yellow-800 dark:text-yellow-300">관리자 권한 안내</h3>
-                    <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
+                    <h3 className="font-medium text-yellow-800">관리자 권한 안내</h3>
+                    <p className="text-sm text-yellow-700 mt-1">
                       관리자는 모든 기능에 대한 접근 권한을 가집니다. 시스템 전체 설정을 변경하고 모든 데이터에 접근할 수 있습니다. 
                       관리자 권한은 꼭 필요한 직원에게만 부여해야 합니다.
                     </p>
@@ -518,23 +518,23 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
             )}
             
             {/* 계정 정보 */}
-            <div className="md:col-span-2 bg-slate-50 dark:bg-slate-700/30 p-4 rounded-lg">
-              <h3 className="font-medium text-slate-900 dark:text-white mb-3">계정 정보</h3>
+            <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
+              <h3 className="font-medium text-slate-900 mb-3">계정 정보</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  <label className="block text-sm font-medium text-slate-500 mb-1">
                     등록일
                   </label>
-                  <div className="flex items-center text-slate-900 dark:text-white">
+                  <div className="flex items-center text-slate-900">
                     <Clock className="w-4 h-4 mr-1.5 text-slate-400" />
                     {format(new Date(formData.createdAt), 'yyyy년 MM월 dd일')}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">
+                  <label className="block text-sm font-medium text-slate-500 mb-1">
                     최근 업데이트
                   </label>
-                  <div className="flex items-center text-slate-900 dark:text-white">
+                  <div className="flex items-center text-slate-900">
                     <Clock className="w-4 h-4 mr-1.5 text-slate-400" />
                     {format(new Date(formData.updatedAt), 'yyyy년 MM월 dd일')}
                   </div>
@@ -545,7 +545,7 @@ const StaffDetails = ({ staff, onClose }: StaffDetailsProps) => {
         </div>
         
         {/* 하단 버튼 */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-2">
+        <div className="p-4 border-t border-slate-200 flex justify-end space-x-2">
           {isEditing ? (
             <>
               <button 

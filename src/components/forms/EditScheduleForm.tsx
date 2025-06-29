@@ -9,9 +9,10 @@ import clsx from 'clsx';
 interface EditScheduleFormProps {
   schedule: Schedule;
   onClose: () => void;
+  onSuccess?: (updatedSchedule: Schedule) => void;
 }
 
-const EditScheduleForm = ({ schedule, onClose }: EditScheduleFormProps) => {
+const EditScheduleForm = ({ schedule, onClose, onSuccess }: EditScheduleFormProps) => {
   const { updateSchedule } = useSchedule();
   const { user, isAdmin } = useAuth();
   
@@ -50,7 +51,22 @@ const EditScheduleForm = ({ schedule, onClose }: EditScheduleFormProps) => {
       isCompleted: formData.isCompleted
     });
     
+    const updatedSchedule = {
+      ...schedule,
+      clientName: formData.clientName,
+      type: formData.type,
+      date: formData.date,
+      startTime: formData.startTime,
+      endTime: formData.endTime,
+      notes: formData.notes,
+      isCompleted: formData.isCompleted,
+      updatedAt: new Date().toISOString()
+    };
+    
     onClose();
+    if (onSuccess) {
+      onSuccess(updatedSchedule);
+    }
   };
 
   // OT 세션이고 관리자가 아닌 경우 읽기 전용 모드
@@ -60,7 +76,7 @@ const EditScheduleForm = ({ schedule, onClose }: EditScheduleFormProps) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
       onClick={onClose}
     >
       <div 

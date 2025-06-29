@@ -26,20 +26,20 @@ const DashboardCard = ({
       className="card p-5"
     >
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">
+        <h3 className="text-sm font-medium text-slate-500">
           {title}
         </h3>
-        <div className="bg-slate-100 dark:bg-slate-700 p-2 rounded-lg">
+        <div className="bg-slate-100 p-2 rounded-lg">
           {icon}
         </div>
       </div>
       
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+          <p className="text-2xl font-bold text-slate-900">
             {value}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             {description}
           </p>
         </div>
