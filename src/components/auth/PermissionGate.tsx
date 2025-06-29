@@ -27,15 +27,14 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   silent = false
 }) => {
   const {
-    checkPermission,
-    checkAnyPermission,
-    checkAllPermissions,
-    checkRole,
-    currentUser
+    hasPermission,
+    hasAnyPermission,
+    hasAllPermissions,
+    user
   } = usePermissions();
 
   // 로그인하지 않은 경우
-  if (!currentUser) {
+  if (!user) {
     if (silent) return null;
     if (fallback) return <>{fallback}</>;
     if (!showFallback) return null;
@@ -48,16 +47,33 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
     );
   }
 
+  let hasAccess = false;
+
+  // 역할 체크
+  if (role) {
+    const roles = Array.isArray(role) ? role : [role];
+    hasAccess = roles.includes(user.role);
+  }
+
+  // 권한 체크
   if (permission) {
     const permissions = Array.isArray(permission) ? permission : [permission];
     
     if (requireAll) {
-      hasAccess = checkAllPermissions(permissions, false);
+      hasAccess = hasAllPermissions(permissions);
     } else {
-      hasAccess = checkAnyPermission(permissions, false);
+      hasAccess = hasAnyPermission(permissions);
     }
   }
 
+  // 역할도 권한도 체크하지 않는 경우, 로그인만 되어 있으면 허용
+  if (!role && !permission) {
+    hasAccess = true;
+  }
+
+  // 권한이 있는 경우 children 렌더링
+  if (hasAccess) {
+    return <>{children}</>;
   }
 
   // 권한이 없는 경우 처리

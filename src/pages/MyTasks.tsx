@@ -419,16 +419,8 @@ const MyTasks = () => {
                 >
                   오늘
                 </button>
-                              )}
-              </div>
-            )}
-            
-            {/* 권한이 없는 경우 안내 메시지 */}
-            {user && !hasPermission('tasks.create') && (
-              <div className="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-lg">
-                업무 추가 권한이 없습니다 (현재 역할: {user.role})
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 

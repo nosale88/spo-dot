@@ -130,11 +130,10 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
         // Update existing report
         updateReport(report.id, {
           ...formData,
-          status: saveAsDraft ? 'draft' : 'submitted',
-          submittedAt: saveAsDraft ? undefined : new Date().toISOString(),
           attachments: [...(report.attachments || []), ...attachments]
         });
         
+        showSuccess(
           saveAsDraft ? '보고서가 저장되었습니다' : '보고서가 제출되었습니다',
           formData.title
         );
@@ -162,6 +161,7 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
           attachments
         });
         
+        showSuccess(
           saveAsDraft ? '보고서가 저장되었습니다' : '보고서가 제출되었습니다',
           formData.title
         );
@@ -183,6 +183,7 @@ const ReportForm = ({ onClose, report, defaultType = 'daily' }: ReportFormProps)
       onClose();
     } catch (error) {
       console.error('Error saving report:', error);
+      showError(
         '오류',
         '보고서 저장 중 오류가 발생했습니다'
       );

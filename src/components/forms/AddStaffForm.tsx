@@ -118,9 +118,6 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
     if (errors[name]) {
       setErrors({ ...errors, [name]: '' });
     }
-    
-      }));
-    }
   };
   
   const handlePermissionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
