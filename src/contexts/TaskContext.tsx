@@ -103,10 +103,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const localTasks: Task[] = JSON.parse(savedTasks);
-<<<<<<< HEAD
-=======
       logger.debug(`📦 로컬 스토리지에서 ${localTasks.length}개의 업무를 발견했습니다.`);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       
       if (localTasks.length === 0) {
         localStorage.removeItem('tasks');
@@ -121,10 +118,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
       // 이미 Supabase에 데이터가 있으면 마이그레이션 하지 않음
       if (existingTasks && existingTasks.length > 0) {
-<<<<<<< HEAD
-=======
         logger.debug('✅ Supabase에 이미 데이터가 있어 마이그레이션을 건너뜁니다.');
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
         localStorage.removeItem('tasks');
         return;
       }
@@ -190,10 +184,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         }
       }
 
-<<<<<<< HEAD
-=======
       logger.debug(`✅ ${migratedCount}개의 업무가 성공적으로 마이그레이션되었습니다.`);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       
       // 마이그레이션 완료 후 localStorage 정리
       localStorage.removeItem('tasks');
@@ -365,15 +356,11 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   // 업무 추가
   const addTask = useCallback(async (newTaskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
     if (!user) {
-<<<<<<< HEAD
-      console.error('❌ 사용자가 로그인되지 않음');
-=======
       handleError(new Error('로그인이 필요합니다'), { 
         action: 'add_task', 
         userId: undefined,
         userRole: undefined 
       });
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       return null;
     }
 
@@ -390,32 +377,6 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       // 상태 변환 (프론트엔드의 in-progress를 데이터베이스의 in_progress로 변환)
       const convertedStatus = newTaskData.status === 'in-progress' ? 'in_progress' : newTaskData.status;
 
-<<<<<<< HEAD
-      const insertPayload = {
-        title: newTaskData.title,
-        description: newTaskData.description,
-        status: convertedStatus,
-        priority: newTaskData.priority,
-        category: newTaskData.category,
-        due_date: newTaskData.dueDate,
-        assigned_to: assignedToId,
-        created_by: user.id,
-        tags: newTaskData.assignedToName // 임시로 태그에 담당자 이름 저장
-      };
-
-      console.log('📤 Supabase insert payload:', insertPayload);
-
-      const { data: newSupabaseTask, error: insertError } = await supabase
-        .from('tasks')
-        .insert(insertPayload)
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error('❌ Supabase insert error:', insertError);
-        throw insertError;
-      }
-=======
       const { data: newSupabaseTask, error: insertError } = await withRetry(
         async () => {
           const response = await supabase
@@ -443,7 +404,6 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         1000,
         { action: 'add_task', userId: user.id, userRole: user.role }
       );
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 
       if (newSupabaseTask) {
         const convertedTask = await convertSupabaseTaskToTask(newSupabaseTask);
