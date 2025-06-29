@@ -1,8 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabaseApiService } from '../services/supabaseApi';
-import { Announcement, Task, Suggestion } from '../types/index';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabaseApiService } from '@/services/supabaseApi';
 
-// 알림 유형 타입
+// 알림 타입 정의
 export type NotificationType = 'info' | 'warning' | 'success' | 'error';
 
 interface MenuBadges {
@@ -164,17 +163,12 @@ async function getUnreadAnnouncementsCount(userId: string): Promise<number> {
     const response = await supabaseApiService.announcements.getAll();
     const announcements = response?.data || [];
     
-<<<<<<< HEAD
-    // 임시로 모든 공지사항 수 반환 (타입 오류 방지)
-    return announcements.length;
-=======
     // 사용자가 읽지 않은 공지사항 수 (active하고 읽지 않은 것들)
     const unreadCount = announcements.filter((ann: any) => 
       ann.isActive !== false && (!ann.readBy || !ann.readBy.includes(userId))
     ).length;
     
     return unreadCount;
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
   } catch (error) {
     console.error('Failed to get unread announcements count:', error);
     return 0;
@@ -183,10 +177,6 @@ async function getUnreadAnnouncementsCount(userId: string): Promise<number> {
 
 async function getMyPendingTasksCount(userId: string): Promise<number> {
   try {
-<<<<<<< HEAD
-    // 임시로 0 반환 (타입 오류 방지)
-    return 0;
-=======
     const response = await supabaseApiService.tasks.getAll();
     
     // 나에게 할당된 대기 중인 업무 수
@@ -195,7 +185,6 @@ async function getMyPendingTasksCount(userId: string): Promise<number> {
     ).length;
     
     return myPendingTasks;
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
   } catch (error) {
     console.error('Failed to get pending tasks count:', error);
     return 0;
@@ -224,10 +213,6 @@ async function getNewManualsCount(): Promise<number> {
 
 async function getUnreadNotificationsCount(userId: string): Promise<number> {
   try {
-<<<<<<< HEAD
-    // 임시로 0 반환 (타입 오류 방지)
-    return 0;
-=======
     const response = await supabaseApiService.notifications.getAll();
     const notifications = response.data;
     
@@ -237,7 +222,6 @@ async function getUnreadNotificationsCount(userId: string): Promise<number> {
     ).length;
     
     return unreadCount;
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
   } catch (error) {
     console.error('Failed to get unread notifications count:', error);
     return 0;
