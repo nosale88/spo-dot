@@ -1,4 +1,3 @@
-import React, { useState, useEffect, useRef } from 'react';
 import {
   Bell,
   Megaphone,
@@ -8,23 +7,10 @@ import {
   X,
   Image as ImageIcon,
   FileImage,
-  Trash2,
-  History,
-  FileText,
-  Eye,
-  Edit3,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle
+  Trash2
 } from 'lucide-react';
-import { useReport } from '../contexts/ReportContext';
+import { useState, useRef } from 'react';
 import AddReportForm from '../components/forms/AddReportForm';
-import { useAuth } from '../contexts/AuthContext';
-import { showSuccess, showError, showWarning, showInfo, logger } from '../utils/notifications';
-import { handleError, handleValidationError, handleFileError } from '../utils/errorHandler';
-import FileUpload from '../components/common/FileUpload';
-import { UploadResult } from '../services/fileUploadService';
 
 interface UploadedImage {
   id: string;
@@ -34,23 +20,6 @@ interface UploadedImage {
   size: number;
 }
 
-interface DailyReportData {
-  id: string;
-  title: string;
-  completed: string;
-  inProgress: string;
-  planned: string;
-  issues: string;
-  reportDate: string;
-  images: {
-    name: string;
-    size: number;
-    url: string;
-  }[];
-  createdAt: string;
-  status: 'draft' | 'submitted';
-}
-
 const DailyReport = () => {
   const [reportTitle, setReportTitle] = useState('');
   const [completedTasks, setCompletedTasks] = useState('');
@@ -58,124 +27,16 @@ const DailyReport = () => {
   const [plannedTasks, setPlannedTasks] = useState('');
   const [issuesSuggestions, setIssuesSuggestions] = useState('');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadResult[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const today = new Date();
-  const formattedDate = today.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'long'
-  });
+  const formattedDate = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 ${
+    ['일', '월', '화', '수', '목', '금', '토'][today.getDay()]
+  }요일`;
   const defaultDateValue = today.toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState(defaultDateValue);
   const [isAddReportModalOpen, setIsAddReportModalOpen] = useState(false);
-  const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
-  const [selectedReport, setSelectedReport] = useState<any>(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-
-  // 내가 작성한 일일 보고서 필터링
-  const myDailyReports = reports
-    .filter(report => 
-      report.type === 'daily' && 
-      report.createdBy === user?.id
-    )
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-  // 상태별 아이콘 반환
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return <Edit3 className="h-4 w-4 text-gray-500" />;
-      case 'submitted':
-        return <Clock className="h-4 w-4 text-blue-500" />;
-      case 'approved':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'rejected':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'reviewed':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      default:
-        return <FileText className="h-4 w-4 text-gray-400" />;
-    }
-  };
-
-  // 상태별 텍스트 반환
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return '임시저장';
-      case 'submitted':
-        return '제출완료';
-      case 'approved':
-        return '승인완료';
-      case 'rejected':
-        return '반려';
-      case 'reviewed':
-        return '검토중';
-      default:
-        return '알 수 없음';
-    }
-  };
-
-  // 상태별 배경색 반환
-  const getStatusBgColor = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return 'bg-gray-100 text-gray-700';
-      case 'submitted':
-        return 'bg-blue-100 text-blue-700';
-      case 'approved':
-        return 'bg-green-100 text-green-700';
-      case 'rejected':
-        return 'bg-red-100 text-red-700';
-      case 'reviewed':
-        return 'bg-yellow-100 text-yellow-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
-  };
-
-  // 임시저장 데이터 복원
-  useEffect(() => {
-    const savedDraft = localStorage.getItem(`dailyReport_draft_${defaultDateValue}`);
-    if (savedDraft) {
-      try {
-        const draftData = JSON.parse(savedDraft);
-        setReportTitle(draftData.title || '');
-        setCompletedTasks(draftData.completed || '');
-        setInProgressTasks(draftData.inProgress || '');
-        setPlannedTasks(draftData.planned || '');
-        setIssuesSuggestions(draftData.issues || '');
-        setLastSavedTime(draftData.lastSaved || null);
-        // 이미지는 보안상 복원하지 않음
-      } catch (error) {
-        logger.error('임시저장 데이터 복원 실패', error);
-      }
-    }
-  }, [defaultDateValue]);
-
-  // 자동 저장 (5초마다)
-  useEffect(() => {
-    const autoSaveInterval = setInterval(() => {
-      if (reportTitle || completedTasks || inProgressTasks || plannedTasks || issuesSuggestions) {
-        const draftData = {
-          title: reportTitle,
-          completed: completedTasks,
-          inProgress: inProgressTasks,
-          planned: plannedTasks,
-          issues: issuesSuggestions,
-          lastSaved: new Date().toISOString()
-        };
-        localStorage.setItem(`dailyReport_draft_${defaultDateValue}`, JSON.stringify(draftData));
-        setLastSavedTime(draftData.lastSaved);
-      }
-    }, 5000); // 5초마다 자동 저장
-
-    return () => clearInterval(autoSaveInterval);
-  }, [reportTitle, completedTasks, inProgressTasks, plannedTasks, issuesSuggestions, defaultDateValue]);
 
   // 이미지 업로드 처리
   const handleImageUpload = (files: FileList | null) => {
@@ -187,16 +48,19 @@ const DailyReport = () => {
     Array.from(files).forEach(file => {
       // 파일 타입 검증
       if (!validImageTypes.includes(file.type)) {
+        alert(`${file.name}은 지원하지 않는 파일 형식입니다. JPG, PNG, GIF, WebP 파일만 업로드 가능합니다.`);
         return;
       }
 
       // 파일 크기 검증
       if (file.size > maxFileSize) {
+        alert(`${file.name}의 크기가 너무 큽니다. 5MB 이하의 파일만 업로드 가능합니다.`);
         return;
       }
 
       // 중복 파일 검증
       if (uploadedImages.some(img => img.name === file.name && img.size === file.size)) {
+        alert(`${file.name}은 이미 업로드된 파일입니다.`);
         return;
       }
 
@@ -222,15 +86,6 @@ const DailyReport = () => {
       }
       return prev.filter(img => img.id !== imageId);
     });
-  };
-
-  // 파일 업로드 핸들러
-  const handleFilesUploaded = (files: UploadResult[]) => {
-    setUploadedFiles(prev => [...prev, ...files]);
-  };
-
-  const handleFileRemoved = (fileId: string) => {
-    setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
   };
 
   // 드래그 앤 드롭 처리
@@ -260,17 +115,43 @@ const DailyReport = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const handleSubmit = () => {
+    // 실제 제출 로직 (API 호출 등)
+    console.log({
       title: reportTitle,
       completed: completedTasks,
       inProgress: inProgressTasks,
       planned: plannedTasks,
       issues: issuesSuggestions,
+      reportDate: defaultDateValue,
+      images: uploadedImages.map(img => ({
+        name: img.name,
+        size: img.size,
+        file: img.file
+      }))
+    });
+    alert('보고서가 제출되었습니다.');
+  };
+
+  const handleSaveDraft = () => {
+    // 임시 저장 로직
+    console.log('임시 저장:', {
+      title: reportTitle,
+      completed: completedTasks,
+      inProgress: inProgressTasks,
+      planned: plannedTasks,
+      issues: issuesSuggestions,
+      reportDate: defaultDateValue,
+      images: uploadedImages.length
+    });
+    alert('보고서가 임시 저장되었습니다.');
   };
 
   return (
     <div className="p-6 bg-slate-100 min-h-screen">
       {/* Header */}
       <header className="flex justify-between items-center mb-6">
+        {/* 페이지 제목은 이미지에 없지만 일관성을 위해 좌측에 표시 */}
         <h1 className="text-3xl font-bold text-slate-800">일일 업무 보고</h1> 
         <div className="flex items-center space-x-4">
           <button aria-label="Notifications" className="relative">
@@ -303,13 +184,6 @@ const DailyReport = () => {
               <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
             </div>
             <button 
-              onClick={() => setShowReportList(true)}
-              className="bg-slate-600 hover:bg-slate-700 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center space-x-2 transition-colors"
-            >
-              <List size={18} />
-              <span>목록</span>
-            </button>
-            <button 
               onClick={() => setIsAddReportModalOpen(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center space-x-2 transition-colors"
             >
@@ -319,38 +193,7 @@ const DailyReport = () => {
           </div>
         </div>
 
-        {/* 탭 메뉴 */}
-        <div className="flex mb-6 border-b border-slate-200">
-          <button
-            onClick={() => setActiveTab('create')}
-            className={`px-4 py-2 font-medium text-sm rounded-t-lg ${
-              activeTab === 'create'
-                ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
-                : 'text-slate-600 hover:text-slate-800'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <PlusSquare size={16} />
-              <span>보고서 작성</span>
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`px-4 py-2 font-medium text-sm rounded-t-lg ${
-              activeTab === 'history'
-                ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
-                : 'text-slate-600 hover:text-slate-800'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <History size={16} />
-              <span>내 보고 내역 ({myDailyReports.length})</span>
-            </div>
-          </button>
-        </div>
-
-        {/* 보고서 작성 탭 */}
-        {activeTab === 'create' && (
+        {/* Report Form */}
         <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
           <div className="mb-6">
             <label htmlFor="reportTitle" className="block mb-1.5 text-sm font-medium text-slate-700">제목</label>
@@ -363,12 +206,6 @@ const DailyReport = () => {
               placeholder="업무 보고 제목을 입력하세요"
               required
             />
-              {lastSavedTime && (
-                <div className="mt-2 flex items-center text-xs text-slate-500">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                  마지막 자동 저장: {new Date(lastSavedTime).toLocaleString('ko-KR')}
-                </div>
-              )}
           </div>
 
           <div className="mb-6">
@@ -419,27 +256,10 @@ const DailyReport = () => {
             />
           </div>
 
-          {/* 파일 첨부 섹션 */}
+          {/* 이미지 업로드 섹션 */}
           <div className="mb-8">
             <label className="block mb-2 text-sm font-medium text-slate-700">
-              파일 첨부 (선택사항)
-            </label>
-            <FileUpload
-              onFilesUploaded={handleFilesUploaded}
-              onFileRemoved={handleFileRemoved}
-              existingFiles={uploadedFiles}
-              maxFiles={5}
-              allowedTypes={['image/*', 'application/pdf', '.doc', '.docx', '.txt']}
-              folder="daily_reports"
-              multiple={true}
-              className="mb-4"
-            />
-          </div>
-
-          {/* 기존 이미지 업로드 (임시 유지) */}
-          <div className="mb-8">
-            <label className="block mb-2 text-sm font-medium text-slate-700">
-              이미지 업로드 (기존 방식)
+              첨부 이미지 (선택사항)
             </label>
             <div className="space-y-4">
               {/* 파일 업로드 영역 */}
@@ -535,374 +355,7 @@ const DailyReport = () => {
             </button>
           </div>
         </form>
-        )}
-
-        {/* 내 보고 내역 탭 */}
-        {activeTab === 'history' && (
-          <div className="space-y-4">
-            {myDailyReports.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-                <p className="text-slate-600 text-lg font-medium mb-2">아직 작성한 보고서가 없습니다</p>
-                <p className="text-slate-500 text-sm mb-4">첫 번째 일일 업무 보고서를 작성해보세요</p>
-                <button
-                  onClick={() => setActiveTab('create')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-                >
-                  보고서 작성하기
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <p className="text-sm text-slate-600">
-                    총 {myDailyReports.length}개의 보고서
-                  </p>
-                </div>
-                
-                <div className="grid gap-4">
-                  {myDailyReports.map((report) => {
-                    const reportContent = (() => {
-                      try {
-                        return JSON.parse(report.content);
-                      } catch {
-                        return { 완료한업무: report.content };
-                      }
-                    })();
-
-                    return (
-                      <div
-                        key={report.id}
-                        className="bg-slate-50 border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-slate-800 mb-1">
-                              {report.title}
-                            </h3>
-                            <p className="text-sm text-slate-600">
-                              {new Date(report.createdAt).toLocaleDateString('ko-KR', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                weekday: 'short'
-                              })}
-                            </p>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBgColor(report.status)}`}>
-                              {getStatusIcon(report.status)}
-                              <span className="ml-1">{getStatusText(report.status)}</span>
-                            </span>
-                            <button
-                              onClick={() => {
-                                setSelectedReport(report);
-                                setShowDetailModal(true);
-                              }}
-                              className="text-slate-400 hover:text-slate-600 transition-colors"
-                              title="상세 보기"
-                            >
-                              <Eye size={16} />
-                            </button>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2 text-sm">
-                          {reportContent.완료한업무 && (
-                            <div>
-                              <span className="font-medium text-slate-700">완료한 업무: </span>
-                              <span className="text-slate-600">
-                                {reportContent.완료한업무.length > 100 
-                                  ? `${reportContent.완료한업무.substring(0, 100)}...` 
-                                  : reportContent.완료한업무
-                                }
-                              </span>
-                            </div>
-                          )}
-                          
-                          {reportContent.진행중인업무 && (
-                            <div>
-                              <span className="font-medium text-slate-700">진행 중인 업무: </span>
-                              <span className="text-slate-600">
-                                {reportContent.진행중인업무.length > 100 
-                                  ? `${reportContent.진행중인업무.substring(0, 100)}...` 
-                                  : reportContent.진행중인업무
-                                }
-                              </span>
-                            </div>
-                          )}
-                          
-                          {reportContent.예정된업무 && (
-                            <div>
-                              <span className="font-medium text-slate-700">예정된 업무: </span>
-                              <span className="text-slate-600">
-                                {reportContent.예정된업무.length > 100 
-                                  ? `${reportContent.예정된업무.substring(0, 100)}...` 
-                                  : reportContent.예정된업무
-                                }
-                              </span>
-                            </div>
-                          )}
-                          
-                          {reportContent.특이사항및건의사항 && (
-                            <div>
-                              <span className="font-medium text-slate-700">특이사항: </span>
-                              <span className="text-slate-600">
-                                {reportContent.특이사항및건의사항.length > 100 
-                                  ? `${reportContent.특이사항및건의사항.substring(0, 100)}...` 
-                                  : reportContent.특이사항및건의사항
-                                }
-                              </span>
-                            </div>
-                          )}
-                          
-                          {reportContent.첨부이미지 && reportContent.첨부이미지.length > 0 && (
-                            <div className="flex items-center text-slate-500">
-                              <ImageIcon className="h-4 w-4 mr-1" />
-                              <span>첨부 이미지 {reportContent.첨부이미지.length}개</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="mt-3 pt-3 border-t border-slate-200 text-xs text-slate-500">
-                          작성일: {new Date(report.createdAt).toLocaleString('ko-KR')}
-                          {report.submittedAt && (
-                            <span className="ml-4">
-                              제출일: {new Date(report.submittedAt).toLocaleString('ko-KR')}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </section>
-
-      {/* Report List Modal */}
-      <AnimatePresence>
-        {showReportList && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
-            onClick={() => setShowReportList(false)}
-          >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="p-6 border-b border-slate-200 flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-slate-900 flex items-center">
-                  <FileText className="h-5 w-5 mr-2 text-blue-600" />
-                  업무 보고서 목록
-                </h2>
-                <button
-                  onClick={() => setShowReportList(false)}
-                  className="text-slate-400 hover:text-slate-600"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
-                {savedReports.length === 0 ? (
-                  <div className="text-center py-12">
-                    <FileText className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-                    <p className="text-slate-500 text-lg mb-2">작성된 보고서가 없습니다</p>
-                    <p className="text-slate-400 text-sm">새 보고서를 작성해보세요</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {savedReports.map((report) => (
-                      <div 
-                        key={report.id}
-                        className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
-                        onClick={() => {
-                          setSelectedReport(report);
-                          setShowReportList(false);
-                        }}
-                      >
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="font-semibold text-slate-900 text-lg hover:text-blue-600 transition-colors">
-                            {report.title}
-                          </h3>
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              report.status === 'submitted' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {report.status === 'submitted' ? '제출됨' : '임시저장'}
-                            </span>
-                            <button className="text-blue-600 hover:text-blue-800 p-1">
-                              <Eye size={16} />
-                            </button>
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-600 mb-3">
-                          <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-1" />
-                            <span>보고일: {formatDate(report.reportDate)}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <User className="h-4 w-4 mr-1" />
-                            <span>작성일: {formatDateTime(report.createdAt)}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <ImageIcon className="h-4 w-4 mr-1" />
-                            <span>첨부: {report.images.length}개</span>
-                          </div>
-                        </div>
-
-                        <div className="text-sm text-slate-600">
-                          <p className="line-clamp-2">
-                            {report.completed ? 
-                              `완료업무: ${report.completed.substring(0, 100)}${report.completed.length > 100 ? '...' : ''}` : 
-                              '작성된 내용 없음'
-                            }
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Report Detail Modal */}
-      <AnimatePresence>
-        {selectedReport && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50"
-            onClick={() => setSelectedReport(null)}
-          >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="p-6 border-b border-slate-200 flex justify-between items-center">
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900">{selectedReport.title}</h2>
-                  <div className="flex items-center space-x-4 mt-2 text-sm text-slate-600">
-                    <span className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      보고일: {formatDate(selectedReport.reportDate)}
-                    </span>
-                    <span className="flex items-center">
-                      <User className="h-4 w-4 mr-1" />
-                      작성일: {formatDateTime(selectedReport.createdAt)}
-                    </span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      selectedReport.status === 'submitted' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {selectedReport.status === 'submitted' ? '제출됨' : '임시저장'}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedReport(null)}
-                  className="text-slate-400 hover:text-slate-600"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] space-y-6">
-                {/* 완료한 업무 */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-3">오늘 완료한 업무</h3>
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <p className="text-slate-700 whitespace-pre-wrap">
-                      {selectedReport.completed || '작성된 내용이 없습니다.'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* 진행 중인 업무 */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-3">진행 중인 업무</h3>
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <p className="text-slate-700 whitespace-pre-wrap">
-                      {selectedReport.inProgress || '작성된 내용이 없습니다.'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* 내일 예정된 업무 */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-3">내일 예정된 업무</h3>
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <p className="text-slate-700 whitespace-pre-wrap">
-                      {selectedReport.planned || '작성된 내용이 없습니다.'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* 특이사항 및 건의사항 */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-3">특이사항 및 건의사항</h3>
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <p className="text-slate-700 whitespace-pre-wrap">
-                      {selectedReport.issues || '작성된 내용이 없습니다.'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* 첨부 이미지 */}
-                {selectedReport.images.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center">
-                      <FileImage className="h-5 w-5 mr-2" />
-                      첨부 이미지 ({selectedReport.images.length}개)
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {selectedReport.images.map((image, index) => (
-                        <div key={index} className="relative group">
-                          <div className="aspect-video bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
-                            <img
-                              src={image.url}
-                              alt={image.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="mt-2 px-1">
-                            <p className="text-xs font-medium text-slate-700 truncate">
-                              {image.name}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {(image.size / 1024 / 1024).toFixed(2)} MB
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Add Report Modal */}
       {isAddReportModalOpen && (
@@ -911,165 +364,6 @@ const DailyReport = () => {
           defaultType="daily"
           initialDate={selectedDate} 
         />
-      )}
-
-      {/* Report Detail Modal */}
-      {showDetailModal && selectedReport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-slate-200">
-              <div className="flex items-center space-x-3">
-                <FileText className="h-6 w-6 text-blue-600" />
-                <h2 className="text-xl font-semibold text-slate-900">보고서 상세 보기</h2>
-              </div>
-              <button
-                onClick={() => {
-                  setShowDetailModal(false);
-                  setSelectedReport(null);
-                }}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-              {(() => {
-                const reportContent = (() => {
-                  try {
-                    return JSON.parse(selectedReport.content);
-                  } catch {
-                    return { 완료한업무: selectedReport.content };
-                  }
-                })();
-
-                return (
-                  <div className="space-y-6">
-                    {/* Report Header */}
-                    <div className="border-b border-slate-200 pb-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="text-2xl font-bold text-slate-900">{selectedReport.title}</h3>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBgColor(selectedReport.status)}`}>
-                          {getStatusIcon(selectedReport.status)}
-                          <span className="ml-2">{getStatusText(selectedReport.status)}</span>
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-4 text-sm text-slate-600">
-                        <div className="flex items-center">
-                          <CalendarDays size={16} className="mr-1" />
-                          <span>
-                            {new Date(selectedReport.createdAt).toLocaleDateString('ko-KR', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              weekday: 'long'
-                            })}
-                          </span>
-                        </div>
-                        <div className="flex items-center">
-                          <Clock size={16} className="mr-1" />
-                          <span>작성일: {new Date(selectedReport.createdAt).toLocaleString('ko-KR')}</span>
-                        </div>
-                        {selectedReport.submittedAt && (
-                          <div className="flex items-center">
-                            <CheckCircle size={16} className="mr-1" />
-                            <span>제출일: {new Date(selectedReport.submittedAt).toLocaleString('ko-KR')}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Report Content */}
-                    <div className="grid gap-6">
-                      {reportContent.완료한업무 && (
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                          <h4 className="text-lg font-semibold text-green-800 mb-3 flex items-center">
-                            <CheckCircle size={20} className="mr-2" />
-                            완료한 업무
-                          </h4>
-                          <div className="text-green-700 leading-relaxed whitespace-pre-wrap">
-                            {reportContent.완료한업무}
-                          </div>
-                        </div>
-                      )}
-
-                      {reportContent.진행중인업무 && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                          <h4 className="text-lg font-semibold text-blue-800 mb-3 flex items-center">
-                            <Clock size={20} className="mr-2" />
-                            진행 중인 업무
-                          </h4>
-                          <div className="text-blue-700 leading-relaxed whitespace-pre-wrap">
-                            {reportContent.진행중인업무}
-                          </div>
-                        </div>
-                      )}
-
-                      {reportContent.예정된업무 && (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                          <h4 className="text-lg font-semibold text-yellow-800 mb-3 flex items-center">
-                            <CalendarDays size={20} className="mr-2" />
-                            예정된 업무
-                          </h4>
-                          <div className="text-yellow-700 leading-relaxed whitespace-pre-wrap">
-                            {reportContent.예정된업무}
-                          </div>
-                        </div>
-                      )}
-
-                      {reportContent.특이사항및건의사항 && (
-                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                          <h4 className="text-lg font-semibold text-orange-800 mb-3 flex items-center">
-                            <AlertCircle size={20} className="mr-2" />
-                            특이사항 및 건의사항
-                          </h4>
-                          <div className="text-orange-700 leading-relaxed whitespace-pre-wrap">
-                            {reportContent.특이사항및건의사항}
-                          </div>
-                        </div>
-                      )}
-
-                      {reportContent.첨부이미지 && reportContent.첨부이미지.length > 0 && (
-                        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                          <h4 className="text-lg font-semibold text-slate-800 mb-3 flex items-center">
-                            <ImageIcon size={20} className="mr-2" />
-                            첨부 이미지 ({reportContent.첨부이미지.length}개)
-                          </h4>
-                          <div className="space-y-2">
-                            {reportContent.첨부이미지.map((image: any, index: number) => (
-                              <div key={index} className="flex items-center space-x-3 p-3 bg-white rounded border">
-                                <FileImage size={20} className="text-slate-500" />
-                                <div className="flex-1">
-                                  <p className="font-medium text-slate-700">{image.name}</p>
-                                  <p className="text-sm text-slate-500">{image.size ? `${(image.size / 1024 / 1024).toFixed(2)}MB` : '크기 정보 없음'}</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex justify-end p-6 border-t border-slate-200">
-              <button
-                onClick={() => {
-                  setShowDetailModal(false);
-                  setSelectedReport(null);
-                }}
-                className="px-6 py-2 bg-slate-600 text-white font-semibold rounded-lg hover:bg-slate-700 transition-colors"
-              >
-                닫기
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );
