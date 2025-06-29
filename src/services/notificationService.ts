@@ -15,9 +15,6 @@ class NotificationService {
   // 기본 알림 생성
   async createNotification(data: NotificationData) {
     try {
-<<<<<<< HEAD
-      await supabaseApiService.notifications.create(data);
-=======
       const { error } = await supabase
         .from('notifications')
         .insert([{
@@ -31,7 +28,6 @@ class NotificationService {
 
       if (error) throw error;
       console.log(`알림 생성됨: ${data.title} -> ${data.userId}`);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
     } catch (error) {
       console.error('알림 생성 실패:', error);
     }
@@ -40,10 +36,6 @@ class NotificationService {
   // 일괄 알림 생성
   async createBulkNotifications(notifications: NotificationData[]) {
     try {
-<<<<<<< HEAD
-      const promises = notifications.map(notif => this.createNotification(notif));
-      await Promise.all(promises);
-=======
       const { error } = await supabase
         .from('notifications')
         .insert(notifications.map(data => ({
@@ -57,7 +49,6 @@ class NotificationService {
 
       if (error) throw error;
       console.log(`${notifications.length}개의 알림이 생성됨`);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
     } catch (error) {
       console.error('일괄 알림 생성 실패:', error);
     }

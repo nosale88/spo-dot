@@ -443,65 +443,6 @@ const Sidebar = ({ open, setOpen, isMobile }: SidebarProps) => {
             {/* 업무 관리 */}
             <PermissionGate permission="admin.task_management">
               <SidebarLink 
-<<<<<<< HEAD
-                name="전체 업무 관리" 
-                path="/dashboard/admin/tasks" 
-                icon={<ClipboardList size={22} />} 
-                badge={0}
-                open={open}
-                isMobile={isMobile}
-                setOpen={setOpen}
-              />
-            </CanViewAllTasks>
-
-            {/* 건의사항 관리 */}
-            <SidebarLink 
-              name="건의사항 관리" 
-              path="/dashboard/admin/suggestions" 
-              icon={<Archive size={22} />} 
-              badge={0}
-              open={open}
-              isMobile={isMobile}
-              setOpen={setOpen}
-            />
-
-            {/* 공지사항 관리 */}
-            <CanManageAnnouncements>
-              <SidebarLink 
-                name="공지사항 관리" 
-                path="/dashboard/admin/announcements" 
-                icon={<Megaphone size={22} />} 
-                badge={0}
-                open={open}
-                isMobile={isMobile}
-                setOpen={setOpen}
-              />
-            </CanManageAnnouncements>
-
-            {/* 일일 업무 보고 관리 */}
-            <PermissionGate permission="reports.view_all">
-              <SidebarLink 
-                name="일일 업무 보고 관리" 
-                path="/dashboard/admin/daily-reports" 
-                icon={<FileText size={22} />} 
-                badge={0}
-                open={open}
-                isMobile={isMobile}
-                setOpen={setOpen}
-              />
-            </PermissionGate>
-
-            {/* 매출보고 관리 */}
-            <PermissionGate permission="sales.view_all">
-              <SidebarLink 
-                name="매출보고 관리" 
-                path="/dashboard/sales-report" 
-                icon={<PieChart size={22} />} 
-=======
-                name="업무 관리" 
-                path="/dashboard/admin/task-management" 
-                icon={<ListChecks size={22} />} 
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
                 badge={0}
                 open={open}
                 isMobile={isMobile}

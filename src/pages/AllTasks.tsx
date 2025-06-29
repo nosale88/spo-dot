@@ -7,12 +7,6 @@ import {
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTask, Task, TaskStatus, TaskPriority } from '../contexts/TaskContext';
-<<<<<<< HEAD
-import { format, parseISO, isSameDay, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth } from 'date-fns';
-=======
-import { useUser } from '../contexts/UserContext';
-import { format, parseISO } from 'date-fns';
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 import { parse as dateFnsParse } from 'date-fns/parse'; 
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import { ko, Locale } from 'date-fns/locale';
@@ -20,10 +14,6 @@ import { getDay } from 'date-fns';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import '../styles/calendar.css';
 import TaskDetails from '../components/tasks/TaskDetails';
-<<<<<<< HEAD
-import clsx from 'clsx';
-=======
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 
 const locales = {
   'ko': ko,
@@ -84,17 +74,6 @@ const AllTasks = () => {
   const { staff: staffList, loadingStaff } = useUser();
   const [currentView, setCurrentView] = useState<AllTaskView>('list');
   const [calendarDate, setCalendarDate] = useState(new Date());
-<<<<<<< HEAD
-  const [selectedAssignee, setSelectedAssignee] = useState<string>('모든 직원');
-  
-  // 업무 상세보기 상태 추가
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isTaskDetailsOpen, setIsTaskDetailsOpen] = useState(false);
-=======
-  const [selectedStaffId, setSelectedStaffId] = useState<string>('all');
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [showTaskDetails, setShowTaskDetails] = useState(false);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 
   const today = new Date();
   const formattedDate = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 ${
@@ -113,66 +92,11 @@ const AllTasks = () => {
   };
 
   const staffOptions = useMemo(() => {
-<<<<<<< HEAD
-    const assignees = new Set<string>(['모든 직원']);
-    contextTasks.forEach(task => {
-      if (task.assignedToName) {
-        // assignedToName이 배열인 경우 처리
-        if (Array.isArray(task.assignedToName)) {
-          task.assignedToName.forEach(name => assignees.add(name));
-        } else {
-          assignees.add(task.assignedToName);
-        }
-      }
-    });
-    return Array.from(assignees);
-  }, [contextTasks]);
-=======
-    const options = [{ id: 'all', name: '모든 직원' }];
-    
-    if (staffList && staffList.length > 0) {
-      const activeStaff = staffList.filter(staff => staff.status === 'active');
-      options.push(...activeStaff.map(staff => ({ id: staff.id, name: staff.name })));
-    }
-    
-    return options;
-  }, [staffList]);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 
   const filteredTasks = useMemo(() => {
     if (selectedStaffId === 'all') {
       return contextTasks;
     }
-<<<<<<< HEAD
-    return contextTasks.filter(task => {
-      if (Array.isArray(task.assignedToName)) {
-        return task.assignedToName.includes(selectedAssignee);
-      }
-      return task.assignedToName === selectedAssignee;
-    });
-  }, [contextTasks, selectedAssignee]);
-=======
-    
-    return contextTasks.filter(task => 
-      task.assignedTo && task.assignedTo.includes(selectedStaffId)
-    );
-  }, [contextTasks, selectedStaffId]);
-
-  const getAssignedToDisplay = (task: Task) => {
-    if (!staffList) return 'N/A';
-    
-    if (task.assignedTo && task.assignedTo.length > 0) {
-      const assignedStaff = task.assignedTo
-        .map(staffId => staffList.find(staff => staff.id === staffId))
-        .filter(Boolean)
-        .map(staff => staff!.name);
-      
-      return assignedStaff.length > 0 ? assignedStaff.join(', ') : '미배정';
-    }
-    
-    return '미배정';
-  };
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 
   const calendarEvents: CalendarEvent[] = useMemo(() => filteredTasks.map(task => ({
     id: task.id,
@@ -183,122 +107,6 @@ const AllTasks = () => {
     originalTask: task,
   })), [filteredTasks]);
 
-<<<<<<< HEAD
-  // 주간 뷰용 데이터 생성
-  const getWeekTasks = () => {
-    const weekStart = startOfWeek(calendarDate);
-    const weekEnd = endOfWeek(calendarDate);
-    const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
-    
-    return days.map(day => {
-      const dayTasks = filteredTasks.filter(task => 
-        isSameDay(parseISO(task.dueDate), day)
-      );
-      
-      return {
-        date: day,
-        tasks: dayTasks
-      };
-    });
-  };
-
-  // 일간 뷰용 데이터 생성
-  const getDayTasks = () => {
-    return filteredTasks.filter(task => 
-      isSameDay(parseISO(task.dueDate), calendarDate)
-    );
-  };
-
-  // 월간 뷰용 데이터 생성
-  const getMonthTasks = () => {
-    const monthStart = startOfMonth(calendarDate);
-    const monthEnd = endOfMonth(calendarDate);
-    const calendarStart = startOfWeek(monthStart);
-    const calendarEnd = endOfWeek(monthEnd);
-    
-    const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
-    
-    return days.map(day => {
-      const dayTasks = filteredTasks.filter(task => 
-        isSameDay(parseISO(task.dueDate), day)
-      );
-      
-      return {
-        date: day,
-        isCurrentMonth: isSameMonth(day, calendarDate),
-        tasks: dayTasks
-      };
-    });
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* 헤더 섹션 */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900 flex items-center">
-                <CalendarDays className="mr-3 text-blue-600" size={32} />
-                팀 업무 보기
-              </h1>
-              <p className="text-slate-600 mt-2">전체 팀원의 업무 현황을 확인하고 관리하세요</p>
-=======
-  // 업무 선택 핸들러
-  const handleTaskSelect = (task: Task) => {
-    setSelectedTask(task);
-    setShowTaskDetails(true);
-  };
-
-  // 캘린더 이벤트 클릭 핸들러
-  const handleEventSelect = (event: CalendarEvent) => {
-    handleTaskSelect(event.originalTask);
-  };
-
-  if (loadingStaff) {
-    return (
-      <div className="p-6 bg-slate-100 min-h-screen">
-        <div className="flex justify-center items-center h-64">
-          <div className="text-slate-600">직원 정보를 불러오는 중...</div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-6 bg-slate-100 min-h-screen">
-      <header className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-slate-800">전체 업무 목록</h1>
-        <div className="flex items-center space-x-4">
-          <button aria-label="Notifications" className="relative">
-            <Bell className="text-slate-600 hover:text-slate-800 transition-colors" size={24} />
-            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-          </button>
-          <span className="text-sm text-slate-600">{formattedDate}</span>
-        </div>
-      </header>
-
-      <div className="bg-blue-600 text-white p-3 rounded-lg flex items-center space-x-3 mb-6 shadow-md">
-        <Megaphone size={24} className="flex-shrink-0" />
-        <p className="text-sm font-medium">공지사항: 이번 주 금요일 오후 3시에 전체 회의가 있습니다. 모든 직원은 참석해주세요.</p>
-      </div>
-
-      <section className="bg-white p-6 rounded-xl shadow-lg mb-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-          <h2 className="text-xl font-semibold text-slate-700 mb-3 sm:mb-0">팀 업무 보기</h2>
-          <div className="flex items-center space-x-3">
-            <div className="relative">
-              <select 
-                value={selectedStaffId}
-                onChange={(e) => setSelectedStaffId(e.target.value)}
-                className="appearance-none bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-8"
-              >
-                {staffOptions.map(staff => (
-                  <option key={staff.id} value={staff.id}>{staff.name}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
             </div>
             
             {/* 날짜 및 알림 */}
@@ -372,70 +180,6 @@ const AllTasks = () => {
           </div>
         </div>
 
-<<<<<<< HEAD
-        {/* 업무 내용 */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-slate-900 flex items-center mb-4">
-              <CalendarDays className="mr-2 text-blue-600" size={20} />
-              팀 업무 목록
-            </h3>
-
-            {currentView === 'list' ? (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[900px]">
-                  <thead>
-                    <tr className="border-b border-slate-200">
-                      <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider w-[15%]">담당자</th>
-                      <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider w-[35%]">업무</th>
-                      <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">상태</th>
-                      <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">마감일</th>
-                      <th className="pb-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider">중요도</th>
-=======
-        {currentView === 'list' ? (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px]">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider w-[15%]">담당자</th>
-                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider w-[35%]">업무</th>
-                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">상태</th>
-                  <th className="pb-3 text-left text-sm font-semibold text-slate-500 uppercase tracking-wider">마감일</th>
-                  <th className="pb-3 text-center text-sm font-semibold text-slate-500 uppercase tracking-wider">중요도</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTasks.length === 0 ? (
-                   <tr><td colSpan={5} className="text-center py-10 text-slate-500">표시할 업무가 없습니다.</td></tr>
-                ) : (
-                  filteredTasks.map((task) => (
-                    <tr key={task.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                      <td className="py-3 pr-3 font-medium text-slate-800">{getAssignedToDisplay(task)}</td>
-                      <td className="py-3 pr-3">
-                        <p 
-                          className="font-semibold text-slate-800 hover:text-blue-600 cursor-pointer transition-colors"
-                          onClick={() => handleTaskSelect(task)}
-                          title="클릭하여 상세 보기"
-                        >
-                          {task.title}
-                        </p>
-                        {task.description && <p className="text-xs text-slate-500 mt-1">{task.description}</p>}
-                        {task.startTime && task.endTime && (
-                          <p className="text-xs text-blue-600 mt-1">
-                            {task.startTime} - {task.endTime}
-                          </p>
-                        )}
-                      </td>
-                      <td className="py-3 pr-3">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(task.status)}`}>
-                          {getStatusDisplayName(task.status)}
-                        </span>
-                      </td>
-                      <td className="py-3 pr-3 text-sm text-slate-700">{format(parseISO(task.dueDate), 'yyyy-MM-dd')}</td>
-                      <td className="py-3 text-center">
-                        <span className={`inline-block h-3 w-3 rounded-full ${getPriorityClass(task.priority)}`}></span>
-                      </td>
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
                     </tr>
                   </thead>
                   <tbody>
@@ -736,109 +480,6 @@ const AllTasks = () => {
               </div>
             )}
           </div>
-<<<<<<< HEAD
-        </div>
-      </div>
-
-      {/* 업무 상세보기 모달 */}
-      {selectedTask && isTaskDetailsOpen && (
-        <TaskDetails
-          task={selectedTask}
-          onClose={handleCloseTaskDetails}
-=======
-        ) : (
-          <div style={{ height: '600px' }}>
-            <Calendar
-              localizer={localizer}
-              events={calendarEvents}
-              startAccessor="start"
-              endAccessor="end"
-              views={['month', 'week', 'day']}
-              view={currentView === 'month' ? 'month' : currentView === 'week' ? 'week' : 'day'}
-              onView={(view) => setCurrentView(view as AllTaskView)}
-              date={calendarDate}
-              onNavigate={(date) => setCalendarDate(date)}
-              onSelectEvent={handleEventSelect}
-              culture="ko"
-              messages={{
-                next: '다음',
-                previous: '이전',
-                today: '오늘',
-                month: '월',
-                week: '주',
-                day: '일',
-                agenda: '일정',
-                date: '날짜',
-                time: '시간',
-                event: '이벤트',
-                noEventsInRange: '이 기간에는 이벤트가 없습니다.',
-                showMore: (total) => `+${total} 더보기`
-              }}
-              eventPropGetter={(event) => ({
-                style: {
-                  backgroundColor: (() => {
-                    switch (event.originalTask.priority) {
-                      case 'urgent': return '#7c3aed';
-                      case 'high': return '#ef4444';
-                      case 'medium': return '#f97316';
-                      case 'low': return '#22c55e';
-                      default: return '#6b7280';
-                    }
-                  })(),
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }
-              })}
-              components={{
-                event: ({ event }) => (
-                  <div className="text-xs cursor-pointer">
-                    <div className="font-medium">{event.title}</div>
-                    <div className="text-xs opacity-90">
-                      {getAssignedToDisplay(event.originalTask)}
-                    </div>
-                  </div>
-                )
-              }}
-            />
-          </div>
-        )}
-      </section>
-
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-slate-500 mb-2">전체 업무</h3>
-          <p className="text-2xl font-bold text-slate-800">{filteredTasks.length}</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-slate-500 mb-2">진행중</h3>
-          <p className="text-2xl font-bold text-blue-600">
-            {filteredTasks.filter(task => task.status === 'in-progress').length}
-          </p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-slate-500 mb-2">완료</h3>
-          <p className="text-2xl font-bold text-green-600">
-            {filteredTasks.filter(task => task.status === 'completed').length}
-          </p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-slate-500 mb-2">대기중</h3>
-          <p className="text-2xl font-bold text-yellow-600">
-            {filteredTasks.filter(task => task.status === 'pending').length}
-          </p>
-        </div>
-      </section>
-
-      {showTaskDetails && selectedTask && (
-        <TaskDetails
-          task={selectedTask}
-          onClose={() => {
-            setShowTaskDetails(false);
-            setSelectedTask(null);
-          }}
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
         />
       )}
     </div>

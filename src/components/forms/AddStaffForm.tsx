@@ -3,12 +3,6 @@ import { X, Save, User, Shield, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { useUser, UserStatus, Staff } from '../../contexts/UserContext';
-<<<<<<< HEAD
-import { useNotification } from '../../contexts/NotificationContext';
-import { UserPosition, UserRole, positionInfo, rolePermissions } from '../../types/permissions';
-=======
-import { UserPosition, positionInfo, departmentNames, UserRole } from '../../types/permissions';
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 import clsx from 'clsx';
 import { logger, showSuccess, showError } from '../../utils/notifications';
 
@@ -125,65 +119,6 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
       setErrors({ ...errors, [name]: '' });
     }
     
-<<<<<<< HEAD
-    // 역할이 변경되면 해당 역할의 기본 권한으로 설정
-    if (name === 'role') {
-      const selectedRole = value as UserRole;
-      setFormData(prev => ({
-        ...prev,
-        role: selectedRole,
-        permissions: selectedRole === 'admin' ? ['all'] : (rolePermissions[selectedRole] || []).map(p => p.toString())
-=======
-    // 역할에 따른 기본 권한 설정
-    if (name === 'role') {
-      let defaultPermissions: string[] = [];
-      switch (value) {
-        case 'admin':
-          // 관리자는 모든 권한
-          defaultPermissions = AVAILABLE_PERMISSIONS.map(p => p.id);
-          break;
-        case 'reception':
-          defaultPermissions = [
-            'tasks.view_assigned', 'tasks.view_department', 'tasks.create', 'tasks.update', 'tasks.comment',
-            'schedules.view_all', 'schedules.create', 'schedules.update',
-            'members.view_department', 'members.create', 'members.update',
-            'customers.view_all', 'customers.update',
-            'trainers.view_all',
-            'sales.create', 'sales.view_all',
-            'reports.create', 'reports.view_department',
-            'ot.view_assigned', 'ot.assign', 'ot.progress_update',
-            'pass.view_all', 'pass.create',
-            'vending.view_own',
-            'announcements.read',
-            'suggestions.create', 'suggestions.view_own',
-            'manuals.read'
-          ];
-          break;
-        case 'fitness':
-        case 'tennis':
-        case 'golf':
-          defaultPermissions = [
-            'tasks.view_assigned', 'tasks.create', 'tasks.update', 'tasks.comment',
-            'schedules.view_department', 'schedules.view_own', 'schedules.create', 'schedules.update',
-            'members.view_department', 'members.update',
-            'sales.create', 'sales.view_own',
-            'reports.create', 'reports.view_own',
-            'ot.view_assigned', 'ot.progress_update',
-            'vending.view_own',
-            'announcements.read',
-            'suggestions.create', 'suggestions.view_own',
-            'manuals.read'
-          ];
-          break;
-        default:
-          defaultPermissions = ['tasks.view_assigned', 'announcements.read', 'manuals.read'];
-      }
-      
-      setFormData(prev => ({
-        ...prev,
-        role: value as UserRole,
-        permissions: defaultPermissions
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       }));
     }
   };
@@ -243,10 +178,6 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-<<<<<<< HEAD
-    
-=======
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
     if (!validateForm()) {
       return;
     }
@@ -266,40 +197,6 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
         permissions: formData.permissions
       };
       
-<<<<<<< HEAD
-      
-      // 직원 추가
-      if (addStaff) {
-        const userId = await addStaff(staffData);
-        
-        if (userId) {
-          showToast('success', '직원 추가 완료', `직원이 성공적으로 추가되었습니다.\n이메일: ${formData.email}`);
-          // 폼 닫기
-          onClose();
-        } else {
-          console.error("직원 추가 실패: userId가 반환되지 않음");
-          showToast('error', '직원 추가 실패', '직원 추가에 실패했습니다.');
-        }
-      } else {
-        console.error("addStaff function is not available in UserContext");
-        showToast('error', '기능 오류', '직원 추가 기능을 사용할 수 없습니다.');
-      }
-    } catch (error) {
-      console.error('직원 추가 중 오류 발생:', error);
-      showToast('error', '직원 추가 오류', '직원 추가 중 오류가 발생했습니다.');
-=======
-      const newStaffId = await addStaff?.(staffData);
-      
-      if (newStaffId) {
-        showSuccess('직원이 성공적으로 추가되었습니다.');
-        onClose();
-      } else {
-        showError('직원 추가에 실패했습니다.');
-      }
-    } catch (error) {
-      logger.error("AddStaffForm handleSubmit error:", error);
-      showError('직원 추가 중 오류가 발생했습니다.');
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
     } finally {
       setIsSubmitting(false);
     }
@@ -535,24 +432,6 @@ const AddStaffForm = ({ onClose }: AddStaffFormProps) => {
                       className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       required
                     >
-<<<<<<< HEAD
-                      {Object.keys(rolePermissions).map((roleKey) => (
-                        <option key={roleKey} value={roleKey}>
-                          {roleKey === 'admin' ? '관리자' :
-                           roleKey === 'reception' ? '리셉션' :
-                           roleKey === 'fitness' ? '피트니스' :
-                           roleKey === 'tennis' ? '테니스' :
-                           roleKey === 'golf' ? '골프' :
-                           roleKey}
-                        </option>
-                      ))}
-=======
-                      <option value="reception">리셉션</option>
-                      <option value="fitness">헬스</option>
-                      <option value="tennis">테니스</option>
-                      <option value="golf">골프</option>
-                      <option value="admin">관리자</option>
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
                     </select>
                     <p className="mt-1 text-xs text-slate-500">
                       • 리셉션: 회원관리, 일정관리, 매출관리 등 프론트 업무 권한<br/>

@@ -19,11 +19,7 @@ type TaskFormData = {
   endTime?: string;
   priority: TaskPriority;
   category: TaskCategory;
-<<<<<<< HEAD
-  assignedToName: string[]; // Changed from string to string[]
-=======
   assignedTo: string;
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 };
 
 const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDueDate }) => {
@@ -70,11 +66,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
         const day = String(today.getDate()).padStart(2, '0');
         setValue('dueDate', `${year}-${month}-${day}`);
       }
-      
-      // 담당자 이름 기본값 설정
-      if (currentUser?.name) {
-        setValue('assignedToName', [currentUser.name]); // Wrap in array
-      }
     } else {
       reset();
       setIsSubmitting(false);
@@ -101,13 +92,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
         priority: data.priority,
         category: data.category,
         status: 'pending', 
-<<<<<<< HEAD
-        assignedTo: [currentUser.id], // 현재 사용자를 담당자로 설정
-        assignedToName: data.assignedToName, // Now already an array
-=======
         assignedTo: data.assignedTo ? [data.assignedTo] : [],
         assignedToName: selectedStaff ? [selectedStaff.name] : [],
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
         assignedBy: currentUser.id,
         assignedByName: currentUser.name || 'Unknown User',
       };
@@ -313,22 +299,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
             <Controller
                 name="assignedTo"
               control={control}
-<<<<<<< HEAD
-              rules={{ required: '담당자 이름은 필수입니다.' }}
-              render={({ field: { onChange, value, ...rest } }) => (
-                <input
-                  {...rest}
-                  id="assignedToName"
-                  type="text"
-                  value={value && value.length > 0 ? value[0] : ''} // Display first element of array
-                  onChange={e => onChange(e.target.value ? [e.target.value] : [])} // Convert to array
-                  className={`w-full p-2 border rounded-md ${errors.assignedToName ? 'border-red-500' : 'border-slate-300'}`}
-                  placeholder="예: 홍길동"
-                />
-              )}
-            />
-            {errors.assignedToName && <p className="text-xs text-red-500 mt-1">{errors.assignedToName.message}</p>}
-=======
                 rules={{ required: '담당자는 필수입니다.' }}
               render={({ field }) => (
                   <select
@@ -352,7 +322,6 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
                 등록된 직원이 없습니다. 먼저 직원을 등록해주세요.
               </p>
             )}
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
@@ -365,13 +334,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isOpen, onClose, initialDue
             </button>
             <button
               type="submit"
-<<<<<<< HEAD
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-transparent rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              disabled={isSubmitting || loading}
-=======
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitting || loading || loadingStaff || activeStaff.length === 0}
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
             >
               {isSubmitting || loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <Save size={16} className="mr-2" />}
               업무 추가

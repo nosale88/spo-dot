@@ -9,13 +9,6 @@ import {
   Image as ImageIcon,
   FileImage,
   Trash2,
-<<<<<<< HEAD
-  List,
-  Eye,
-  Calendar,
-  User,
-  FileText
-=======
   History,
   FileText,
   Eye,
@@ -24,20 +17,14 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 } from 'lucide-react';
 import { useReport } from '../contexts/ReportContext';
 import AddReportForm from '../components/forms/AddReportForm';
-<<<<<<< HEAD
-import { useNotification } from '../contexts/NotificationContext';
-import { motion, AnimatePresence } from 'framer-motion';
-=======
 import { useAuth } from '../contexts/AuthContext';
 import { showSuccess, showError, showWarning, showInfo, logger } from '../utils/notifications';
 import { handleError, handleValidationError, handleFileError } from '../utils/errorHandler';
 import FileUpload from '../components/common/FileUpload';
 import { UploadResult } from '../services/fileUploadService';
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 
 interface UploadedImage {
   id: string;
@@ -65,13 +52,6 @@ interface DailyReportData {
 }
 
 const DailyReport = () => {
-<<<<<<< HEAD
-  const { showToast } = useNotification();
-=======
-  const { user } = useAuth();
-  const { reports, createReport } = useReport();
-  
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
   const [reportTitle, setReportTitle] = useState('');
   const [completedTasks, setCompletedTasks] = useState('');
   const [inProgressTasks, setInProgressTasks] = useState('');
@@ -80,13 +60,6 @@ const DailyReport = () => {
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadResult[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-<<<<<<< HEAD
-  const [showReportList, setShowReportList] = useState(false);
-  const [selectedReport, setSelectedReport] = useState<DailyReportData | null>(null);
-  const [savedReports, setSavedReports] = useState<DailyReportData[]>([]);
-=======
-  const [activeTab, setActiveTab] = useState<'create' | 'history'>('create');
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const today = new Date();
@@ -214,31 +187,16 @@ const DailyReport = () => {
     Array.from(files).forEach(file => {
       // 파일 타입 검증
       if (!validImageTypes.includes(file.type)) {
-<<<<<<< HEAD
-        showToast('error', '파일 형식 오류', `${file.name}은 지원하지 않는 파일 형식입니다. JPG, PNG, GIF, WebP 파일만 업로드 가능합니다.`);
-=======
-        handleFileError(file.name, 'file_type');
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
         return;
       }
 
       // 파일 크기 검증
       if (file.size > maxFileSize) {
-<<<<<<< HEAD
-        showToast('error', '파일 크기 오류', `${file.name}의 크기가 너무 큽니다. 5MB 이하의 파일만 업로드 가능합니다.`);
-=======
-        handleFileError(file.name, 'file_size');
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
         return;
       }
 
       // 중복 파일 검증
       if (uploadedImages.some(img => img.name === file.name && img.size === file.size)) {
-<<<<<<< HEAD
-        showToast('warning', '중복 파일', `${file.name}은 이미 업로드된 파일입니다.`);
-=======
-        showWarning(`${file.name}은 이미 업로드된 파일입니다.`);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
         return;
       }
 
@@ -302,179 +260,11 @@ const DailyReport = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-<<<<<<< HEAD
-  const handleSubmit = () => {
-    if (!reportTitle.trim()) {
-      showToast('error', '입력 오류', '보고서 제목을 입력해주세요.');
-      return;
-    }
-
-    const reportData: DailyReportData = {
-      id: `report-${Date.now()}`,
       title: reportTitle,
       completed: completedTasks,
       inProgress: inProgressTasks,
       planned: plannedTasks,
       issues: issuesSuggestions,
-      reportDate: selectedDate,
-      images: uploadedImages.map(img => ({
-        name: img.name,
-        size: img.size,
-        url: img.url
-      })),
-      createdAt: new Date().toISOString(),
-      status: 'submitted'
-    };
-    
-    setSavedReports(prev => [reportData, ...prev]);
-    
-    // 폼 초기화
-    setReportTitle('');
-    setCompletedTasks('');
-    setInProgressTasks('');
-    setPlannedTasks('');
-    setIssuesSuggestions('');
-    setUploadedImages([]);
-    
-    showToast('success', '보고서 제출 완료', '보고서가 성공적으로 제출되었습니다.');
-  };
-
-  const handleSaveDraft = () => {
-    if (!reportTitle.trim()) {
-      showToast('error', '입력 오류', '보고서 제목을 입력해주세요.');
-      return;
-    }
-
-    const draftData: DailyReportData = {
-      id: `draft-${Date.now()}`,
-=======
-  const handleSubmit = async () => {
-    if (!user) {
-      handleError(new Error('로그인이 필요합니다'), {
-        action: 'submit_report',
-        userId: undefined,
-        userRole: undefined
-      });
-      return;
-    }
-
-    // 필수 입력값 검증
-    if (!reportTitle?.trim()) {
-      handleValidationError('제목', 'required');
-      return;
-    }
-
-    if (!completedTasks?.trim() && !inProgressTasks?.trim() && !plannedTasks?.trim()) {
-      handleValidationError('업무 내용', '최소 하나의 업무 항목은 입력해야 합니다');
-      return;
-    }
-
-    const reportContent = {
-      완료한업무: completedTasks,
-      진행중인업무: inProgressTasks,
-      예정된업무: plannedTasks,
-      특이사항및건의사항: issuesSuggestions,
-      첨부이미지: uploadedImages.map(img => ({
-        name: img.name,
-        size: img.size
-      })),
-      첨부파일: uploadedFiles.map(file => ({
-        id: file.id,
-        name: file.name,
-        url: file.url,
-        size: file.size,
-        type: file.type
-      }))
-    };
-
-    try {
-      const reportId = await createReport({
-        title: reportTitle || `${formattedDate} 일일 업무 보고`,
-        content: JSON.stringify(reportContent),
-        type: 'daily',
-        category: 'operational',
-        status: 'submitted',
-        createdBy: user.id,
-        createdByName: user.name || user.email,
-      });
-
-      if (reportId) {
-        // 제출 완료 후 임시저장 데이터 삭제
-        localStorage.removeItem(`dailyReport_draft_${defaultDateValue}`);
-        
-        showSuccess('보고서가 성공적으로 제출되었습니다.');
-        
-        // 폼 초기화
-        setReportTitle('');
-        setCompletedTasks('');
-        setInProgressTasks('');
-        setPlannedTasks('');
-        setIssuesSuggestions('');
-        setUploadedImages([]);
-        setUploadedFiles([]);
-        setLastSavedTime(null);
-        
-        // 내역 탭으로 이동
-        setActiveTab('history');
-      } else {
-        handleError(new Error('보고서 제출 실패'), {
-          action: 'submit_report',
-          userId: user.id,
-          userRole: user.role
-        });
-      }
-    } catch (error) {
-      handleError(error, {
-        action: 'submit_report',
-        userId: user.id,
-        userRole: user.role
-      });
-    }
-  };
-
-  const handleSaveDraft = () => {
-    // 임시 저장 로직
-    const draftData = {
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
-      title: reportTitle,
-      completed: completedTasks,
-      inProgress: inProgressTasks,
-      planned: plannedTasks,
-      issues: issuesSuggestions,
-<<<<<<< HEAD
-      reportDate: selectedDate,
-      images: uploadedImages.map(img => ({
-        name: img.name,
-        size: img.size,
-        url: img.url
-      })),
-      createdAt: new Date().toISOString(),
-      status: 'draft'
-    };
-    
-    setSavedReports(prev => [draftData, ...prev]);
-    
-    showToast('info', '임시 저장 완료', '보고서가 임시 저장되었습니다.');
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
-  };
-
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-=======
-      lastSaved: new Date().toISOString()
-    };
-    
-    localStorage.setItem(`dailyReport_draft_${defaultDateValue}`, JSON.stringify(draftData));
-    setLastSavedTime(draftData.lastSaved);
-    
-    logger.debug('임시 저장', draftData);
-    showInfo(`보고서가 임시 저장되었습니다.\n저장 시간: ${new Date().toLocaleTimeString('ko-KR')}`);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
   };
 
   return (

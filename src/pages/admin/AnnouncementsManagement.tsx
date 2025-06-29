@@ -1,12 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useAnnouncement } from '../../contexts/AnnouncementContext';
 import { useAuth } from '../../contexts/AuthContext';
-<<<<<<< HEAD
-import { useNotification } from '../../contexts/NotificationContext';
-import { Announcement } from '../../types'; 
-=======
-import { Announcement } from '../../types/index'; 
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 import { format, parseISO } from 'date-fns';
 import { Edit3, Trash2, PlusCircle, CheckSquare, Square, Upload, X, Image as ImageIcon } from 'lucide-react';
 
@@ -254,18 +248,6 @@ const AnnouncementsManagement: React.FC = () => {
       );
       
       if (isEditMode && currentAnnouncement.id) {
-<<<<<<< HEAD
-        await updateAnnouncement({ ...currentAnnouncement, category, tags } as Partial<Announcement> & { id: string });
-        showToast('success', '공지사항 수정 완료', '공지사항이 성공적으로 수정되었습니다.');
-=======
-        const existingImages = currentAnnouncement.images || [];
-        await updateAnnouncement({ 
-          ...currentAnnouncement, 
-          category, 
-          tags,
-          images: [...existingImages, ...imageData]
-        } as Partial<Announcement> & { id: string });
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       } else {
         const newAnnouncementData: Omit<Announcement, 'id' | 'createdAt' | 'updatedAt'> = {
           title: currentAnnouncement.title,
