@@ -1,10 +1,10 @@
 // Supabase 클라이언트 설정
-// 실제 Supabase 프로젝트 연결을 위해서는 환경변수 설정이 필요합니다.
+// 새 Supabase 프로젝트: htsvzzphkvtjoamzmtya
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://piwftspnolcvpytaqaeq.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpd2Z0c3Bub2xjdnB5dGFxYWVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3ODQzODMsImV4cCI6MjA2MjM2MDM4M30.79_5Nbygmj-lWnsG4Gq9E8hMk1it2UDz6IZ0vK9eAfc';
+const supabaseUrl = 'https://htsvzzphkvtjoamzmtya.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0c3Z6enBoa3Z0am9hbXptdHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc2NDQ0MzQsImV4cCI6MjA1MzIyMDQzNH0.Fho-EhHZfPsrB3W4WTvFcEhRUP6bZyV0qyBCFBUkSWE';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
