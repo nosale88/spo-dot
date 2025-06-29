@@ -1,24 +1,23 @@
-import { ReactNode, createContext, useContext, useState, useEffect, useCallback } from "react";
-import { supabaseApiService } from '../services/supabaseApi';
-import { secureApiService } from '../services/secureApiService';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { supabaseApiService } from '@/services/supabaseApi';
+import { secureApiService } from '@/services/secureApiService';
 import { 
   UserRole, 
-  UserPosition,
+  UserPosition, 
   Permission, 
-  hasPermission as checkPermission, 
+  DataAccessLevel,
+  rolePermissions,
+  hasPermission as checkPermission,
   hasPageAccess as checkPageAccess,
   getDataAccessLevel,
-  canModifyData as checkDataModification,
+  canModifyData as checkCanModifyData,
   filterDataByPermission,
   hasElevatedPermission,
-  checkPermissionWithReason,
-  logPermissionCheck,
-  DataAccessLevel,
-  rolePermissions
-} from '../types/permissions';
-import { isSessionValid, refreshSession } from '../utils/securityUtils';
+  checkPermissionWithReason
+} from '@/types/permissions';
+import { isSessionValid, refreshSession } from '@/utils/securityUtils';
 
-// AuthContext 타입 정의
+// User 인터페이스 정의
 interface User {
   id: string;
   name: string;
@@ -30,6 +29,7 @@ interface User {
   permissions?: string[]; // 개별 설정된 권한 추가
 }
 
+// AuthContext 타입 정의
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
@@ -54,16 +54,13 @@ interface AuthContextType {
   isFitness: boolean;
   isTennis: boolean;
   isGolf: boolean;
-<<<<<<< HEAD
+  isManager: boolean;
+  isTeamLead: boolean;
   
   // 🔐 보안 강화 함수들
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   validateSession: () => boolean;
   refreshUserSession: () => Promise<boolean>;
-=======
-  isManager: boolean;
-  isTeamLead: boolean;
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 }
 
 // 기본 Context 생성
@@ -88,7 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const currentUserId = localStorage.getItem('currentUserId');
         if (currentUserId) {
-<<<<<<< HEAD
           // 보안 강화된 API 사용
           const response = await secureApiService.auth.getCurrentUser();
           if (response.success && response.data) {
@@ -100,14 +96,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // 인증 실패 시 로그아웃 처리
             await logout();
           }
-=======
-          const userData = await supabaseApiService.auth.getCurrentUser();
-          setUser({
-            ...userData,
-            position: userData.position as UserPosition
-          });
-          console.log('✅ 사용자 인증 확인:', userData.role);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
         }
       } catch (error) {
         console.error('Auth check failed:', error);
@@ -149,15 +137,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('currentUserName', response.data.user.name);
       localStorage.setItem('authToken', response.data.token);
       
-<<<<<<< HEAD
       setUser(response.data.user);
-=======
-      setUser({
-        ...response.user,
-        position: response.user.position as UserPosition
-      });
-      console.log('✅ 로그인 성공:', response.user.role);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
+      console.log('✅ 로그인 성공:', response.data.user.role);
     } catch (error) {
       throw error;
     } finally {
@@ -179,7 +160,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-<<<<<<< HEAD
   // 🔐 보안 강화 함수들
   const changePassword = async (currentPassword: string, newPassword: string) => {
     const response = await secureApiService.auth.changePassword(currentPassword, newPassword);
@@ -206,10 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // 🔐 권한 관리 함수들
-=======
   // 🔐 권한 관리 함수들 - 개별 권한과 역할별 권한을 모두 고려
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
   const hasPermission = useCallback((permission: Permission): boolean => {
     if (!user) return false;
     
@@ -242,7 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasAnyPermission = useCallback((permissions: Permission[]): boolean => {
     if (!user) return false;
     return permissions.some(permission => hasPermission(permission));
-  }, [user]);
+  }, [user, hasPermission]);
 
   const hasPageAccess = useCallback((pathname: string): boolean => {
     if (!user) return false;
@@ -256,18 +233,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const canModifyData = useCallback((dataType: string, dataOwnerId?: string, itemDepartment?: string, assignedUsers?: string[]): boolean => {
     if (!user) return false;
-    return checkDataModification(
-      user.role, 
-      dataType, 
-      dataOwnerId, 
-      user.id, 
-      user.department, 
-      itemDepartment, 
-      assignedUsers
-    );
+    return checkCanModifyData(user.role, dataType, dataOwnerId, user.id, user.department, itemDepartment, assignedUsers);
   }, [user]);
 
-  // 🛡️ 강화된 권한 검사 함수들
   const filterUserData = useCallback(<T extends { created_by?: string; assigned_to?: string | string[]; department?: string; id?: string }>(data: T[], dataType: string): T[] => {
     if (!user) return [];
     return filterDataByPermission(data, user.role, dataType, user.id, user.department);
@@ -279,49 +247,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const checkPermissionWithDetails = useCallback((permission: Permission): { allowed: boolean; reason: string } => {
-    if (!user) return { allowed: false, reason: 'User not authenticated' };
+    if (!user) return { allowed: false, reason: '로그인이 필요합니다.' };
     return checkPermissionWithReason(user.role, permission, user.position);
   }, [user]);
 
-  // 역할별 편의 함수들
+  // 편의 함수들
   const isAdmin = user?.role === 'admin';
   const isReception = user?.role === 'reception';
   const isFitness = user?.role === 'fitness';
   const isTennis = user?.role === 'tennis';
   const isGolf = user?.role === 'golf';
-  
-  // 직책별 편의 함수들
-  const isManager = Boolean(user?.position && ['팀장', '부팀장', '매니저', '리셉션 매니저'].includes(user.position));
-  const isTeamLead = Boolean(user?.position && ['팀장', '부팀장'].includes(user.position));
+  const isManager = user?.position ? ['팀장', '부팀장', '매니저', '리셉션 매니저'].includes(user.position) : false;
+  const isTeamLead = user?.position ? ['팀장', '부팀장'].includes(user.position) : false;
+
+  const value: AuthContextType = {
+    user,
+    login,
+    logout,
+    isLoading,
+    hasPermission,
+    hasAnyPermission,
+    hasPageAccess,
+    getDataAccess,
+    canModifyData,
+    filterUserData,
+    hasElevatedAccess,
+    checkPermissionWithDetails,
+    isAdmin,
+    isReception,
+    isFitness,
+    isTennis,
+    isGolf,
+    isManager,
+    isTeamLead,
+    changePassword,
+    validateSession,
+    refreshUserSession
+  };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      logout, 
-      isLoading,
-      hasPermission,
-      hasAnyPermission,
-      hasPageAccess,
-      getDataAccess,
-      canModifyData,
-      filterUserData,
-      hasElevatedAccess,
-      checkPermissionWithDetails,
-      isAdmin,
-      isReception,
-      isFitness,
-      isTennis,
-      isGolf,
-<<<<<<< HEAD
-      changePassword,
-      validateSession,
-      refreshUserSession
-=======
-      isManager,
-      isTeamLead
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
