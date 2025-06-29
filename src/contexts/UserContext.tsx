@@ -3,12 +3,7 @@ import { Team } from '../types';
 // Supabase 클라이언트 임포트
 import { supabase } from '../supabaseClient';
 import type { Database } from '../types/database.types';
-<<<<<<< HEAD
 import { UserRole, UserPosition, DatabaseRole, mapUserRoleToDatabaseRole } from '../types/permissions';
-=======
-// 권한 시스템 import
-import { UserRole } from '../types/permissions';
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 
 // 사용자 성별 타입
 export type Gender = 'male' | 'female' | 'other';
@@ -202,11 +197,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase
         .from('users')
         .select('*')
-<<<<<<< HEAD
         .in('role', ['admin', 'trainer', 'staff', 'user', 'client']);  // 모든 허용된 DatabaseRole 조회
-=======
-        .eq('status', 'active');  // 활성 상태인 사용자만 조회 (역할 필터링 제거)
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
 
       if (error) {
         console.error('Error fetching staff:', error);
@@ -226,19 +217,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
         role: user.role as DatabaseRole,
         status: (user.status as UserStatus) || 'active',
         department: user.department || '',
-<<<<<<< HEAD
         position: user.position as UserPosition || '',
         permissions: user.permissions as string[] || [],
         createdAt: user.created_at || new Date().toISOString(),
         updatedAt: user.updated_at || new Date().toISOString(),
         lastLogin: user.last_login as string | null,
-=======
-        position: user.position || '',
-        permissions: Array.isArray(user.permissions) ? user.permissions.filter(p => typeof p === 'string') as string[] : [],
-        createdAt: user.created_at || new Date().toISOString(),
-        updatedAt: user.updated_at || new Date().toISOString(),
-        lastLogin: user.last_login || undefined,
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
         profileImage: user.profile_image
       }));
 
@@ -255,7 +238,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const addStaffMember = async (staffData: Omit<Staff, 'id' | 'createdAt' | 'updatedAt' | 'role'> & { role: UserRole }): Promise<string | null> => {
     setIsSubmitting(true);
     try {
-<<<<<<< HEAD
       // UserRole을 DatabaseRole로 변환
       const databaseRole = mapUserRoleToDatabaseRole(staffData.role);
 
@@ -290,64 +272,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
       return data.user.id;
     } catch (error) {
       console.error('직원 추가 중 오류 발생:', error);
-=======
-      console.log('직원 추가 시도:', staffData);
-      
-      // 기본 사용자 데이터 추가 - role을 그대로 사용
-      const { data, error } = await supabase
-        .from('users')
-        .insert([
-          {
-            name: staffData.name,
-            email: staffData.email,
-            password: staffData.password || '123456', // 기본 비밀번호
-            role: staffData.role, // UserRole 그대로 사용
-            phone: staffData.phone || '',
-            department: staffData.department || '',
-            position: staffData.position || '',
-            status: staffData.status || 'active',
-            permissions: staffData.permissions || []
-          }
-        ])
-        .select();
-
-      if (error) {
-        console.error('직원 추가 중 오류:', error);
-        const errorMessage = error.message || '알 수 없는 오류가 발생했습니다.';
-        alert('직원 추가 오류: ' + errorMessage);
-        return null;
-      }
-
-      if (!data || data.length === 0) {
-        console.error('직원 추가 실패: 데이터가 반환되지 않음');
-        alert('직원 추가 실패: 데이터가 반환되지 않았습니다.');
-        return null;
-      }
-
-      console.log('직원 추가 성공:', data[0]);
-      
-      // 반환된 데이터로 새 직원 정보 구성
-      const newStaff = {
-        ...staffData,
-        id: data[0].id,
-        role: data[0].role as UserRole,
-        createdAt: data[0].created_at || new Date().toISOString(),
-        updatedAt: data[0].updated_at || new Date().toISOString(),
-      };
-
-      // 상태 업데이트
-      setStaffList(prevStaff => [...prevStaff, newStaff as Staff]);
-
-      // 직원 목록 새로고침
-      await fetchStaff();
-
-      // 성공 시 ID 반환
-      return data[0].id;
-    } catch (err) {
-      console.error('직원 추가 오류:', err);
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      alert('직원 추가 오류: ' + errorMessage);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       return null;
     } finally {
       setIsSubmitting(false);
@@ -356,19 +280,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const updateStaffMember = async (id: string, staffData: Partial<Staff>): Promise<boolean> => {
     try {
-<<<<<<< HEAD
-=======
-      // Supabase에 업데이트
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       const { error } = await supabase
         .from('users')
         .update({
           name: staffData.name,
           phone: staffData.phone,
-<<<<<<< HEAD
-=======
           role: staffData.role,
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
           status: staffData.status,
           department: staffData.department,
           position: staffData.position,
@@ -378,44 +295,18 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('직원 업데이트 오류:', error);
-<<<<<<< HEAD
         throw new Error(error.message);
       }
       await fetchStaff();
       return true;
     } catch (error) {
       console.error('직원 업데이트 중 오류 발생:', error);
-=======
-        const errorMessage = error.message || '알 수 없는 오류가 발생했습니다.';
-        alert('직원 업데이트 오류: ' + errorMessage);
-        return false;
-      }
-
-      // 로컬 상태 업데이트
-      setStaffList(prevStaff => prevStaff.map(staff => 
-        staff.id === id 
-          ? { ...staff, ...staffData, updatedAt: new Date().toISOString() } 
-          : staff
-      ));
-
-      // 직원 목록 새로고침
-      await fetchStaff();
-
-      return true;
-    } catch (err) {
-      console.error('직원 수정 오류:', err);
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      alert('직원 수정 오류: ' + errorMessage);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       return false;
     }
   };
 
   const deleteStaffMember = async (id: string): Promise<boolean> => {
     try {
-<<<<<<< HEAD
-      const { error } = await supabase
-=======
       console.log('직원 삭제 시도:', id);
       
       // 1. 먼저 해당 직원에게 할당된 모든 tasks의 assigned_to를 null로 설정
@@ -453,21 +344,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       // 3. 실제 데이터베이스에서 삭제 시도
       const { error: deleteError } = await supabase
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
         .from('users')
         .delete()
         .eq('id', id);
 
-<<<<<<< HEAD
-      if (error) {
-        console.error('직원 삭제 오류:', error);
-        throw new Error(error.message);
-      }
-      await fetchStaff();
-      return true;
-    } catch (error) {
-      console.error('직원 삭제 중 오류 발생:', error);
-=======
       if (deleteError) {
         console.error('직원 삭제 오류:', deleteError);
         // 삭제에 실패하면 상태만 비활성화된 상태로 유지
@@ -489,7 +369,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
       console.error('직원 삭제 오류:', err);
       const errorMessage = err instanceof Error ? err.message : String(err);
       alert('직원 삭제 오류: ' + errorMessage);
->>>>>>> 44f164cad4e06545f0588bfd7c5302c9923da970
       return false;
     }
   };
