@@ -32,8 +32,8 @@ const PasswordChangeModal = ({ isOpen, onClose, onSubmit }: {
       return;
     }
 
-    if (newPassword.length < 8) {
-      setError('비밀번호는 최소 8자 이상이어야 합니다.');
+    if (newPassword.length < 6) {
+      setError('비밀번호는 최소 6자 이상이어야 합니다.');
       return;
     }
 
@@ -103,7 +103,7 @@ const PasswordChangeModal = ({ isOpen, onClose, onSubmit }: {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="form-input w-full"
-                placeholder="새 비밀번호 입력 (8자 이상)"
+                placeholder="새 비밀번호 입력 (6자 이상)"
               />
             </div>
 
