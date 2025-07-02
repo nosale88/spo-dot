@@ -215,7 +215,7 @@ export class ErrorHandler {
     const friendlyMessages: Record<string, string> = {
       'required': '필수 입력 항목입니다.',
       'email': '올바른 이메일 주소를 입력해주세요.',
-      'password': '비밀번호는 8자 이상이어야 합니다.',
+      'password': '비밀번호는 6자 이상이어야 합니다.',
       'phone': '올바른 전화번호를 입력해주세요.',
       'date': '올바른 날짜를 선택해주세요.',
       'number': '숫자만 입력 가능합니다.',

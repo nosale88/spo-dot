@@ -490,9 +490,10 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
     ]);
   };
 
-  // 초기 데이터 로드
+  // 초기 데이터 로드 - 일시적으로 비활성화
   useEffect(() => {
-    refreshAllData();
+    // refreshAllData(); // 일시적으로 주석 처리
+    console.log('🚀 GlobalDataContext 초기화 완료 - 데이터 로딩은 수동으로 수행');
   }, []);
 
   const value: GlobalDataContextValue = {

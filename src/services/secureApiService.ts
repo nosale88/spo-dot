@@ -77,7 +77,7 @@ class SecureApiService {
           throw new Error('올바른 이메일 형식이 아닙니다.');
         }
         if (!validateInput(credentials.password, 'password')) {
-          throw new Error('비밀번호는 8자 이상이어야 합니다.');
+          throw new Error('비밀번호는 6자 이상이어야 합니다.');
         }
 
         // 입력 새니타이징
@@ -203,7 +203,7 @@ class SecureApiService {
 
           // 새 비밀번호 유효성 검사
           if (!validateInput(newPassword, 'password')) {
-            throw new Error('새 비밀번호는 8자 이상, 영문과 숫자를 포함해야 합니다.');
+            throw new Error('새 비밀번호는 6자 이상, 영문과 숫자를 포함해야 합니다.');
           }
 
           // 비밀번호 해시화 및 업데이트

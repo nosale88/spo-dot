@@ -80,7 +80,7 @@ const AdminSettings = () => {
   const [systemSettings, setSystemSettings] = useState({
     sessionTimeout: 24, // 시간
     maxLoginAttempts: 5,
-    passwordMinLength: 8,
+    passwordMinLength: 6,
     enableTwoFactor: false,
     auditLogging: true,
     backupInterval: 'daily',
@@ -593,7 +593,7 @@ const AdminSettings = () => {
               비밀번호 정책
             </label>
             <select className="form-input">
-              <option value="standard">표준 (8자 이상, 영문/숫자 조합)</option>
+              <option value="standard">표준 (6자 이상, 영문/숫자 조합)</option>
               <option value="strong">강력 (10자 이상, 영문/숫자/특수문자 조합)</option>
               <option value="very-strong">매우 강력 (12자 이상, 대소문자/숫자/특수문자 조합)</option>
             </select>

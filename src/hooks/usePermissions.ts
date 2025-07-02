@@ -196,6 +196,9 @@ export const usePermissions = () => {
     isPosition,
     isInDepartment,
     
+    // 편의 boolean들
+    isAdmin: isRole('admin'),
+    
     // 작업별 권한
     canCreateTask,
     canAssignTask,

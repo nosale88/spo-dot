@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { supabaseApiService } from '@/services/supabaseApi';
+import { apiService } from '@/services/api';
 import { secureApiService } from '@/services/secureApiService';
 import { 
   UserRole, 
@@ -85,8 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const currentUserId = localStorage.getItem('currentUserId');
         if (currentUserId) {
-          // 보안 강화된 API 사용
-          const response = await secureApiService.auth.getCurrentUser();
+          // API 서비스 사용
+          const response = await apiService.auth.getCurrentUser();
           if (response.success && response.data) {
             setUser(response.data);
             
@@ -125,8 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       
-      // 보안 강화된 로그인 사용
-      const response = await secureApiService.auth.login({ email, password });
+      // API 서비스 사용
+      const response = await apiService.auth.login({ email, password });
       
       if (!response.success || !response.data) {
         throw new Error(response.error || '로그인에 실패했습니다.');
@@ -148,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await supabaseApiService.auth.logout();
+      await apiService.auth.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {

@@ -164,7 +164,7 @@ export const validateInput = (input: string, type: 'email' | 'password' | 'text'
     case 'email':
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
     case 'password':
-      return input.length >= 8; // 8자 이상이면 통과 (영문/숫자 조건 제거)
+      return input.length >= 6; // 6자 이상이면 통과 (영문/숫자 조건 제거)
     case 'text':
       return input.length > 0 && input.length <= 1000;
     case 'number':

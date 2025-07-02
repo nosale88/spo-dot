@@ -214,6 +214,7 @@ export interface User {
   isActive?: boolean;
   createdAt: string;
   updatedAt?: string;
+  permissions?: string[]; // 개별 설정된 권한 추가
 }
 
 export interface Task {
@@ -337,11 +338,11 @@ export interface ApiResponse<T> {
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
+  items: T[]; // data -> items로 변경
   total: number;
   page: number;
   limit: number;
-  totalPages: number;
+  totalPages?: number;
 }
 
 // 필터 및 검색 타입
@@ -354,6 +355,7 @@ export interface FilterOptions {
   dateTo?: string;
   authorId?: string;
   tags?: string[];
+  isActive?: boolean; // 추가
 }
 
 // 통계 타입
@@ -361,13 +363,9 @@ export interface DashboardStats {
   totalTasks: number;
   completedTasks: number;
   pendingTasks: number;
-  overdueTasks: number;
   totalUsers: number;
-  activeCustomers: number;
-  monthlyRevenue: number;
-  dailyReports: number;
-  announcements: number;
-  suggestions: number;
+  activeAnnouncements: number;
+  todayReports: number;
 }
 
 // 알림 타입

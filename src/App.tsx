@@ -69,6 +69,8 @@ export default function App() {
     <ErrorBoundary>
       <Router>
         <AuthProvider>
+          {/* 일시적으로 다른 Provider들 주석 처리 */}
+          {/*
           <GlobalDataProvider>
             <UserProvider>
               <TaskProvider>
@@ -83,6 +85,7 @@ export default function App() {
                                 <OTProvider>
                                   <CustomerProvider>
                                     <MemberProvider>
+          */}
                                       <Suspense fallback={<LoadingScreen />}>
                                         <Routes>
                                           {/* 인증 경로 */}
@@ -159,6 +162,7 @@ export default function App() {
                                           <Route path="*" element={<NotFound />} />
                                         </Routes>
                                       </Suspense>
+          {/*
                                     </MemberProvider>
                                   </CustomerProvider>
                                 </OTProvider>
@@ -173,6 +177,7 @@ export default function App() {
               </TaskProvider>
             </UserProvider>
           </GlobalDataProvider>
+          */}
         </AuthProvider>
       </Router>
     </ErrorBoundary>
